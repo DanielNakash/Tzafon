@@ -28,6 +28,13 @@ interface TaskRepository {
     suspend fun toggleDone(id: String)
 
     /**
+     * DM-TASK-1/2/3 — apply a state transition with its effects (thaw, series
+     * freeze/restore per FR-REC-5, contribution apply/reverse once the M5
+     * ledger exists). Callers clear StateMachine.guardFor(...) first.
+     */
+    suspend fun setState(id: String, target: TaskState, today: String)
+
+    /**
      * Materialize missing occurrences for every live series up to the
      * effective horizon (FR-REC-3), incl. the FR-REC-1 nearest floor.
      * Idempotent; safe to call on every app start / horizon change.

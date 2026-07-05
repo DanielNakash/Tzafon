@@ -7,6 +7,7 @@ import com.thefoxworks.tzafon.data.db.toEntity
 import com.thefoxworks.tzafon.domain.dates.Dates
 import com.thefoxworks.tzafon.domain.model.EditScope
 import com.thefoxworks.tzafon.domain.model.Series
+import com.thefoxworks.tzafon.domain.model.StateMachine
 import com.thefoxworks.tzafon.domain.model.Task
 import com.thefoxworks.tzafon.domain.model.TaskDraft
 import com.thefoxworks.tzafon.domain.model.TaskRepository
@@ -244,17 +245,62 @@ class RoomTaskRepository(
         }
     }
 
-    // ── done toggle (M0 parity; the full machine lands in M1) ─
+    // ── state machine (DM-TASK-1/2/3, FR-REC-5) ───────────────
 
     override suspend fun toggleDone(id: String) {
         val t = taskDao.get(id)?.toDomain() ?: return
         val next = if (t.state == TaskState.DONE) TaskState.OPEN else TaskState.DONE
+        setState(id, next, Dates.todayIso())
+    }
+
+    override suspend fun setState(id: String, target: TaskState, today: String) {
+        val t = taskDao.get(id)?.toDomain() ?: return
+        if (t.state == target) return
+        val isRecurring = t.seriesId != null
+        val fx = StateMachine.transition(t.state, target, isRecurring)
+
+        // Contribution apply/reverse are wired to the DM-ATTR ledger in M5;
+        // until then the state flip itself is the whole effect.
         taskDao.upsert(
             t.copy(
-                state = next,
+                state = fx.newState,
                 stateChangedAt = now(),
-                completedAt = if (next == TaskState.DONE) now() else null,
+                completedAt = when {
+                    fx.setCompleted -> now()
+                    fx.clearCompleted -> null
+                    else -> t.completedAt
+                },
+                toDoDate = if (fx.clearToDoDate) null else t.toDoDate,
             ).toEntity()
         )
+
+        val seriesId = t.seriesId ?: return
+        val series = seriesDao.get(seriesId)?.toDomain() ?: return
+
+        if (fx.freezeSeries && !series.frozen) {
+            // FR-REC-5: terminate generation; retain the frozen instance and
+            // settled history, drop the untouched future occurrences
+            seriesDao.upsert(series.copy(frozen = true).toEntity())
+            val occ = taskDao.occurrencesOf(seriesId).map { it.toDomain() }
+            val cutoff = t.occurrenceDate ?: today
+            val prune = occ.filter { o ->
+                o.id != t.id && (o.occurrenceDate ?: "") > cutoff &&
+                    o.state == TaskState.OPEN && !o.overridden
+            }
+            taskDao.deleteAll(prune.map { it.id })
+        }
+
+        if (fx.restoreSeries && series.frozen) {
+            // DM-TASK-2: thaw restores recurrence; next occurrence generates
+            // forward from the thawed instance via the normal topUp path
+            seriesDao.upsert(series.copy(frozen = false).toEntity())
+            val existing = taskDao.occurrencesOf(seriesId).mapNotNull { it.occurrenceDate }.toSet()
+            generate(
+                series.copy(frozen = false),
+                existing,
+                today,
+                Dates.addDays(today, Recurrence.HORIZON_DAYS),
+            )
+        }
     }
 }

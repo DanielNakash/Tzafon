@@ -122,6 +122,9 @@ fun TzafonNavHost(container: AppContainer) {
                     scope.launch { container.taskRepository.deleteTask(id, editScope) }
                     nav.popBackStack()
                 },
+                onSetState = { id, target ->
+                    scope.launch { container.taskRepository.setState(id, target, today) }
+                },
                 onClose = { nav.popBackStack() },
             )
         }

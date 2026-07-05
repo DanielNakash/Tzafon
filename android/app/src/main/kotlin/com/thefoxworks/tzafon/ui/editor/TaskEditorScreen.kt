@@ -65,6 +65,7 @@ fun TaskEditorScreen(
     today: String,
     onSave: (TaskDraft, EditScope) -> Unit,
     onDelete: (String, EditScope) -> Unit,
+    onSetState: ((String, com.thefoxworks.tzafon.domain.model.TaskState) -> Unit)? = null,
     onClose: () -> Unit,
 ) {
     val isNew = initial == null
@@ -205,6 +206,42 @@ fun TaskEditorScreen(
                         else -> null
                     },
                 )
+
+                // state row — opens the "Where does this stand?" sheet (M1)
+                if (!isNew && onSetState != null) {
+                    Row(
+                        Modifier.fillMaxWidth()
+                            .clip(RoundedCornerShape(13.dp))
+                            .background(Den.card)
+                            .border(1.dp, Den.line, RoundedCornerShape(13.dp))
+                            .pressable { sheet = "state" }
+                            .padding(14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(13.dp),
+                    ) {
+                        com.thefoxworks.tzafon.ui.components.TaskCheckbox(draft.state)
+                        Column(Modifier.weight(1f)) {
+                            SectionLabel("State")
+                            Text(
+                                when (draft.state) {
+                                    com.thefoxworks.tzafon.domain.model.TaskState.OPEN -> "Open"
+                                    com.thefoxworks.tzafon.domain.model.TaskState.DONE -> "Done"
+                                    com.thefoxworks.tzafon.domain.model.TaskState.CLOSED -> "Closed"
+                                    com.thefoxworks.tzafon.domain.model.TaskState.FROZEN -> "Frozen"
+                                    com.thefoxworks.tzafon.domain.model.TaskState.BACKLOG -> "Someday"
+                                },
+                                style = TextStyle(fontFamily = DenType.body, fontSize = 16.sp),
+                                color = Den.ink,
+                                modifier = Modifier.padding(top = 2.dp),
+                            )
+                        }
+                        Text(
+                            "CHANGE",
+                            style = TextStyle(fontFamily = DenType.mono, fontSize = 10.5.sp),
+                            color = Den.rust,
+                        )
+                    }
+                }
             }
 
             // ── recurrence ──
@@ -396,6 +433,15 @@ fun TaskEditorScreen(
                 onPick = { draft = draft.copy(recurrence = rec!!.copy(endDate = it)); sheet = null },
                 onClear = { draft = draft.copy(recurrence = rec!!.copy(endDate = null)); sheet = null })
         }
+        "state" -> com.thefoxworks.tzafon.ui.components.StateSheet(
+            current = draft.state,
+            isRecurring = draft.seriesId != null,
+            onPick = { target ->
+                onSetState?.invoke(draft.id!!, target)
+                draft = draft.copy(state = target)
+            },
+            onClose = { sheet = null },
+        )
         "delete" -> DenSheet("Delete repeating task", onClose = { sheet = null }) {
             Column {
                 Text(

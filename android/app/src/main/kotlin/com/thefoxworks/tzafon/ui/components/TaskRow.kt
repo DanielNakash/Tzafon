@@ -1,6 +1,9 @@
 package com.thefoxworks.tzafon.ui.components
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,12 +39,14 @@ fun dueIndicator(task: Task, today: String): DueIndicator = when {
  * The reusable task row (tz-ui.jsx TaskRow): state checkbox, title
  * (struck for done/closed), meta chips, optional chevron, hairline below.
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun TaskRow(
     task: Task,
     today: String,
     onToggle: () -> Unit,
     onOpen: () -> Unit,
+    onLongPress: (() -> Unit)? = null,
     recurSummary: String? = null,
     servesLabel: String? = null,
     servesAccent: androidx.compose.ui.graphics.Color = Den.muted,
@@ -55,7 +60,12 @@ fun TaskRow(
     Column(
         Modifier
             .fillMaxWidth()
-            .pressable(onOpen)
+            .combinedClickable(
+                interactionSource = MutableInteractionSource(),
+                indication = null,
+                onClick = onOpen,
+                onLongClick = onLongPress,
+            )
             .alpha(if (task.state == TaskState.DONE) 0.62f else 1f)
     ) {
         Row(
