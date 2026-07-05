@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Fox Works — Task Manager POC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=Gloock&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Hanken+Grotesk:wght@400;500;600;700&family=Spline+Sans+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
+<style>
+  html, body { margin: 0; padding: 0; background: #ECE6DC; }
+  * { -webkit-font-smoothing: antialiased; }
+
+  /* press feedback */
+  .ft-press { transition: transform .12s ease; }
+  .ft-press:active { transform: scale(0.95); }
+
+  /* hide inner scrollbars for a clean mock */
+  .ft-scroll::-webkit-scrollbar, .ft-screen ::-webkit-scrollbar { width: 0; height: 0; }
+  .ft-scroll { scrollbar-width: none; }
+
+  /* new-task entrance */
+  @keyframes ftPopIn {
+    from { opacity: 0; transform: translateY(-8px) scale(0.98); }
+    to   { opacity: 1; transform: none; }
+  }
+  .ft-pop-in { animation: ftPopIn .34s cubic-bezier(.2,.8,.2,1); }
+
+  /* sign-in spinner */
+  @keyframes ftSpin { to { transform: rotate(360deg); } }
+  .ft-spin { animation: ftSpin .8s linear infinite; }
+
+  /* composer sheet */
+  @keyframes ftSheet { from { transform: translateY(100%); } to { transform: none; } }
+  .ft-sheet { animation: ftSheet .3s cubic-bezier(.2,.8,.2,1); }
+  @keyframes ftFade { from { opacity: 0; } to { opacity: 1; } }
+  .ft-fade { animation: ftFade .25s ease; }
+
+  /* undo toast */
+  @keyframes ftToast { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  .ft-toast { animation: ftToast .26s cubic-bezier(.2,.8,.2,1); }
+
+  /* pop confetti */
+  @keyframes ftConfetti {
+    from { opacity: 1; transform: translate(-50%, -50%); }
+    to   { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))); }
+  }
+  .ft-confetti { animation: ftConfetti .6s ease-out forwards; }
+
+  .ft-rowdel { opacity: 0.55; transition: opacity .15s; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="ios-frame.jsx"></script>
+<script type="text/babel" src="task-app.jsx"></script>
+
+<script type="text/babel">
+const { useState } = React;
+
+function Phone({ id, theme, initialScreen }) {
+  return (
+    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <IOSDevice>
+        <TaskApp theme={theme} instanceId={id} initialScreen={initialScreen} />
+      </IOSDevice>
+    </div>
+  );
+}
+
+const CARD_BG = '#ECE6DC';
+const ABW = 448, ABH = 918;
+
+function ReadMe() {
+  const t = THEMES.paper;
+  return (
+    <div style={{
+      width: '100%', height: '100%', boxSizing: 'border-box', padding: '44px 52px',
+      background: t.surface, color: t.ink, fontFamily: t.body,
+      display: 'flex', flexDirection: 'column', justifyContent: 'center',
+    }}>
+      <div style={{ fontFamily: t.mono, fontSize: 12, letterSpacing: 4, color: t.rust, fontWeight: 600 }}>DON'T PANIC · POC MOCKUP</div>
+      <h1 style={{ fontFamily: t.serif, fontSize: 46, fontWeight: 600, letterSpacing: -0.5, margin: '12px 0 0', lineHeight: 1.02 }}>
+        The Fox Works — Task Manager
+      </h1>
+      <p style={{ fontSize: 18, lineHeight: 1.55, color: t.muted, maxWidth: 620, margin: '14px 0 26px' }}>
+        A mobile-first task app covering the full POC scope — Google SSO, a private task list, create,
+        inline edit, delete, and an open/done toggle — dressed in the warm rust-and-amber, fox-and-“DON'T PANIC”
+        personality of thefoxworks.net. Below are <b>three visual directions</b>, each a real, working prototype.
+        Tap a checkbox, add a task, rename one inline, delete and undo.
+      </p>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 18 }}>
+        {[
+          ['01 · Foxpaper', 'Cozy & literary. Paper cards, serif headings, soft circular checks.'],
+          ['02 · The Den', 'Editorial. Kraft header block, mono labels, rubber-stamp “DONE”.'],
+          ['03 · Pop Fox', 'Bold & playful. Chunky display type, progress bar, a little confetti.'],
+        ].map(([h, d]) => (
+          <div key={h} style={{ background: t.surfaceAlt, borderRadius: 14, padding: '16px 18px' }}>
+            <div style={{ fontFamily: t.mono, fontSize: 12, color: t.rust, fontWeight: 700, letterSpacing: 1 }}>{h}</div>
+            <div style={{ fontSize: 14.5, lineHeight: 1.45, color: t.muted, marginTop: 8 }}>{d}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{ marginTop: 26, fontSize: 13.5, color: t.muted, fontFamily: t.mono, letterSpacing: 0.3 }}>
+        SCOPE NOTE — “mobile web app” per your brief. Data scoped per signed-in account · persisted across refresh · 🔒 HTTPS.
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <DesignCanvas>
+      <DCSection id="readme" title="Start here" subtitle="Brief, design system & how to read this">
+        <DCArtboard id="rm" label="Read me" width={860} height={520} style={{ background: '#fff' }}>
+          <ReadMe />
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="paper" title="01 · Foxpaper" subtitle="Cozy literary — paper cards, serif headings, soft circular checks">
+        <DCArtboard id="paper-signin" label="Sign in (Google SSO)" width={ABW} height={ABH} style={{ background: CARD_BG }}>
+          <Phone id="paper-signin" theme={THEMES.paper} initialScreen="signin" />
+        </DCArtboard>
+        <DCArtboard id="paper-app" label="Task list · create · edit · done" width={ABW} height={ABH} style={{ background: CARD_BG }}>
+          <Phone id="paper-app" theme={THEMES.paper} initialScreen="app" />
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="den" title="02 · The Den" subtitle="Editorial — kraft header, mono labels, rubber-stamp DONE">
+        <DCArtboard id="den-signin" label="Sign in (Google SSO)" width={ABW} height={ABH} style={{ background: CARD_BG }}>
+          <Phone id="den-signin" theme={THEMES.den} initialScreen="signin" />
+        </DCArtboard>
+        <DCArtboard id="den-app" label="Task list · create · edit · done" width={ABW} height={ABH} style={{ background: CARD_BG }}>
+          <Phone id="den-app" theme={THEMES.den} initialScreen="app" />
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="pop" title="03 · Pop Fox" subtitle="Bold & playful — chunky display type, progress bar, confetti">
+        <DCArtboard id="pop-signin" label="Sign in (Google SSO)" width={ABW} height={ABH} style={{ background: CARD_BG }}>
+          <Phone id="pop-signin" theme={THEMES.pop} initialScreen="signin" />
+        </DCArtboard>
+        <DCArtboard id="pop-app" label="Task list · create · edit · done" width={ABW} height={ABH} style={{ background: CARD_BG }}>
+          <Phone id="pop-app" theme={THEMES.pop} initialScreen="app" />
+        </DCArtboard>
+      </DCSection>
+    </DesignCanvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

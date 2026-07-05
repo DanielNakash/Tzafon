@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Tzafon v2.0 — Design</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;0,6..72,700;1,6..72,400;1,6..72,500&family=Hanken+Grotesk:wght@400;500;600;700&family=Spline+Sans+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
+<style>
+  html, body { margin: 0; padding: 0; background: #f0eee9; }
+  * { -webkit-font-smoothing: antialiased; box-sizing: border-box; }
+  ::-webkit-scrollbar { width: 0; height: 0; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="tz/tz-core.jsx"></script>
+<script type="text/babel" src="tz/tz-ui.jsx"></script>
+<script type="text/babel" src="tz/tz-action.jsx"></script>
+<script type="text/babel" src="tz/tz-direction.jsx"></script>
+<script type="text/babel" src="tz/tz-habits.jsx"></script>
+<script type="text/babel" src="tz/tz-reflect.jsx"></script>
+<script type="text/babel" src="tz/tz-capture.jsx"></script>
+
+<script type="text/babel">
+const AB = { w: 412, h: 892 };
+function P({ children }) { return <div style={{ background: 'transparent', width: AB.w, height: AB.h }}>{children}</div>; }
+
+function App() {
+  return (
+    <DesignCanvas>
+      <DCSection id="onboarding" title="Get started" subtitle="The rename to Tzafon — The Fox Works logo + the north/compass motif">
+        <DCArtboard id="signin" label="Sign in — Tzafon" width={AB.w} height={AB.h} style={{ background: 'transparent', boxShadow: 'none', overflow: 'visible', borderRadius: 40 }}><SignIn /></DCArtboard>
+      </DCSection>
+
+      <DCSection id="action" title="Action — do it" subtitle="Today · Planning · All Tasks · Backlog">
+        <DCArtboard id="today" label="Today" width={AB.w} height={AB.h} style={{ background: 'transparent', boxShadow: 'none', overflow: 'visible', borderRadius: 40 }}><TodayScreen /></DCArtboard>
+        <DCArtboard id="planning" label="Planning — triage" width={AB.w} height={AB.h} style={{ background: 'transparent', boxShadow: 'none', overflow: 'visible', borderRadius: 40 }}><PlanningScreen /></DCArtboard>
+        <DCArtboard id="alltasks" label="All Tasks — index" width={AB.w} height={AB.h} style={{ background: 'transparent', boxShadow: 'none', overflow: 'visible', borderRadius: 40 }}><AllTasksScreen /></DCArtboard>
+        <DCArtboard id="backlog" label="Backlog — someday" width={AB.w} height={AB.h} style={{ background: 'transparent', boxShadow: 'none', overflow: 'visible', borderRadius: 40 }}><BacklogScreen /></DCArtboard>
+      </DCSection>
+
+      <DCSection id="direction" title="Direction — why & aim" subtitle="The namesake · Compass board: three bearings, each opening to its goals + habits">
+        <DCArtboard id="directions" label="Directions — Compass board" width={AB.w} height={AB.h} style={{ background: 'transparent', boxShadow: 'none', overflow: 'visible', borderRadius: 40 }}><DirectionsBoard /></DCArtboard>
+        <DCArtboard id="directions-expanded" label="Directions — one theme expanded" width={AB.w} height={AB.h} style={{ background: 'transparent', boxShadow: 'none', overflow: 'visible', borderRadius: 40 }}><DirectionsBoardExpanded /></DCArtboard>
+        <DCArtboard id="habits" label="Habits — rhythm & identity" width={AB.w} height={AB.h} style={{ background: 'transparent', boxShadow: 'none', overflow: 'visible', borderRadius: 40 }}><HabitsScreen /></DCArtboard>
+      </DCSection>
+
+      <DCSection id="reflection" title="Reflection — look back" subtitle="Journey (the identity mirror) · the weekly Review loop (Reflect → Plan)">
+        <DCArtboard id="journey" label="Journey — the mirror" width={AB.w} height={AB.h} style={{ background: 'transparent', boxShadow: 'none', overflow: 'visible', borderRadius: 40 }}><JourneyScreen /></DCArtboard>
+        <DCArtboard id="review-reflect" label="Review · Reflect" width={AB.w} height={AB.h} style={{ background: 'transparent', boxShadow: 'none', overflow: 'visible', borderRadius: 40 }}><ReviewReflect /></DCArtboard>
+        <DCArtboard id="review-plan" label="Review · Plan (fresh start)" width={AB.w} height={AB.h} style={{ background: 'transparent', boxShadow: 'none', overflow: 'visible', borderRadius: 40 }}><ReviewPlan /></DCArtboard>
+      </DCSection>
+
+      <DCSection id="system" title="Capture & system" subtitle="How tasks are made, staged and managed — plus an alternative nav for comparison">
+        <DCArtboard id="quickadd" label="Quick-add — the friction floor" width={AB.w} height={AB.h} style={{ background: 'transparent', boxShadow: 'none', overflow: 'visible', borderRadius: 40 }}><QuickAdd /></DCArtboard>
+        <DCArtboard id="editor" label="Task editor — full" width={AB.w} height={AB.h} style={{ background: 'transparent', boxShadow: 'none', overflow: 'visible', borderRadius: 40 }}><TaskEditor /></DCArtboard>
+        <DCArtboard id="statesheet" label="Task state — the state machine" width={AB.w} height={AB.h} style={{ background: 'transparent', boxShadow: 'none', overflow: 'visible', borderRadius: 40 }}><StateSheet /></DCArtboard>
+        <DCArtboard id="settings" label="Settings" width={AB.w} height={AB.h} style={{ background: 'transparent', boxShadow: 'none', overflow: 'visible', borderRadius: 40 }}><SettingsScreen /></DCArtboard>
+        <DCArtboard id="navalt" label="Alternative nav model" width={AB.w} height={AB.h} style={{ background: 'transparent', boxShadow: 'none', overflow: 'visible', borderRadius: 40 }}><NavAlt /></DCArtboard>
+      </DCSection>
+    </DesignCanvas>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

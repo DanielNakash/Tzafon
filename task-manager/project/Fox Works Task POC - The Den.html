@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Fox Works — The Den</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600;6..72,700&family=Hanken+Grotesk:wght@400;500;600;700&family=Spline+Sans+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
+<style>
+  html, body { margin: 0; padding: 0; background: #ECE6DC; }
+  * { -webkit-font-smoothing: antialiased; }
+  .ft-press { transition: transform .12s ease; }
+  .ft-press:active { transform: scale(0.95); }
+  .ft-scroll::-webkit-scrollbar, .ft-screen ::-webkit-scrollbar { width: 0; height: 0; }
+  .ft-scroll { scrollbar-width: none; }
+  @keyframes ftPopIn { from { opacity: 0; transform: translateY(-8px) scale(0.98); } to { opacity: 1; transform: none; } }
+  .ft-pop-in { animation: ftPopIn .34s cubic-bezier(.2,.8,.2,1); }
+  @keyframes ftSpin { to { transform: rotate(360deg); } }
+  .ft-spin { animation: ftSpin .8s linear infinite; }
+  @keyframes ftSheet { from { transform: translateY(100%); } to { transform: none; } }
+  .ft-sheet { animation: ftSheet .3s cubic-bezier(.2,.8,.2,1); }
+  @keyframes ftFade { from { opacity: 0; } to { opacity: 1; } }
+  .ft-fade { animation: ftFade .25s ease; }
+  @keyframes ftToast { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  .ft-toast { animation: ftToast .26s cubic-bezier(.2,.8,.2,1); }
+  @keyframes ftConfetti { from { opacity: 1; transform: translate(-50%, -50%); } to { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))); } }
+  .ft-confetti { animation: ftConfetti .6s ease-out forwards; }
+  .ft-rowdel { opacity: 0.55; transition: opacity .15s; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="ios-frame.jsx"></script>
+<script type="text/babel" src="task-app.jsx"></script>
+
+<script type="text/babel">
+const CARD_BG = '#ECE6DC';
+const ABW = 448, ABH = 918;
+
+function Phone({ id, theme, initialScreen }) {
+  return (
+    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <IOSDevice>
+        <TaskApp theme={theme} instanceId={id} initialScreen={initialScreen} />
+      </IOSDevice>
+    </div>
+  );
+}
+
+function ReadMe() {
+  const t = THEMES.denx;
+  return (
+    <div style={{
+      width: '100%', height: '100%', boxSizing: 'border-box', padding: '46px 54px',
+      background: t.surface, color: t.ink, fontFamily: t.body,
+      display: 'flex', flexDirection: 'column', justifyContent: 'center',
+    }}>
+      <div style={{ fontFamily: t.mono, fontSize: 12, letterSpacing: 4, color: t.rust, fontWeight: 600 }}>DON'T PANIC · THE DEN · v2</div>
+      <h1 style={{ fontFamily: t.serif, fontSize: 48, fontWeight: 600, letterSpacing: -0.6, margin: '12px 0 0', lineHeight: 1.02 }}>
+        The Den, remixed
+      </h1>
+      <p style={{ fontSize: 18, lineHeight: 1.55, color: t.muted, maxWidth: 640, margin: '14px 0 26px' }}>
+        Your favourite direction — The Den's editorial structure (kraft header, divider rows, rubber-stamp
+        “DONE”) — now wearing <b>Foxpaper's Newsreader serif</b>, with the <b>Pop Fox progress bar</b> baked into
+        the header. Inline edit now has explicit <b>✕ cancel / ✓ save</b> controls. Tap any title to rename it.
+      </p>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 18 }}>
+        {[
+          ['Typography', 'Newsreader serif headings (from Foxpaper) over Hanken Grotesk body & mono labels.'],
+          ['Progress bar', 'Borrowed from Pop Fox — amber fill on the rust header, with a live done/total count.'],
+          ['Edit actions', 'Renaming shows ✕ and ✓ buttons. Enter saves, Esc cancels, tapping away saves.'],
+        ].map(([h, d]) => (
+          <div key={h} style={{ background: t.surfaceAlt, borderRadius: 14, padding: '16px 18px' }}>
+            <div style={{ fontFamily: t.mono, fontSize: 12, color: t.rust, fontWeight: 700, letterSpacing: 1 }}>{h.toUpperCase()}</div>
+            <div style={{ fontSize: 14.5, lineHeight: 1.45, color: t.muted, marginTop: 8 }}>{d}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{ marginTop: 26, fontSize: 13.5, color: t.muted, fontFamily: t.mono, letterSpacing: 0.3 }}>
+        Full POC scope · Google SSO · create · inline edit · delete + undo · open/done · persisted across refresh · 🔒 HTTPS.
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <DesignCanvas>
+      <DCSection id="readme" title="The Den — v2" subtitle="Den structure + Foxpaper type + Pop progress bar + edit controls">
+        <DCArtboard id="rm" label="What changed" width={860} height={520} style={{ background: '#fff' }}>
+          <ReadMe />
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="denx" title="The Den" subtitle="Editorial — Newsreader headings, mono labels, amber progress bar, rubber-stamp DONE">
+        <DCArtboard id="denx-signin" label="Sign in (Google SSO)" width={ABW} height={ABH} style={{ background: CARD_BG }}>
+          <Phone id="denx-signin" theme={THEMES.denx} initialScreen="signin" />
+        </DCArtboard>
+        <DCArtboard id="denx-app" label="Task list · create · edit · done" width={ABW} height={ABH} style={{ background: CARD_BG }}>
+          <Phone id="denx-app" theme={THEMES.denx} initialScreen="app" />
+        </DCArtboard>
+      </DCSection>
+    </DesignCanvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

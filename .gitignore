@@ -1,0 +1,23 @@
+# macOS
+.DS_Store
+
+# Android / Gradle
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/.kotlin/
+*.apk
+*.aab
+*.hprof
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Claude local settings
+.claude/settings.local.json
+
+# Secrets (Firebase config lands in M9b, never committed)
+android/app/google-services.json

@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./gradlew *)",
+      "Bash(JAVA_HOME=* ./gradlew *)",
+      "Bash(adb *)",
+      "Bash(emulator *)",
+      "Bash(sdkmanager *)",
+      "Bash(avdmanager *)",
+      "Bash(keytool -list *)"
+    ]
+  }
+}

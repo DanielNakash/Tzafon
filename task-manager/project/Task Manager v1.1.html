@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Task Manager — v1.1.0</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600;6..72,700&family=Hanken+Grotesk:wght@400;500;600;700&family=Spline+Sans+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
+<style>
+  html, body { margin: 0; padding: 0; background: #E7DEC9; }
+  * { -webkit-font-smoothing: antialiased; box-sizing: border-box; }
+  .ft-press { transition: transform .12s ease; }
+  .ft-press:active { transform: scale(0.96); }
+  .ft-scroll::-webkit-scrollbar { width: 0; height: 0; }
+  .ft-scroll { scrollbar-width: none; }
+  @keyframes ftSpin { to { transform: rotate(360deg); } }
+  .ft-spin { animation: ftSpin .8s linear infinite; }
+  @keyframes ftSheet { from { transform: translateY(100%); } to { transform: none; } }
+  .ft-sheet { animation: ftSheet .3s cubic-bezier(.2,.8,.2,1); }
+  @keyframes ftFade { from { opacity: 0; } to { opacity: 1; } }
+  .ft-fade { animation: ftFade .25s ease; }
+  @keyframes ftToast { from { opacity: 0; transform: translateY(14px) translateX(-50%); } to { opacity: 1; } }
+  .ft-toast { animation: ftToast .26s cubic-bezier(.2,.8,.2,1); }
+
+  .stage { min-height: 100vh; display: flex; align-items: center; justify-content: center; gap: 56px; padding: 48px; flex-wrap: wrap; }
+  .rail { width: 360px; max-width: 100%; color: #241A12; font-family: "Hanken Grotesk", system-ui, sans-serif; }
+  .rail .kick { font-family: "Spline Sans Mono", monospace; font-size: 12px; letter-spacing: 3px; color: #A6421E; font-weight: 600; }
+  .rail h1 { font-family: "Newsreader", Georgia, serif; font-size: 44px; font-weight: 600; letter-spacing: -0.6px; line-height: 1.02; margin: 10px 0 0; }
+  .rail .lede { font-size: 16.5px; line-height: 1.55; color: #7C6A52; margin: 12px 0 0; }
+  .rail h2 { font-family: "Spline Sans Mono", monospace; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: #A8967C; margin: 28px 0 12px; font-weight: 600; }
+  .feat { display: flex; gap: 12px; padding: 11px 0; border-top: 1px solid rgba(36,26,18,0.12); }
+  .feat:last-child { border-bottom: 1px solid rgba(36,26,18,0.12); }
+  .feat .n { font-family: "Spline Sans Mono", monospace; font-size: 12px; color: #A6421E; font-weight: 700; flex-shrink: 0; width: 22px; }
+  .feat .t { font-size: 14.5px; line-height: 1.45; }
+  .feat .t b { font-weight: 600; }
+  .feat .t span { color: #7C6A52; }
+  .reset { margin-top: 22px; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; background: transparent; border: 1px solid rgba(36,26,18,0.2); border-radius: 999px; padding: 9px 16px; color: #7C6A52; font-family: "Spline Sans Mono", monospace; font-size: 11.5px; letter-spacing: 0.5px; }
+  .reset:hover { background: #FBF4E6; }
+  @media (max-width: 820px) { .stage { gap: 36px; padding: 32px 20px; } .rail { width: 100%; max-width: 440px; } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="ios-frame.jsx"></script>
+<script type="text/babel" src="app-v1.1/icons.jsx"></script>
+<script type="text/babel" src="app-v1.1/model.jsx"></script>
+<script type="text/babel" src="app-v1.1/list.jsx"></script>
+<script type="text/babel" src="app-v1.1/calendar.jsx"></script>
+<script type="text/babel" src="app-v1.1/recurrence.jsx"></script>
+<script type="text/babel" src="app-v1.1/editor.jsx"></script>
+<script type="text/babel" src="app-v1.1/app.jsx"></script>
+
+<script type="text/babel">
+const FEATURES = [
+  ['1', '<b>Description</b> <span>— optional free-form detail, shown in the task editor below the title.</span>'],
+  ['2', '<b>To Do Date</b> <span>— the scheduling date and the primary sort key for the list.</span>'],
+  ['3', '<b>Due Date</b> <span>— a deadline, with a persistent badge when it equals the To Do Date, and a “Due today” note on the day.</span>'],
+  ['4', '<b>All Tasks View</b> <span>— the new default landing screen; sorted by To Do Date, undated tasks last, Done hidden behind a toggle.</span>'],
+  ['5', '<b>Recurrence</b> <span>— interval, weekday, and monthly patterns, with Singular vs Recurring due-date modes and an end date.</span>'],
+  ['6', '<b>Per-occurrence edits</b> <span>— reschedule one, edit this &amp; future, or delete one / all.</span>'],
+];
+
+function Rail() {
+  const reset = () => { Object.keys(localStorage).filter(k => k.startsWith('taskmgr:')).forEach(k => localStorage.removeItem(k)); location.reload(); };
+  return (
+    <div className="rail">
+      <div className="kick">THE FOX WORKS · DON'T PANIC</div>
+      <h1>Task Manager<br/>v1.1.0</h1>
+      <p className="lede">The POC grows up: tasks now carry dates and deadlines, repeat on a schedule, and live in a proper browsing view. Everything to the right is live — sign in, add a task, set dates, build a recurrence rule.</p>
+      <h2>What's new in this release</h2>
+      {FEATURES.map(([n, t]) => (
+        <div className="feat" key={n}>
+          <div className="n">{n}</div>
+          <div className="t" dangerouslySetInnerHTML={{ __html: t }} />
+        </div>
+      ))}
+      <h2>Try it</h2>
+      <p className="lede" style={{ fontSize: 14.5, marginTop: 0 }}>Open <b style={{ color: '#241A12' }}>“Make the weekly studio post”</b> to see a recurring deadline (To Do on Mondays, due Fridays). Hit <b style={{ color: '#241A12' }}>+</b> and toggle <b style={{ color: '#241A12' }}>Repeat</b> to build a rule. Use <b style={{ color: '#241A12' }}>Show Done</b> to reveal completed tasks.</p>
+      <button className="reset" onClick={reset}>↺ RESET DEMO</button>
+    </div>
+  );
+}
+
+function Stage() {
+  return (
+    <div className="stage">
+      <Rail />
+      <IOSDevice>
+        <div style={{ height: '100%', position: 'relative' }}>
+          <TaskAppV2 instanceId="v11" />
+        </div>
+      </IOSDevice>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<Stage />);
+</script>
+</body>
+</html>
