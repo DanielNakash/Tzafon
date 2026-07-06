@@ -85,6 +85,19 @@ fun TodayScreen(
     var alsoCollapsed by remember { mutableStateOf(false) }
     var quickAdd by remember { mutableStateOf(false) }
     var menu by remember { mutableStateOf(false) }
+    var amountTask by remember { mutableStateOf<Task?>(null) } // DM-HABIT-5 prompt
+
+    // completing against a quantitative habit asks "how much?" first
+    fun requestToggle(t: Task) {
+        val habit = state.habitsById[t.habitId]
+        if (t.state != com.thefoxworks.tzafon.domain.model.TaskState.DONE &&
+            habit?.kind == com.thefoxworks.tzafon.domain.model.HabitKind.QUANTITATIVE
+        ) {
+            amountTask = t
+        } else {
+            vm.toggleDone(t.id)
+        }
+    }
 
     val d = Dates.parse(state.today)
     val kicker = "${Dates.WD_FULL[Dates.dayOfWeek(d)]} · ${Dates.MO[d.monthValue - 1]} ${d.dayOfMonth}"
@@ -156,7 +169,7 @@ fun TodayScreen(
                             FocusItem(
                                 t = t,
                                 last = i == state.focus.lastIndex,
-                                onToggle = { vm.toggleDone(t.id) },
+                                onToggle = { requestToggle(t) },
                                 onOpen = { onOpenTask(t.id) },
                             )
                         }
@@ -187,9 +200,10 @@ fun TodayScreen(
                         ReorderableTaskList(
                             tasks = state.alsoToday,
                             today = state.today,
-                            onToggle = { vm.toggleDone(it) },
+                            onToggle = { id -> state.alsoToday.firstOrNull { it.id == id }?.let(::requestToggle) },
                             onOpen = onOpenTask,
                             onPersist = { vm.persistOrder(it) },
+                            habitLabel = { t -> state.habitsById[t.habitId]?.name },
                         )
                     }
                 }
@@ -268,6 +282,16 @@ fun TodayScreen(
             onSettings = onOpenSettings,
         )
     }
+    amountTask?.let { t ->
+        val habit = state.habitsById[t.habitId]
+        com.thefoxworks.tzafon.ui.components.AmountSheet(
+            title = "How much? · ${habit?.name ?: t.title}",
+            unit = habit?.unit,
+            suggested = habit?.target,
+            onConfirm = { vm.toggleDone(t.id, habitAmount = it) },
+            onClose = { amountTask = null },
+        )
+    }
 }
 
 /** Focus row (design FocusItem): bold title, serves/cue meta, no chevron. */
@@ -306,6 +330,7 @@ internal fun ReorderableTaskList(
     onToggle: (String) -> Unit,
     onOpen: (String) -> Unit,
     onPersist: (List<String>) -> Unit,
+    habitLabel: (Task) -> String? = { null },
 ) {
     val ids = tasks.map { it.id }
     var localOrder by remember { mutableStateOf<List<String>?>(null) }
@@ -388,6 +413,7 @@ internal fun ReorderableTaskList(
                     today = today,
                     onToggle = { onToggle(task.id) },
                     onOpen = { onOpen(task.id) },
+                    habitLabel = habitLabel(task),
                     last = index == displayed.lastIndex,
                 )
             }

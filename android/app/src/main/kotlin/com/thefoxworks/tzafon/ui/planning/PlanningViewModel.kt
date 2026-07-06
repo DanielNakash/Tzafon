@@ -6,6 +6,8 @@ import com.thefoxworks.tzafon.data.settings.SettingsStore
 import com.thefoxworks.tzafon.domain.action.ActionLogic
 import com.thefoxworks.tzafon.domain.action.ActionLogic.RangePreset
 import com.thefoxworks.tzafon.domain.dates.Dates
+import com.thefoxworks.tzafon.domain.model.Habit
+import com.thefoxworks.tzafon.domain.model.HabitRepository
 import com.thefoxworks.tzafon.domain.model.Task
 import com.thefoxworks.tzafon.domain.model.TaskRepository
 import com.thefoxworks.tzafon.domain.model.TaskState
@@ -26,6 +28,7 @@ data class PlanningUiState(
     val dated: List<Pair<Dates.Group, List<Task>>> = emptyList(),
     val inbox: List<Task> = emptyList(),
     val undatedCount: Int = 0,
+    val habitsById: Map<String, Habit> = emptyMap(), // M4 chips + quant prompt
 )
 
 /**
@@ -36,6 +39,7 @@ class PlanningViewModel(
     private val repo: TaskRepository,
     private val settings: SettingsStore,
     private val sessionHorizonDays: MutableStateFlow<Long>,
+    habitRepo: HabitRepository,
 ) : ViewModel() {
 
     val today: String get() = Dates.todayIso()
@@ -45,8 +49,11 @@ class PlanningViewModel(
             repo.observeTasks(),
             settings.planningPreset,
             settings.planningCustomEnd,
-        ) { tasks, presetName, customEnd ->
-            build(tasks, RangePreset.parse(presetName), customEnd)
+            habitRepo.observeHabits(),
+        ) { tasks, presetName, customEnd, habits ->
+            build(tasks, RangePreset.parse(presetName), customEnd).copy(
+                habitsById = habits.associateBy { it.id },
+            )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), PlanningUiState())
 
     init {
@@ -115,8 +122,8 @@ class PlanningViewModel(
         viewModelScope.launch { repo.setState(id, target, today) }
     }
 
-    fun toggleDone(id: String) {
-        viewModelScope.launch { repo.toggleDone(id) }
+    fun toggleDone(id: String, habitAmount: Double? = null) {
+        viewModelScope.launch { repo.toggleDone(id, habitAmount) }
     }
 
     fun quickAdd(title: String) {

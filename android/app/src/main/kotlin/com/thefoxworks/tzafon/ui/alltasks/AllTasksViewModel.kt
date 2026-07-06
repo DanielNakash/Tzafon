@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.thefoxworks.tzafon.domain.action.ActionLogic
 import com.thefoxworks.tzafon.domain.dates.Dates
+import com.thefoxworks.tzafon.domain.model.Habit
+import com.thefoxworks.tzafon.domain.model.HabitRepository
 import com.thefoxworks.tzafon.domain.model.Series
 import com.thefoxworks.tzafon.domain.model.Task
 import com.thefoxworks.tzafon.domain.model.TaskRepository
@@ -38,26 +40,33 @@ data class AllTasksUiState(
     val query: String = "",                              // FR-ALL-2
     val horizonDate: String = Dates.todayIso(),          // FR-ALL-4
     val horizonIndex: Int = 0,                           // divider slot in `groups`
+    val habitsById: Map<String, Habit> = emptyMap(),     // M4 chips + quant prompt
 )
 
 class AllTasksViewModel(
     private val repo: TaskRepository,
     private val sessionHorizonDays: MutableStateFlow<Long>,
+    habitRepo: HabitRepository,
 ) : ViewModel() {
 
     private val visible = MutableStateFlow(VisibleStates())
     private val query = MutableStateFlow("")
     val today: String get() = Dates.todayIso()
 
+    private data class Sources(val tasks: List<Task>, val series: List<Series>, val habits: List<Habit>)
+
     val uiState: StateFlow<AllTasksUiState> =
         combine(
-            repo.observeTasks(),
-            repo.observeSeries(),
+            combine(repo.observeTasks(), repo.observeSeries(), habitRepo.observeHabits()) { t, s, h ->
+                Sources(t, s, h)
+            },
             visible,
             query,
             sessionHorizonDays,
-        ) { tasks, series, vis, q, horizonDays ->
-            build(tasks, series, vis, q, horizonDays)
+        ) { src, vis, q, horizonDays ->
+            build(src.tasks, src.series, vis, q, horizonDays).copy(
+                habitsById = src.habits.associateBy { it.id },
+            )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), AllTasksUiState())
 
     init {
@@ -127,8 +136,8 @@ class AllTasksViewModel(
         }
     }
 
-    fun toggleDone(id: String) {
-        viewModelScope.launch { repo.toggleDone(id) }
+    fun toggleDone(id: String, habitAmount: Double? = null) {
+        viewModelScope.launch { repo.toggleDone(id, habitAmount) }
     }
 
     fun setState(id: String, target: TaskState) {

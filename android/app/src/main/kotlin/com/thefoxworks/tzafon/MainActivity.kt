@@ -32,6 +32,8 @@ import com.thefoxworks.tzafon.ui.alltasks.AllTasksViewModel
 import com.thefoxworks.tzafon.ui.backlog.BacklogScreen
 import com.thefoxworks.tzafon.ui.backlog.BacklogViewModel
 import com.thefoxworks.tzafon.ui.editor.TaskEditorScreen
+import com.thefoxworks.tzafon.ui.habits.HabitsScreen
+import com.thefoxworks.tzafon.ui.habits.HabitsViewModel
 import com.thefoxworks.tzafon.ui.nav.DenBottomNav
 import com.thefoxworks.tzafon.ui.nav.PendingTabScreen
 import com.thefoxworks.tzafon.ui.nav.Tab
@@ -62,13 +64,15 @@ class VmFactory(private val container: AppContainer) : ViewModelProvider.Factory
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T = when (modelClass) {
         AllTasksViewModel::class.java ->
-            AllTasksViewModel(container.taskRepository, container.sessionHorizonDays) as T
+            AllTasksViewModel(container.taskRepository, container.sessionHorizonDays, container.habitRepository) as T
         TodayViewModel::class.java ->
-            TodayViewModel(container.taskRepository, container.settings) as T
+            TodayViewModel(container.taskRepository, container.settings, container.habitRepository) as T
         PlanningViewModel::class.java ->
-            PlanningViewModel(container.taskRepository, container.settings, container.sessionHorizonDays) as T
+            PlanningViewModel(container.taskRepository, container.settings, container.sessionHorizonDays, container.habitRepository) as T
         BacklogViewModel::class.java ->
             BacklogViewModel(container.taskRepository) as T
+        HabitsViewModel::class.java ->
+            HabitsViewModel(container.habitRepository, container.settings) as T
         else -> throw IllegalArgumentException("Unknown VM $modelClass")
     }
 }
@@ -142,7 +146,10 @@ fun TzafonNavHost(container: AppContainer) {
                 )
             }
 
-            composable(Tab.HABITS.route) { PendingTabScreen(Tab.HABITS) }      // M4
+            composable(Tab.HABITS.route) {
+                val vm: HabitsViewModel = viewModel(factory = VmFactory(container))
+                HabitsScreen(vm = vm)
+            }
             composable(Tab.DIRECTIONS.route) { PendingTabScreen(Tab.DIRECTIONS) } // M6
             composable(Tab.JOURNEY.route) { PendingTabScreen(Tab.JOURNEY) }    // M8
 
@@ -201,6 +208,8 @@ fun TzafonNavHost(container: AppContainer) {
                         )
                     }
                 } ?: presetTitle?.let { TaskDraft(id = null, title = it) } // quick-add expand
+                val habits by container.habitRepository.observeHabits()
+                    .collectAsStateWithLifecycle(initialValue = emptyList())
                 TaskEditorScreen(
                     initial = initial,
                     today = today,
@@ -218,6 +227,7 @@ fun TzafonNavHost(container: AppContainer) {
                         scope.launch { container.taskRepository.setState(id, target, today) }
                     },
                     onClose = { nav.popBackStack() },
+                    habits = habits,
                 )
             }
         }

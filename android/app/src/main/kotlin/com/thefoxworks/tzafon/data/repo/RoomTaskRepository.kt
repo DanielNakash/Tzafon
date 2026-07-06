@@ -5,7 +5,9 @@ import com.thefoxworks.tzafon.data.db.TaskDao
 import com.thefoxworks.tzafon.data.db.toDomain
 import com.thefoxworks.tzafon.data.db.toEntity
 import com.thefoxworks.tzafon.domain.dates.Dates
+import com.thefoxworks.tzafon.domain.habits.HabitMath
 import com.thefoxworks.tzafon.domain.model.EditScope
+import com.thefoxworks.tzafon.domain.model.HabitRepository
 import com.thefoxworks.tzafon.domain.model.Series
 import com.thefoxworks.tzafon.domain.model.StateMachine
 import com.thefoxworks.tzafon.domain.model.Task
@@ -28,6 +30,8 @@ import java.util.UUID
 class RoomTaskRepository(
     private val taskDao: TaskDao,
     private val seriesDao: SeriesDao,
+    /** the DM-ATTR-2 habit ledger (null only in narrow tests) */
+    private val habits: HabitRepository? = null,
     private val now: () -> Long = { System.currentTimeMillis() },
 ) : TaskRepository {
 
@@ -193,7 +197,8 @@ class RoomTaskRepository(
         seriesDao.upsert(updated.toEntity())
 
         // remove auto-generated, still-open occurrences the new rule replaces;
-        // keep overridden/settled ones but refresh their text
+        // keep overridden/settled ones but refresh their text and links —
+        // DM-HABIT-8: an ALL-scope link change applies to past occurrences too
         val occ = taskDao.occurrencesOf(series.id).map { it.toDomain() }
         val settled = { t: Task -> t.state != TaskState.OPEN }
         for (o in occ) {
@@ -201,7 +206,17 @@ class RoomTaskRepository(
             if (inRange && !o.overridden && !settled(o)) {
                 taskDao.delete(o.id)
             } else if (inRange) {
-                taskDao.upsert(o.copy(title = draft.title.trim(), description = draft.description).toEntity())
+                taskDao.upsert(
+                    o.copy(
+                        title = draft.title.trim(),
+                        description = draft.description,
+                        cue = draft.cue,
+                        themeId = draft.themeId,
+                        habitId = draft.habitId,
+                        goalIds = draft.goalIds,
+                        commitment = draft.commitment,
+                    ).toEntity(),
+                )
             }
         }
 
@@ -264,20 +279,27 @@ class RoomTaskRepository(
 
     // ── state machine (DM-TASK-1/2/3, FR-REC-5) ───────────────
 
-    override suspend fun toggleDone(id: String) {
+    override suspend fun toggleDone(id: String, habitAmount: Double?) {
         val t = taskDao.get(id)?.toDomain() ?: return
         val next = if (t.state == TaskState.DONE) TaskState.OPEN else TaskState.DONE
-        setState(id, next, Dates.todayIso())
+        setState(id, next, Dates.todayIso(), habitAmount)
     }
 
-    override suspend fun setState(id: String, target: TaskState, today: String) {
+    override suspend fun setState(id: String, target: TaskState, today: String, habitAmount: Double?) {
         val t = taskDao.get(id)?.toDomain() ?: return
         if (t.state == target) return
         val isRecurring = t.seriesId != null
         val fx = StateMachine.transition(t.state, target, isRecurring)
 
-        // Contribution apply/reverse are wired to the DM-ATTR ledger in M5;
-        // until then the state flip itself is the whole effect.
+        // DM-ATTR-2 — the habit ledger, written once per completion and
+        // reversed exactly (goal attribution joins in M5)
+        if (fx.applyContribution && t.habitId != null) {
+            habits?.logForTask(t.habitId, HabitMath.logDateFor(t, today), t.id, habitAmount)
+        }
+        if (fx.reverseContribution) {
+            habits?.reverseForTask(t.id)
+        }
+
         taskDao.upsert(
             t.copy(
                 state = fx.newState,

@@ -108,6 +108,7 @@ fun AllTasksScreen(
     val state by vm.uiState.collectAsStateWithLifecycle()
     var sheetTask by remember { mutableStateOf<Task?>(null) }
     var menu by remember { mutableStateOf(false) }
+    var amountTask by remember { mutableStateOf<Task?>(null) } // DM-HABIT-5 prompt
     var query by rememberSaveable { mutableStateOf("") }
     val collapsed = remember { mutableStateMapOf<String, Boolean>() }
     val listState = rememberLazyListState()
@@ -261,7 +262,15 @@ fun AllTasksScreen(
                             }
 
                             is Entry.Item -> item(key = e.key) {
-                                TaskLine(e.task, state.today, vm, onOpenTask, { sheetTask = it }, e.last, state.ruleSummaries)
+                                TaskLine(
+                                    e.task, state.today, vm, onOpenTask,
+                                    onSheet = { sheetTask = it },
+                                    onAmount = { amountTask = it },
+                                    habitLabel = state.habitsById[e.task.habitId]?.name,
+                                    isQuantHabit = state.habitsById[e.task.habitId]?.kind == com.thefoxworks.tzafon.domain.model.HabitKind.QUANTITATIVE,
+                                    last = e.last,
+                                    summaries = state.ruleSummaries,
+                                )
                             }
 
                             Entry.JumpBar -> item(key = e.key) {
@@ -332,6 +341,16 @@ fun AllTasksScreen(
             onSettings = onOpenSettings,
         )
     }
+    amountTask?.let { t ->
+        val habit = state.habitsById[t.habitId]
+        com.thefoxworks.tzafon.ui.components.AmountSheet(
+            title = "How much? · ${habit?.name ?: t.title}",
+            unit = habit?.unit,
+            suggested = habit?.target,
+            onConfirm = { vm.toggleDone(t.id, habitAmount = it) },
+            onClose = { amountTask = null },
+        )
+    }
 }
 
 @Composable
@@ -341,6 +360,9 @@ private fun TaskLine(
     vm: AllTasksViewModel,
     onOpenTask: (String) -> Unit,
     onSheet: (Task) -> Unit,
+    onAmount: (Task) -> Unit,
+    habitLabel: String?,
+    isQuantHabit: Boolean,
     last: Boolean,
     summaries: Map<String, String>,
 ) {
@@ -348,10 +370,17 @@ private fun TaskLine(
     TaskRow(
         task = task,
         today = today,
-        onToggle = { if (settled) onSheet(task) else vm.toggleDone(task.id) },
+        onToggle = {
+            when {
+                settled -> onSheet(task)
+                task.state != TaskState.DONE && isQuantHabit -> onAmount(task) // DM-HABIT-5
+                else -> vm.toggleDone(task.id)
+            }
+        },
         onOpen = { onOpenTask(task.id) },
         onLongPress = { onSheet(task) },
         recurSummary = task.seriesId?.let { summaries[it] },
+        habitLabel = habitLabel,
         last = last,
     )
 }

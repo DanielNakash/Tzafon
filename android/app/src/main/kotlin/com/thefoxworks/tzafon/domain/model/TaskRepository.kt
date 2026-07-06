@@ -24,15 +24,18 @@ interface TaskRepository {
     /** Delete a task or occurrence; ALL deletes the whole series. */
     suspend fun deleteTask(id: String, scope: EditScope)
 
-    /** M0 parity toggle: OPEN <-> DONE. The full state machine lands in M1. */
-    suspend fun toggleDone(id: String)
+    /**
+     * OPEN <-> DONE. [habitAmount] carries the "how much?" answer when the
+     * task completes against a quantitative habit (DM-HABIT-5).
+     */
+    suspend fun toggleDone(id: String, habitAmount: Double? = null)
 
     /**
      * DM-TASK-1/2/3 — apply a state transition with its effects (thaw, series
-     * freeze/restore per FR-REC-5, contribution apply/reverse once the M5
-     * ledger exists). Callers clear StateMachine.guardFor(...) first.
+     * freeze/restore per FR-REC-5, the DM-ATTR-2 habit ledger from M4, goal
+     * attribution from M5). Callers clear StateMachine.guardFor(...) first.
      */
-    suspend fun setState(id: String, target: TaskState, today: String)
+    suspend fun setState(id: String, target: TaskState, today: String, habitAmount: Double? = null)
 
     /**
      * Materialize missing occurrences for every live series up to the

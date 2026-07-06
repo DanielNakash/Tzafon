@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.thefoxworks.tzafon.data.settings.SettingsStore
 import com.thefoxworks.tzafon.domain.action.ActionLogic
 import com.thefoxworks.tzafon.domain.dates.Dates
+import com.thefoxworks.tzafon.domain.model.Habit
+import com.thefoxworks.tzafon.domain.model.HabitRepository
 import com.thefoxworks.tzafon.domain.model.Task
 import com.thefoxworks.tzafon.domain.model.TaskRepository
 import com.thefoxworks.tzafon.domain.recurrence.Recurrence
@@ -26,11 +28,13 @@ data class TodayUiState(
     val slippedCount: Int = 0,                    // FR-TODAY-4
     val showSlippage: Boolean = false,
     val showOverload: Boolean = false,            // FR-TODAY-5
+    val habitsById: Map<String, Habit> = emptyMap(), // M4 chips + quant prompt
 )
 
 class TodayViewModel(
     private val repo: TaskRepository,
     private val settings: SettingsStore,
+    habitRepo: HabitRepository,
 ) : ViewModel() {
 
     val today: String get() = Dates.todayIso()
@@ -40,8 +44,11 @@ class TodayViewModel(
             repo.observeTasks(),
             settings.slippageDismissedOn,
             settings.overloadDismissedOn,
-        ) { tasks, slipDismissed, overDismissed ->
-            build(tasks, slipDismissed, overDismissed)
+            habitRepo.observeHabits(),
+        ) { tasks, slipDismissed, overDismissed, habits ->
+            build(tasks, slipDismissed, overDismissed).copy(
+                habitsById = habits.associateBy { it.id },
+            )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), TodayUiState())
 
     init {
@@ -76,8 +83,8 @@ class TodayViewModel(
         )
     }
 
-    fun toggleDone(id: String) {
-        viewModelScope.launch { repo.toggleDone(id) }
+    fun toggleDone(id: String, habitAmount: Double? = null) {
+        viewModelScope.launch { repo.toggleDone(id, habitAmount) }
     }
 
     fun dismissSlippage() {

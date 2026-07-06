@@ -67,6 +67,8 @@ fun TaskEditorScreen(
     onDelete: (String, EditScope) -> Unit,
     onSetState: ((String, com.thefoxworks.tzafon.domain.model.TaskState) -> Unit)? = null,
     onClose: () -> Unit,
+    /** M4 — the habits available to link (DM-REL: at most one per task). */
+    habits: List<com.thefoxworks.tzafon.domain.model.Habit> = emptyList(),
 ) {
     // a quick-add expand passes a title-only draft (id = null) — still a new task
     val isNew = initial?.id == null
@@ -76,7 +78,7 @@ fun TaskEditorScreen(
         )
     }
     var scope by remember { mutableStateOf(EditScope.ALL) }
-    var sheet by remember { mutableStateOf<String?>(null) } // todo | due | end | delete
+    var sheet by remember { mutableStateOf<String?>(null) } // todo | due | end | delete | cue | habit
     val rec = draft.recurrence
     val repeat = rec != null
     val singular = repeat && rec!!.dueMode == DueMode.SINGULAR
@@ -176,6 +178,75 @@ fun TaskEditorScreen(
                 textStyle = TextStyle(fontFamily = DenType.body, fontSize = 15.5.sp, color = Den.ink, lineHeight = 23.sp),
                 minLines = 3,
             )
+
+            // ── cue (DM-TASK-4: "When will you do this?") ──
+            EdSection("When will you do this? · cue")
+            Row(
+                Modifier.fillMaxWidth()
+                    .clip(RoundedCornerShape(13.dp))
+                    .background(if (draft.cue != null) Den.amber.a(0.1f) else Den.card)
+                    .border(1.dp, if (draft.cue != null) Den.amber.a(0.4f) else Den.line, RoundedCornerShape(13.dp))
+                    .pressable { sheet = "cue" }
+                    .padding(horizontal = 14.dp, vertical = 13.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(11.dp),
+            ) {
+                TzIcons.Cue(17.dp, if (draft.cue != null) Den.rust else Den.faint)
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        draft.cue?.label ?: "Anchor it to a routine — optional",
+                        style = TextStyle(fontFamily = DenType.body, fontSize = 15.5.sp),
+                        color = if (draft.cue != null) Den.ink else Den.faint,
+                    )
+                    Text(
+                        draft.cue?.let { "${it.type.name.replace('_', '-')} · A TRIGGER BEATS A CLOCK" }
+                            ?: "WHEN X, I WILL DO Y",
+                        style = TextStyle(fontFamily = DenType.mono, fontSize = 10.sp),
+                        color = Den.faint,
+                        modifier = Modifier.padding(top = 2.dp),
+                    )
+                }
+                TzIcons.Chevron(17.dp, Den.ink.a(0.28f))
+            }
+
+            // ── serves (M4: the habit link; themes M6, goals M5) ──
+            EdSection("Serves · alignment (optional)")
+            val linkedHabit = habits.firstOrNull { it.id == draft.habitId }
+            Row(
+                Modifier.fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .let {
+                        if (linkedHabit != null) it.background(Den.card).border(1.dp, Den.line, RoundedCornerShape(12.dp))
+                        else it.border(1.dp, Den.line, RoundedCornerShape(12.dp))
+                    }
+                    .pressable { sheet = "habit" }
+                    .padding(horizontal = 13.dp, vertical = 11.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                if (linkedHabit != null) {
+                    TzIcons.Repeat(14.dp, Den.green)
+                    Text(
+                        linkedHabit.name,
+                        style = TextStyle(fontFamily = DenType.body, fontSize = 14.5.sp),
+                        color = Den.ink,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Text(
+                        "HABIT",
+                        style = TextStyle(fontFamily = DenType.mono, fontSize = 9.5.sp),
+                        color = Den.faint,
+                    )
+                } else {
+                    TzIcons.Plus(14.dp, Den.muted)
+                    Text(
+                        "Link a habit — done ticks it",
+                        style = TextStyle(fontFamily = DenType.body, fontSize = 13.5.sp),
+                        color = Den.muted,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+            }
 
             // ── dates ──
             EdSection("Dates")
@@ -443,6 +514,64 @@ fun TaskEditorScreen(
             },
             onClose = { sheet = null },
         )
+        "cue" -> com.thefoxworks.tzafon.ui.components.CueSheet(
+            current = draft.cue,
+            onSave = { draft = draft.copy(cue = it) },
+            onClose = { sheet = null },
+        )
+        "habit" -> DenSheet("Serves a habit", onClose = { sheet = null }) {
+            Column {
+                Text(
+                    "Done ticks the habit for the day — counted once, reversed exactly if you undo.",
+                    style = TextStyle(fontFamily = DenType.body, fontSize = 13.sp),
+                    color = Den.muted,
+                    modifier = Modifier.padding(top = 3.dp, bottom = 8.dp),
+                )
+                if (habits.isEmpty()) {
+                    Text(
+                        "No habits yet — start one in the Habits tab first.",
+                        style = TextStyle(fontFamily = DenType.body, fontSize = 14.sp),
+                        color = Den.muted,
+                        modifier = Modifier.padding(vertical = 14.dp),
+                    )
+                }
+                habits.forEach { h ->
+                    Row(
+                        Modifier.fillMaxWidth()
+                            .pressable { draft = draft.copy(habitId = h.id); sheet = null }
+                            .padding(vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(11.dp),
+                    ) {
+                        TzIcons.Repeat(15.dp, Den.green)
+                        Text(
+                            h.name,
+                            style = TextStyle(fontFamily = DenType.body, fontSize = 15.5.sp),
+                            color = Den.ink,
+                            modifier = Modifier.weight(1f),
+                        )
+                        if (draft.habitId == h.id) TzIcons.Check(15.dp, Den.rust, 2.6f)
+                    }
+                    Box(Modifier.fillMaxWidth().height(1.dp).background(Den.line2))
+                }
+                if (draft.habitId != null) {
+                    Row(
+                        Modifier.fillMaxWidth()
+                            .pressable { draft = draft.copy(habitId = null); sheet = null }
+                            .padding(vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(11.dp),
+                    ) {
+                        TzIcons.X(14.dp, Den.muted)
+                        Text(
+                            "No habit for this one",
+                            style = TextStyle(fontFamily = DenType.body, fontSize = 14.5.sp),
+                            color = Den.muted,
+                        )
+                    }
+                }
+            }
+        }
         "delete" -> DenSheet("Delete repeating task", onClose = { sheet = null }) {
             Column {
                 Text(

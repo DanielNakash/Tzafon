@@ -63,3 +63,35 @@ interface SeriesDao {
     @Query("DELETE FROM series WHERE id = :id")
     suspend fun delete(id: String)
 }
+
+@Dao
+interface HabitDao {
+    @Query("SELECT * FROM habits")
+    fun observeAll(): Flow<List<HabitEntity>>
+
+    @Query("SELECT * FROM habits WHERE id = :id")
+    suspend fun get(id: String): HabitEntity?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsert(habit: HabitEntity)
+
+    @Query("DELETE FROM habits WHERE id = :id")
+    suspend fun delete(id: String)
+
+    @Query("SELECT * FROM habit_logs")
+    fun observeLogs(): Flow<List<HabitLogEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertLog(log: HabitLogEntity)
+
+    @Query("DELETE FROM habit_logs WHERE habitId = :habitId AND date = :date")
+    suspend fun deleteLog(habitId: String, date: String)
+
+    /** DM-HABIT-7 — delete is destructive: the whole history goes with it. */
+    @Query("DELETE FROM habit_logs WHERE habitId = :habitId")
+    suspend fun deleteLogsFor(habitId: String)
+
+    /** Exact reversal of a task's ledger rows (DM-ATTR-2). */
+    @Query("DELETE FROM habit_logs WHERE sourceTaskId = :taskId AND source = 'TASK'")
+    suspend fun deleteLogsForTask(taskId: String)
+}

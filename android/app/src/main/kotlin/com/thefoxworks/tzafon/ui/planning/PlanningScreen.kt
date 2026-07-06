@@ -74,6 +74,18 @@ fun PlanningScreen(
     var customRange by remember { mutableStateOf(false) }
     // FR-BACKLOG-2 — Someday on a recurring task opens the guard (offers Frozen)
     var somedayGuardTask by remember { mutableStateOf<Task?>(null) }
+    var amountTask by remember { mutableStateOf<Task?>(null) } // DM-HABIT-5 prompt
+
+    fun requestToggle(t: Task) {
+        val habit = state.habitsById[t.habitId]
+        if (t.state != com.thefoxworks.tzafon.domain.model.TaskState.DONE &&
+            habit?.kind == com.thefoxworks.tzafon.domain.model.HabitKind.QUANTITATIVE
+        ) {
+            amountTask = t
+        } else {
+            vm.toggleDone(t.id)
+        }
+    }
 
     Box(Modifier.fillMaxSize().background(Den.bg)) {
         Column(Modifier.fillMaxSize()) {
@@ -179,8 +191,9 @@ fun PlanningScreen(
                         TaskRow(
                             task = t,
                             today = state.today,
-                            onToggle = { vm.toggleDone(t.id) },
+                            onToggle = { requestToggle(t) },
                             onOpen = { onOpenTask(t.id) },
+                            habitLabel = state.habitsById[t.habitId]?.name,
                             last = t.id == tasks.last().id,
                         )
                     }
@@ -195,8 +208,9 @@ fun PlanningScreen(
                         TaskRow(
                             task = t,
                             today = state.today,
-                            onToggle = { vm.toggleDone(t.id) },
+                            onToggle = { requestToggle(t) },
                             onOpen = { onOpenTask(t.id) },
+                            habitLabel = state.habitsById[t.habitId]?.name,
                             last = t.id == state.inbox.last().id,
                         )
                     }
@@ -270,6 +284,16 @@ fun PlanningScreen(
             onPick = { target -> vm.toState(t.id, target) },
             onClose = { somedayGuardTask = null },
             initialGuard = StateMachine.Guard.RecurringCannotBacklog,
+        )
+    }
+    amountTask?.let { t ->
+        val habit = state.habitsById[t.habitId]
+        com.thefoxworks.tzafon.ui.components.AmountSheet(
+            title = "How much? · ${habit?.name ?: t.title}",
+            unit = habit?.unit,
+            suggested = habit?.target,
+            onConfirm = { vm.toggleDone(t.id, habitAmount = it) },
+            onClose = { amountTask = null },
         )
     }
 }

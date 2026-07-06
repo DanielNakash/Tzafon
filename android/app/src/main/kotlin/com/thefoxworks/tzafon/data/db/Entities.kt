@@ -5,6 +5,10 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.thefoxworks.tzafon.domain.model.Cue
 import com.thefoxworks.tzafon.domain.model.CueType
+import com.thefoxworks.tzafon.domain.model.Habit
+import com.thefoxworks.tzafon.domain.model.HabitKind
+import com.thefoxworks.tzafon.domain.model.HabitLog
+import com.thefoxworks.tzafon.domain.model.LogSource
 import com.thefoxworks.tzafon.domain.model.Series
 import com.thefoxworks.tzafon.domain.model.Task
 import com.thefoxworks.tzafon.domain.model.TaskState
@@ -92,6 +96,33 @@ data class SeriesEntity(
     val createdAt: Long = 0,
 )
 
+@Entity(tableName = "habits")
+data class HabitEntity(
+    @PrimaryKey val id: String,
+    val name: String,
+    val kind: String = "FREQUENCY",
+    val target: Double = 3.0,
+    val unit: String? = null,
+    val targetDays: Int? = null,
+    val cueType: String? = null,
+    val cueLabel: String? = null,
+    val cueTime: String? = null,
+    val primaryThemeId: String? = null,
+    val goalId: String? = null,
+    val startedAt: Long = 0,
+    val createdAt: Long = 0,
+)
+
+@Entity(tableName = "habit_logs", primaryKeys = ["habitId", "date"])
+data class HabitLogEntity(
+    val habitId: String,
+    val date: String,
+    val done: Boolean = true,
+    val amount: Double? = null,
+    val source: String = "DIRECT",
+    val sourceTaskId: String? = null,
+)
+
 // ── mapping ───────────────────────────────────────────────────
 
 private fun csv(list: List<String>) = list.joinToString(",")
@@ -167,6 +198,32 @@ fun SeriesEntity.toDomain() = Series(
     cue = cueOf(cueType, cueLabel, cueTime),
     themeId = themeId, habitId = habitId, goalIds = unCsv(goalIds),
     createdAt = createdAt,
+)
+
+fun HabitEntity.toDomain() = Habit(
+    id = id, name = name, kind = HabitKind.valueOf(kind),
+    target = target, unit = unit, targetDays = targetDays,
+    cue = cueOf(cueType, cueLabel, cueTime),
+    primaryThemeId = primaryThemeId, goalId = goalId,
+    startedAt = startedAt, createdAt = createdAt,
+)
+
+fun Habit.toEntity() = HabitEntity(
+    id = id, name = name, kind = kind.name,
+    target = target, unit = unit, targetDays = targetDays,
+    cueType = cue?.type?.name, cueLabel = cue?.label, cueTime = cue?.time,
+    primaryThemeId = primaryThemeId, goalId = goalId,
+    startedAt = startedAt, createdAt = createdAt,
+)
+
+fun HabitLogEntity.toDomain() = HabitLog(
+    habitId = habitId, date = date, done = done, amount = amount,
+    source = LogSource.valueOf(source), sourceTaskId = sourceTaskId,
+)
+
+fun HabitLog.toEntity() = HabitLogEntity(
+    habitId = habitId, date = date, done = done, amount = amount,
+    source = source.name, sourceTaskId = sourceTaskId,
 )
 
 fun Series.toEntity() = SeriesEntity(
