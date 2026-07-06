@@ -19,6 +19,10 @@ class SettingsStore(private val context: Context) {
     private object Keys {
         val welcomeSeen = booleanPreferencesKey("welcome_seen")
         val weekStart = stringPreferencesKey("week_start") // SUNDAY | MONDAY | SATURDAY
+        val planningPreset = stringPreferencesKey("planning_preset") // ActionLogic.RangePreset name
+        val planningCustomEnd = stringPreferencesKey("planning_custom_end") // ISO date
+        val slippageDismissed = stringPreferencesKey("slippage_dismissed_on") // ISO date
+        val overloadDismissed = stringPreferencesKey("overload_dismissed_on") // ISO date
     }
 
     val welcomeSeen: Flow<Boolean> = context.dataStore.data.map { it[Keys.welcomeSeen] ?: false }
@@ -31,5 +35,30 @@ class SettingsStore(private val context: Context) {
 
     suspend fun setWeekStart(day: String) {
         context.dataStore.edit { it[Keys.weekStart] = day }
+    }
+
+    // ── Planning range (FR-PLAN-2) ────────────────────────────
+
+    val planningPreset: Flow<String> = context.dataStore.data.map { it[Keys.planningPreset] ?: "DAYS_7" }
+    val planningCustomEnd: Flow<String?> = context.dataStore.data.map { it[Keys.planningCustomEnd] }
+
+    suspend fun setPlanningRange(preset: String, customEnd: String?) {
+        context.dataStore.edit {
+            it[Keys.planningPreset] = preset
+            if (customEnd != null) it[Keys.planningCustomEnd] = customEnd else it.remove(Keys.planningCustomEnd)
+        }
+    }
+
+    // ── per-day dismissals (FR-TODAY-4/5 — calm, closeable) ───
+
+    val slippageDismissedOn: Flow<String?> = context.dataStore.data.map { it[Keys.slippageDismissed] }
+    val overloadDismissedOn: Flow<String?> = context.dataStore.data.map { it[Keys.overloadDismissed] }
+
+    suspend fun dismissSlippage(today: String) {
+        context.dataStore.edit { it[Keys.slippageDismissed] = today }
+    }
+
+    suspend fun dismissOverload(today: String) {
+        context.dataStore.edit { it[Keys.overloadDismissed] = today }
     }
 }

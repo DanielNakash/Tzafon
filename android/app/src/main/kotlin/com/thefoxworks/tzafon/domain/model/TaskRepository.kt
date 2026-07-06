@@ -40,4 +40,14 @@ interface TaskRepository {
      * Idempotent; safe to call on every app start / horizon change.
      */
     suspend fun topUp(today: String, horizonDays: Long)
+
+    /** FR-TODAY-2 — persist a manual reorder as explicit sortOrder values. */
+    suspend fun setSortOrders(orders: Map<String, Long>)
+
+    /**
+     * FR-PLAN-3 decide actions — move a task to a new To Do date (user-
+     * initiated, so DM-TASK-8 holds). An occurrence reschedules as an
+     * overridden one-off, series untouched (v1.1.0 semantics).
+     */
+    suspend fun reschedule(id: String, newToDoDate: String?)
 }

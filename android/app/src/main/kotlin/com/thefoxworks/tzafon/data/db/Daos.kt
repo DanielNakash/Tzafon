@@ -36,6 +36,14 @@ interface TaskDao {
 
     @Query("SELECT * FROM tasks WHERE seriesId = :seriesId")
     suspend fun occurrencesOf(seriesId: String): List<TaskEntity>
+
+    @Query("UPDATE tasks SET sortOrder = :order WHERE id = :id")
+    suspend fun setSortOrder(id: String, order: Long)
+
+    @Transaction
+    suspend fun setSortOrders(orders: Map<String, Long>) {
+        for ((id, order) in orders) setSortOrder(id, order)
+    }
 }
 
 @Dao

@@ -245,6 +245,23 @@ class RoomTaskRepository(
         }
     }
 
+    // ── action layer (M2) ─────────────────────────────────────
+
+    override suspend fun setSortOrders(orders: Map<String, Long>) {
+        taskDao.setSortOrders(orders)
+    }
+
+    override suspend fun reschedule(id: String, newToDoDate: String?) {
+        val t = taskDao.get(id)?.toDomain() ?: return
+        taskDao.upsert(
+            t.copy(
+                toDoDate = newToDoDate,
+                // a rescheduled occurrence detaches from its slot (v1.1.0 one-off edit)
+                overridden = t.overridden || t.seriesId != null,
+            ).toEntity()
+        )
+    }
+
     // ── state machine (DM-TASK-1/2/3, FR-REC-5) ───────────────
 
     override suspend fun toggleDone(id: String) {

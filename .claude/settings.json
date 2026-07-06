@@ -12,9 +12,7 @@
       "Bash(avdmanager *)",
       "Bash(keytool -list *)",
       "Bash(cd *)",
-      "Bash(export *)",
       "Bash(sleep *)",
-      "Bash(echo *)",
       "Bash(grep *)"
     ]
   }

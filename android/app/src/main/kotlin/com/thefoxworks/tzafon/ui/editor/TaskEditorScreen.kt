@@ -68,7 +68,8 @@ fun TaskEditorScreen(
     onSetState: ((String, com.thefoxworks.tzafon.domain.model.TaskState) -> Unit)? = null,
     onClose: () -> Unit,
 ) {
-    val isNew = initial == null
+    // a quick-add expand passes a title-only draft (id = null) — still a new task
+    val isNew = initial?.id == null
     var draft by remember {
         mutableStateOf(
             initial ?: TaskDraft(id = null, title = "", toDoDate = null) // undated by default

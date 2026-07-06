@@ -5,6 +5,8 @@ import com.thefoxworks.tzafon.data.db.TzafonDatabase
 import com.thefoxworks.tzafon.data.repo.RoomTaskRepository
 import com.thefoxworks.tzafon.data.settings.SettingsStore
 import com.thefoxworks.tzafon.domain.model.TaskRepository
+import com.thefoxworks.tzafon.domain.recurrence.Recurrence
+import kotlinx.coroutines.flow.MutableStateFlow
 
 /**
  * Manual DI (PLAN §3): one container on the Application. The repository
@@ -16,6 +18,13 @@ class AppContainer(app: Application) {
 
     val taskRepository: TaskRepository by lazy { RoomTaskRepository(db.taskDao(), db.seriesDao()) }
     val settings by lazy { SettingsStore(app) }
+
+    /**
+     * FR-REC-3 / NFR-PERF-2 — the session's effective generation horizon in
+     * days. Planning raises it when the user looks further ahead; All Tasks
+     * reads it for the horizon marker. Deliberately not persisted.
+     */
+    val sessionHorizonDays = MutableStateFlow(Recurrence.HORIZON_DAYS)
 }
 
 class TzafonApp : Application() {
