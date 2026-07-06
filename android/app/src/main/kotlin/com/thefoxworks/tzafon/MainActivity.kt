@@ -36,8 +36,9 @@ import com.thefoxworks.tzafon.ui.directions.DirectionsViewModel
 import com.thefoxworks.tzafon.ui.editor.TaskEditorScreen
 import com.thefoxworks.tzafon.ui.habits.HabitsScreen
 import com.thefoxworks.tzafon.ui.habits.HabitsViewModel
+import com.thefoxworks.tzafon.ui.journey.JourneyScreen
+import com.thefoxworks.tzafon.ui.journey.JourneyViewModel
 import com.thefoxworks.tzafon.ui.nav.DenBottomNav
-import com.thefoxworks.tzafon.ui.nav.PendingTabScreen
 import com.thefoxworks.tzafon.ui.nav.Tab
 import com.thefoxworks.tzafon.ui.planning.PlanningScreen
 import com.thefoxworks.tzafon.ui.planning.PlanningViewModel
@@ -82,6 +83,8 @@ class VmFactory(private val container: AppContainer) : ViewModelProvider.Factory
             HabitsViewModel(container.habitRepository, container.settings, container.goalRepository) as T
         DirectionsViewModel::class.java ->
             DirectionsViewModel(container.themeRepository, container.goalRepository, container.habitRepository, container.taskRepository) as T
+        JourneyViewModel::class.java ->
+            JourneyViewModel(container.taskRepository, container.goalRepository, container.habitRepository, container.themeRepository, container.reviewRepository, container.settings) as T
         else -> throw IllegalArgumentException("Unknown VM $modelClass")
     }
 }
@@ -166,7 +169,10 @@ fun TzafonNavHost(container: AppContainer) {
                 val vm: DirectionsViewModel = viewModel(factory = VmFactory(container))
                 DirectionsScreen(vm = vm)
             }
-            composable(Tab.JOURNEY.route) { PendingTabScreen(Tab.JOURNEY) }    // M8
+            composable(Tab.JOURNEY.route) {
+                val vm: JourneyViewModel = viewModel(factory = VmFactory(container))
+                JourneyScreen(vm = vm)
+            }
 
             // ── reference views via the menu (FR-NAV-1) ──
             composable("alltasks") {

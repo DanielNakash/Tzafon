@@ -85,5 +85,6 @@ short progress note (what changed, against which codes) → **git commit** refer
 - **M5** — Goals + attribution (`DM-GOAL`, `DM-ATTR`) — ✅ committed.
 - **M6** — Themes + Directions hub (`DM-THEME`, `FR-DIR`) — ✅ committed.
 - **M7** — Review + Focus loops (`DM-REVIEW`, `DM-FOCUS`, `FR-LOOP`, `FR-SET`) — ✅ committed.
-- **M8** — Journey (`FR-JOURNEY`) — next.
+- **M8** — Journey (`FR-JOURNEY`) — ✅ committed.
+- **M9** — notifications, offline, a11y/polish, release `v2.0.0` — next. (M9b Firebase stays deferred.)
 Check `git log` and `PLAN.md §5` for the current frontier before continuing.
