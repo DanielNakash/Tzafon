@@ -1,5 +1,10 @@
 package com.thefoxworks.tzafon.ui.settings
 
+import android.Manifest
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -21,6 +26,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.toggleableState
+import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -139,7 +150,13 @@ fun SettingsScreen(
                 )
             }
 
-            // ── reminders (fire from M9) ──
+            // ── reminders (FR-NOTIF-2 — strictly opt-in) ──
+            val remindersOn by settings.remindersEnabled.collectAsStateWithLifecycle(initialValue = false)
+            val permissionLauncher = rememberLauncherForActivityResult(
+                ActivityResultContracts.RequestPermission(),
+            ) { granted ->
+                scope.launch { settings.setRemindersEnabled(granted) }
+            }
             SectionLabel("Reminders", modifier = Modifier.padding(top = 20.dp, bottom = 9.dp))
             Row(
                 Modifier.fillMaxWidth()
@@ -158,16 +175,24 @@ fun SettingsScreen(
                         color = Den.ink,
                     )
                     Text(
-                        "Fires on your triggers — arrives with notifications.",
+                        "Fires on the triggers you set — never to pull you back in.",
                         style = TextStyle(fontFamily = DenType.body, fontSize = 12.5.sp),
                         color = Den.muted,
                         modifier = Modifier.padding(top = 1.dp),
                     )
                 }
-                Text(
-                    "SOON",
-                    style = TextStyle(fontFamily = DenType.mono, fontSize = 9.5.sp, letterSpacing = 0.5.sp),
-                    color = Den.faint,
+                DenSwitch(
+                    on = remindersOn,
+                    contentDescription = "Cue-based reminders",
+                    onToggle = {
+                        if (remindersOn) {
+                            scope.launch { settings.setRemindersEnabled(false) }
+                        } else if (Build.VERSION.SDK_INT >= 33) {
+                            permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        } else {
+                            scope.launch { settings.setRemindersEnabled(true) }
+                        }
+                    },
                 )
             }
 
@@ -179,5 +204,31 @@ fun SettingsScreen(
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center,
             )
         }
+    }
+}
+
+/** Den-styled toggle — a rust pill, no Material thumb chrome. */
+@Composable
+private fun DenSwitch(on: Boolean, contentDescription: String, onToggle: () -> Unit) {
+    val thumbOffset by animateDpAsState(if (on) 20.dp else 2.dp, label = "thumb")
+    Box(
+        Modifier
+            .size(width = 42.dp, height = 24.dp)
+            .clip(RoundedCornerShape(99.dp))
+            .background(if (on) Den.rust else Den.ink.a(0.15f))
+            .semantics {
+                role = Role.Switch
+                this.contentDescription = contentDescription
+                toggleableState = if (on) ToggleableState.On else ToggleableState.Off
+            }
+            .pressable(onToggle),
+    ) {
+        Box(
+            Modifier
+                .padding(start = thumbOffset, top = 2.dp)
+                .size(20.dp)
+                .clip(RoundedCornerShape(99.dp))
+                .background(Color.White),
+        )
     }
 }

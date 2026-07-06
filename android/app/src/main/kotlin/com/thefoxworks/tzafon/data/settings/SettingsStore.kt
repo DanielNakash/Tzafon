@@ -23,6 +23,7 @@ class SettingsStore(private val context: Context) {
         val planningCustomEnd = stringPreferencesKey("planning_custom_end") // ISO date
         val slippageDismissed = stringPreferencesKey("slippage_dismissed_on") // ISO date
         val overloadDismissed = stringPreferencesKey("overload_dismissed_on") // ISO date
+        val remindersEnabled = booleanPreferencesKey("reminders_enabled") // FR-NOTIF opt-in
     }
 
     val welcomeSeen: Flow<Boolean> = context.dataStore.data.map { it[Keys.welcomeSeen] ?: false }
@@ -60,5 +61,13 @@ class SettingsStore(private val context: Context) {
 
     suspend fun dismissOverload(today: String) {
         context.dataStore.edit { it[Keys.overloadDismissed] = today }
+    }
+
+    // ── cue reminders (FR-NOTIF-2 — strictly opt-in, PRIN-9) ──
+
+    val remindersEnabled: Flow<Boolean> = context.dataStore.data.map { it[Keys.remindersEnabled] ?: false }
+
+    suspend fun setRemindersEnabled(on: Boolean) {
+        context.dataStore.edit { it[Keys.remindersEnabled] = on }
     }
 }

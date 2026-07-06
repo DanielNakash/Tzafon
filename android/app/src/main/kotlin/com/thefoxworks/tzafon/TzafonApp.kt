@@ -12,7 +12,16 @@ import com.thefoxworks.tzafon.domain.model.HabitRepository
 import com.thefoxworks.tzafon.domain.model.TaskRepository
 import com.thefoxworks.tzafon.domain.model.ThemeRepository
 import com.thefoxworks.tzafon.domain.recurrence.Recurrence
+import com.thefoxworks.tzafon.notify.Notify
+import com.thefoxworks.tzafon.notify.TopUpWorker
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.launch
 
 /**
  * Manual DI (PLAN §3): one container on the Application. The repository
@@ -45,8 +54,28 @@ class TzafonApp : Application() {
     lateinit var container: AppContainer
         private set
 
+    private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
+    @OptIn(FlowPreview::class)
     override fun onCreate() {
         super.onCreate()
         container = AppContainer(this)
+
+        // FR-NOTIF-2 — channel + the daily top-up + a start-of-process pass
+        Notify.ensureChannel(this)
+        TopUpWorker.ensureScheduled(this)
+        TopUpWorker.runNow(this)
+
+        // cue/task/habit edits re-set today's alarms without waiting a day
+        appScope.launch {
+            combine(
+                container.taskRepository.observeTasks(),
+                container.habitRepository.observeHabits(),
+                container.habitRepository.observeLogs(),
+                container.settings.remindersEnabled,
+            ) { _, _, _, _ -> Unit }
+                .debounce(2000)
+                .collect { TopUpWorker.runNow(this@TzafonApp) }
+        }
     }
 }
