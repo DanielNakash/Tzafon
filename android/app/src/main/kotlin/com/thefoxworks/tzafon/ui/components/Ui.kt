@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -28,6 +29,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
@@ -42,13 +48,44 @@ import com.thefoxworks.tzafon.ui.theme.DenType
 import com.thefoxworks.tzafon.ui.theme.a
 
 /** Ripple-free press — the design's .ft-press feel. */
-fun Modifier.pressable(onClick: () -> Unit): Modifier = this.then(
+fun Modifier.pressable(onClick: () -> Unit): Modifier = pressable(null, null, onClick)
+
+/** NFR-A11Y-1 — same press, with a TalkBack label/role for icon-only controls. */
+fun Modifier.pressable(label: String?, role: Role?, onClick: () -> Unit): Modifier = this.then(
     Modifier.clickable(
         interactionSource = MutableInteractionSource(),
         indication = null,
+        onClickLabel = label,
+        role = role,
         onClick = onClick,
     )
 )
+
+/**
+ * NFR-A11Y-1 — a ~48dp touch target around a smaller visual without moving
+ * the layout: the outer box keeps the visual's slot, the unbounded inner
+ * box carries the press. (Compose hit-tests children beyond parent bounds.)
+ */
+@Composable
+fun TouchTarget(
+    visualSize: Dp,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    label: String? = null,
+    role: Role? = null,
+    semantics: (androidx.compose.ui.semantics.SemanticsPropertyReceiver.() -> Unit)? = null,
+    content: @Composable () -> Unit,
+) {
+    Box(
+        modifier
+            .size(visualSize)
+            .wrapContentSize(Alignment.Center, unbounded = true)
+            .size(48.dp)
+            .pressable(label, role, onClick)
+            .then(if (semantics != null) Modifier.semantics(properties = semantics) else Modifier),
+        contentAlignment = Alignment.Center,
+    ) { content() }
+}
 
 // ── text + label primitives (tz-ui.jsx) ─────────────────────
 
@@ -214,9 +251,32 @@ fun DeadlinePill(modifier: Modifier = Modifier) {
 
 @Composable
 fun TaskCheckbox(state: TaskState, onClick: (() -> Unit)? = null, modifier: Modifier = Modifier) {
-    val m = modifier
-        .size(25.dp)
-        .then(if (onClick != null) Modifier.pressable(onClick) else Modifier)
+    if (onClick != null) {
+        // NFR-A11Y-1: 48dp target + TalkBack state, visual slot unchanged
+        TouchTarget(
+            visualSize = 25.dp,
+            onClick = onClick,
+            modifier = modifier,
+            label = "Change task state",
+            role = Role.Checkbox,
+            semantics = {
+                stateDescription = when (state) {
+                    TaskState.OPEN -> "Open"
+                    TaskState.DONE -> "Done"
+                    TaskState.CLOSED -> "Closed"
+                    TaskState.FROZEN -> "Frozen"
+                    TaskState.BACKLOG -> "Someday"
+                }
+            },
+        ) { CheckboxVisual(state) }
+    } else {
+        CheckboxVisual(state, modifier)
+    }
+}
+
+@Composable
+private fun CheckboxVisual(state: TaskState, modifier: Modifier = Modifier) {
+    val m = modifier.size(25.dp)
     val shape = RoundedCornerShape(7.dp)
     when (state) {
         TaskState.DONE -> Box(m.clip(shape).background(Den.rust), contentAlignment = Alignment.Center) {
@@ -267,7 +327,7 @@ fun Fab(
             .height(58.dp)
             .clip(RoundedCornerShape(18.dp))
             .background(Den.rust)
-            .pressable(onClick)
+            .pressable(label ?: "Add a task", Role.Button, onClick)
             .padding(horizontal = if (label != null) 18.dp else 17.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),

@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -63,9 +64,15 @@ fun DenSheet(title: String, onClose: () -> Unit, content: @Composable () -> Unit
                 Text(title, style = TextStyle(fontFamily = DenType.serif, fontSize = 23.sp, fontWeight = FontWeight.SemiBold), color = Den.ink)
                 Box(Modifier.weight(1f))
                 Box(
-                    Modifier.size(34.dp).clip(RoundedCornerShape(9.dp)).background(Den.surfaceAlt).pressable(onClose),
+                    Modifier.size(34.dp).wrapContentSize(Alignment.Center, unbounded = true).size(48.dp)
+                        .pressable("Close", androidx.compose.ui.semantics.Role.Button, onClose),
                     contentAlignment = Alignment.Center,
-                ) { TzIcons.X(16.dp, Den.muted) }
+                ) {
+                    Box(
+                        Modifier.size(34.dp).clip(RoundedCornerShape(9.dp)).background(Den.surfaceAlt),
+                        contentAlignment = Alignment.Center,
+                    ) { TzIcons.X(16.dp, Den.muted) }
+                }
             }
             Box(Modifier.padding(top = 8.dp, bottom = 26.dp)) { content() }
         }

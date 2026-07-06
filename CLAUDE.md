@@ -86,5 +86,8 @@ short progress note (what changed, against which codes) → **git commit** refer
 - **M6** — Themes + Directions hub (`DM-THEME`, `FR-DIR`) — ✅ committed.
 - **M7** — Review + Focus loops (`DM-REVIEW`, `DM-FOCUS`, `FR-LOOP`, `FR-SET`) — ✅ committed.
 - **M8** — Journey (`FR-JOURNEY`) — ✅ committed.
-- **M9** — notifications, offline, a11y/polish, release `v2.0.0` — next. (M9b Firebase stays deferred.)
+- **M9** — notifications (`FR-NOTIF`), offline (`NFR-OFFLINE-1`), a11y (`NFR-A11Y-1`), DM-NOT audit,
+  §9 sign-off, release build — ✅ committed, tagged **`v2.0.0`**.
+- **M9b** — Firebase Auth + Firestore sync behind the repository seam — deferred until the owner
+  provisions the Firebase project. (§9.1 data-in-Firestore rides with it; release signing config too.)
 Check `git log` and `PLAN.md §5` for the current frontier before continuing.

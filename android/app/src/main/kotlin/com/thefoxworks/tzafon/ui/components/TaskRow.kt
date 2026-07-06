@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -110,16 +111,22 @@ fun TaskRow(
                 }
             }
             if (onFocusToggle != null) {
-                Box(
-                    Modifier.padding(top = 1.dp).pressable(onFocusToggle),
-                ) {
-                    Compass(
-                        size = 20.dp,
-                        ring = if (focused) Den.rust else Den.faint.a(0.7f),
-                        needleN = if (focused) Den.rust else Den.faint.a(0.7f),
-                        needleS = if (focused) Den.rust.a(0.5f) else Den.faint.a(0.4f),
-                        stroke = 2f,
-                    )
+                Box(Modifier.padding(top = 1.dp)) {
+                    TouchTarget(
+                        visualSize = 20.dp,
+                        onClick = onFocusToggle,
+                        label = "Today's focus",
+                        role = androidx.compose.ui.semantics.Role.Checkbox,
+                        semantics = { stateDescription = if (focused) "Focused" else "Not focused" },
+                    ) {
+                        Compass(
+                            size = 20.dp,
+                            ring = if (focused) Den.rust else Den.faint.a(0.7f),
+                            needleN = if (focused) Den.rust else Den.faint.a(0.7f),
+                            needleS = if (focused) Den.rust.a(0.5f) else Den.faint.a(0.4f),
+                            stroke = 2f,
+                        )
+                    }
                 }
             }
             if (chevron) {
