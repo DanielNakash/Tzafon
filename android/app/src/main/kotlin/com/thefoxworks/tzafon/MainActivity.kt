@@ -31,9 +31,9 @@ import com.thefoxworks.tzafon.ui.alltasks.AllTasksScreen
 import com.thefoxworks.tzafon.ui.alltasks.AllTasksViewModel
 import com.thefoxworks.tzafon.ui.backlog.BacklogScreen
 import com.thefoxworks.tzafon.ui.backlog.BacklogViewModel
+import com.thefoxworks.tzafon.ui.directions.DirectionsScreen
+import com.thefoxworks.tzafon.ui.directions.DirectionsViewModel
 import com.thefoxworks.tzafon.ui.editor.TaskEditorScreen
-import com.thefoxworks.tzafon.ui.goals.GoalsScreen
-import com.thefoxworks.tzafon.ui.goals.GoalsViewModel
 import com.thefoxworks.tzafon.ui.habits.HabitsScreen
 import com.thefoxworks.tzafon.ui.habits.HabitsViewModel
 import com.thefoxworks.tzafon.ui.nav.DenBottomNav
@@ -75,8 +75,8 @@ class VmFactory(private val container: AppContainer) : ViewModelProvider.Factory
             BacklogViewModel(container.taskRepository) as T
         HabitsViewModel::class.java ->
             HabitsViewModel(container.habitRepository, container.settings, container.goalRepository) as T
-        GoalsViewModel::class.java ->
-            GoalsViewModel(container.goalRepository, container.habitRepository) as T
+        DirectionsViewModel::class.java ->
+            DirectionsViewModel(container.themeRepository, container.goalRepository, container.habitRepository, container.taskRepository) as T
         else -> throw IllegalArgumentException("Unknown VM $modelClass")
     }
 }
@@ -155,9 +155,8 @@ fun TzafonNavHost(container: AppContainer) {
                 HabitsScreen(vm = vm)
             }
             composable(Tab.DIRECTIONS.route) {
-                // interim goals home — the M6 hub nests these under themes
-                val vm: GoalsViewModel = viewModel(factory = VmFactory(container))
-                GoalsScreen(vm = vm)
+                val vm: DirectionsViewModel = viewModel(factory = VmFactory(container))
+                DirectionsScreen(vm = vm)
             }
             composable(Tab.JOURNEY.route) { PendingTabScreen(Tab.JOURNEY) }    // M8
 

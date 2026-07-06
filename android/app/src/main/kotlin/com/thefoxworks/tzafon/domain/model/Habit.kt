@@ -16,6 +16,8 @@ data class Habit(
     val targetDays: Int? = null,
     val cue: Cue? = null,              // DM-CUE — a habit without one is just a tracker
     val primaryThemeId: String? = null,
+    /** the full serve set (DM-HABIT-6) — primary + shared */
+    val themeIds: List<String> = emptyList(),
     val goalId: String? = null,        // DM-HABIT-6 / D2 — may serve one Goal
     val startedAt: Long = 0,           // long arc anchor ("Running 9 weeks")
     val createdAt: Long = 0,

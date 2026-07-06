@@ -16,8 +16,9 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         TaskEntity::class, SeriesEntity::class,
         HabitEntity::class, HabitLogEntity::class,
         GoalEntity::class, ContributionEntity::class,
+        ThemeEntity::class,
     ],
-    version = 3,
+    version = 4,
     exportSchema = false,
 )
 abstract class TzafonDatabase : RoomDatabase() {
@@ -25,6 +26,7 @@ abstract class TzafonDatabase : RoomDatabase() {
     abstract fun seriesDao(): SeriesDao
     abstract fun habitDao(): HabitDao
     abstract fun goalDao(): GoalDao
+    abstract fun themeDao(): ThemeDao
 
     companion object {
         /** M4 — habits + per-date logs (DM-HABIT), purely additive. */
@@ -83,9 +85,28 @@ abstract class TzafonDatabase : RoomDatabase() {
             }
         }
 
+        /** M6 — themes + the shared-serve sets on goals/habits (DM-THEME). */
+        private val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """CREATE TABLE IF NOT EXISTS `themes` (
+                        `id` TEXT NOT NULL, `name` TEXT NOT NULL, `why` TEXT NOT NULL,
+                        `windowStart` TEXT NOT NULL, `windowEnd` TEXT NOT NULL,
+                        `state` TEXT NOT NULL DEFAULT 'UPCOMING',
+                        `archivedOutcome` TEXT, `renewedToThemeId` TEXT,
+                        `accentSlot` INTEGER NOT NULL DEFAULT 0,
+                        `createdAt` INTEGER NOT NULL DEFAULT 0,
+                        `archivedAt` INTEGER,
+                        PRIMARY KEY(`id`))""",
+                )
+                db.execSQL("ALTER TABLE `goals` ADD COLUMN `themeIds` TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE `habits` ADD COLUMN `themeIds` TEXT NOT NULL DEFAULT ''")
+            }
+        }
+
         fun build(context: Context): TzafonDatabase =
             Room.databaseBuilder(context, TzafonDatabase::class.java, "tzafon.db")
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
                 .build()
     }
 }

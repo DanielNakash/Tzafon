@@ -23,7 +23,10 @@ data class Goal(
     val state: GoalState = GoalState.ONGOING,
     val deadline: String? = null,
     val commitment: String? = null,    // DM-GOAL-1 commitment device
+    /** shown as "serves: <theme>" — the display parent (DM-REL-1) */
     val primaryThemeId: String? = null,
+    /** the full serve set (DM-GOAL-6) — primary + shared ("+N") */
+    val themeIds: List<String> = emptyList(),
     val lastActivityAt: Long = 0,      // DM-GOAL-5 stale nudge
     val completedAt: Long? = null,
     val createdAt: Long = 0,

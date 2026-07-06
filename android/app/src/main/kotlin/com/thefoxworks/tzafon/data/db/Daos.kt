@@ -127,3 +127,18 @@ interface GoalDao {
     @Query("DELETE FROM contributions WHERE goalId = :goalId")
     suspend fun deleteContributionsForGoal(goalId: String)
 }
+
+@Dao
+interface ThemeDao {
+    @Query("SELECT * FROM themes")
+    fun observeAll(): Flow<List<ThemeEntity>>
+
+    @Query("SELECT * FROM themes WHERE id = :id")
+    suspend fun get(id: String): ThemeEntity?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsert(theme: ThemeEntity)
+
+    @Query("DELETE FROM themes WHERE id = :id")
+    suspend fun delete(id: String)
+}

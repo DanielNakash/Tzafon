@@ -3,10 +3,13 @@ package com.thefoxworks.tzafon.data.db
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.thefoxworks.tzafon.domain.model.ArchivedOutcome
 import com.thefoxworks.tzafon.domain.model.Contribution
 import com.thefoxworks.tzafon.domain.model.ContributionVia
 import com.thefoxworks.tzafon.domain.model.Cue
 import com.thefoxworks.tzafon.domain.model.CueType
+import com.thefoxworks.tzafon.domain.model.Theme
+import com.thefoxworks.tzafon.domain.model.ThemeState
 import com.thefoxworks.tzafon.domain.model.Goal
 import com.thefoxworks.tzafon.domain.model.GoalState
 import com.thefoxworks.tzafon.domain.model.GoalStep
@@ -114,6 +117,7 @@ data class HabitEntity(
     val cueLabel: String? = null,
     val cueTime: String? = null,
     val primaryThemeId: String? = null,
+    val themeIds: String = "",                // CSV (M6)
     val goalId: String? = null,
     val startedAt: Long = 0,
     val createdAt: Long = 0,
@@ -144,9 +148,25 @@ data class GoalEntity(
     val deadline: String? = null,
     val commitment: String? = null,
     val primaryThemeId: String? = null,
+    val themeIds: String = "",                // CSV (M6)
     val lastActivityAt: Long = 0,
     val completedAt: Long? = null,
     val createdAt: Long = 0,
+)
+
+@Entity(tableName = "themes")
+data class ThemeEntity(
+    @PrimaryKey val id: String,
+    val name: String,
+    val why: String,
+    val windowStart: String,
+    val windowEnd: String,
+    val state: String = "UPCOMING",
+    val archivedOutcome: String? = null,
+    val renewedToThemeId: String? = null,
+    val accentSlot: Int = 0,
+    val createdAt: Long = 0,
+    val archivedAt: Long? = null,
 )
 
 @Entity(tableName = "contributions")
@@ -240,7 +260,7 @@ fun HabitEntity.toDomain() = Habit(
     id = id, name = name, kind = HabitKind.valueOf(kind),
     target = target, unit = unit, targetDays = targetDays,
     cue = cueOf(cueType, cueLabel, cueTime),
-    primaryThemeId = primaryThemeId, goalId = goalId,
+    primaryThemeId = primaryThemeId, themeIds = unCsv(themeIds), goalId = goalId,
     startedAt = startedAt, createdAt = createdAt,
 )
 
@@ -248,8 +268,26 @@ fun Habit.toEntity() = HabitEntity(
     id = id, name = name, kind = kind.name,
     target = target, unit = unit, targetDays = targetDays,
     cueType = cue?.type?.name, cueLabel = cue?.label, cueTime = cue?.time,
-    primaryThemeId = primaryThemeId, goalId = goalId,
+    primaryThemeId = primaryThemeId, themeIds = csv(themeIds), goalId = goalId,
     startedAt = startedAt, createdAt = createdAt,
+)
+
+fun ThemeEntity.toDomain() = Theme(
+    id = id, name = name, why = why,
+    windowStart = windowStart, windowEnd = windowEnd,
+    state = ThemeState.valueOf(state),
+    archivedOutcome = archivedOutcome?.let { ArchivedOutcome.valueOf(it) },
+    renewedToThemeId = renewedToThemeId,
+    accentSlot = accentSlot, createdAt = createdAt, archivedAt = archivedAt,
+)
+
+fun Theme.toEntity() = ThemeEntity(
+    id = id, name = name, why = why,
+    windowStart = windowStart, windowEnd = windowEnd,
+    state = state.name,
+    archivedOutcome = archivedOutcome?.name,
+    renewedToThemeId = renewedToThemeId,
+    accentSlot = accentSlot, createdAt = createdAt, archivedAt = archivedAt,
 )
 
 private const val STEP_SEP = ''  // between steps
@@ -270,7 +308,8 @@ fun GoalEntity.toDomain() = Goal(
     type = GoalType.valueOf(type), steps = decodeSteps(steps),
     targetQty = targetQty, unit = unit, currentQty = currentQty,
     state = GoalState.valueOf(state), deadline = deadline, commitment = commitment,
-    primaryThemeId = primaryThemeId, lastActivityAt = lastActivityAt,
+    primaryThemeId = primaryThemeId, themeIds = unCsv(themeIds),
+    lastActivityAt = lastActivityAt,
     completedAt = completedAt, createdAt = createdAt,
 )
 
@@ -279,7 +318,8 @@ fun Goal.toEntity() = GoalEntity(
     type = type.name, steps = encodeSteps(steps),
     targetQty = targetQty, unit = unit, currentQty = currentQty,
     state = state.name, deadline = deadline, commitment = commitment,
-    primaryThemeId = primaryThemeId, lastActivityAt = lastActivityAt,
+    primaryThemeId = primaryThemeId, themeIds = csv(themeIds),
+    lastActivityAt = lastActivityAt,
     completedAt = completedAt, createdAt = createdAt,
 )
 

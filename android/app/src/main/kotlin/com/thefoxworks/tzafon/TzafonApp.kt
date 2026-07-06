@@ -5,10 +5,12 @@ import com.thefoxworks.tzafon.data.db.TzafonDatabase
 import com.thefoxworks.tzafon.data.repo.RoomGoalRepository
 import com.thefoxworks.tzafon.data.repo.RoomHabitRepository
 import com.thefoxworks.tzafon.data.repo.RoomTaskRepository
+import com.thefoxworks.tzafon.data.repo.RoomThemeRepository
 import com.thefoxworks.tzafon.data.settings.SettingsStore
 import com.thefoxworks.tzafon.domain.model.GoalRepository
 import com.thefoxworks.tzafon.domain.model.HabitRepository
 import com.thefoxworks.tzafon.domain.model.TaskRepository
+import com.thefoxworks.tzafon.domain.model.ThemeRepository
 import com.thefoxworks.tzafon.domain.recurrence.Recurrence
 import kotlinx.coroutines.flow.MutableStateFlow
 
@@ -22,6 +24,7 @@ class AppContainer(app: Application) {
 
     val habitRepository: HabitRepository by lazy { RoomHabitRepository(db.habitDao()) }
     val goalRepository: GoalRepository by lazy { RoomGoalRepository(db.goalDao()) }
+    val themeRepository: ThemeRepository by lazy { RoomThemeRepository(db.themeDao()) }
     val taskRepository: TaskRepository by lazy {
         RoomTaskRepository(db.taskDao(), db.seriesDao(), habitRepository, goalRepository)
     }
