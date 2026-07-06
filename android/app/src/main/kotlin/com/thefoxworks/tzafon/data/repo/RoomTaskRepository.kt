@@ -4,9 +4,12 @@ import com.thefoxworks.tzafon.data.db.SeriesDao
 import com.thefoxworks.tzafon.data.db.TaskDao
 import com.thefoxworks.tzafon.data.db.toDomain
 import com.thefoxworks.tzafon.data.db.toEntity
+import com.thefoxworks.tzafon.domain.attribution.Attribution
 import com.thefoxworks.tzafon.domain.dates.Dates
 import com.thefoxworks.tzafon.domain.habits.HabitMath
+import com.thefoxworks.tzafon.domain.model.Contribution
 import com.thefoxworks.tzafon.domain.model.EditScope
+import com.thefoxworks.tzafon.domain.model.GoalRepository
 import com.thefoxworks.tzafon.domain.model.HabitRepository
 import com.thefoxworks.tzafon.domain.model.Series
 import com.thefoxworks.tzafon.domain.model.StateMachine
@@ -32,6 +35,8 @@ class RoomTaskRepository(
     private val seriesDao: SeriesDao,
     /** the DM-ATTR-2 habit ledger (null only in narrow tests) */
     private val habits: HabitRepository? = null,
+    /** the DM-ATTR-1 goal ledger (null only in narrow tests) */
+    private val goals: GoalRepository? = null,
     private val now: () -> Long = { System.currentTimeMillis() },
 ) : TaskRepository {
 
@@ -291,13 +296,40 @@ class RoomTaskRepository(
         val isRecurring = t.seriesId != null
         val fx = StateMachine.transition(t.state, target, isRecurring)
 
-        // DM-ATTR-2 — the habit ledger, written once per completion and
-        // reversed exactly (goal attribution joins in M5)
-        if (fx.applyContribution && t.habitId != null) {
-            habits?.logForTask(t.habitId, HabitMath.logDateFor(t, today), t.id, habitAmount)
+        // DM-ATTR — the up-flow, counted once: habit ledger first (ATTR-2),
+        // then goal attribution (ATTR-1: gather → dedupe → apply once)
+        if (fx.applyContribution) {
+            val habit = t.habitId?.let { habits?.getHabit(it) }
+            if (t.habitId != null) {
+                habits?.logForTask(t.habitId, HabitMath.logDateFor(t, today), t.id, habitAmount)
+            }
+            if (goals != null) {
+                val reachableIds = (t.goalIds + listOfNotNull(habit?.goalId)).distinct()
+                val goalsById = reachableIds
+                    .mapNotNull { goals.getGoal(it) }
+                    .associateBy { it.id }
+                val plan = Attribution.planOnDone(t, habit, goalsById, habitAmount)
+                val rows = plan.mapNotNull { p ->
+                    p.amount?.takeIf { it != 0.0 }?.let { a ->
+                        Contribution(
+                            id = UUID.randomUUID().toString(),
+                            taskId = t.id, goalId = p.goalId,
+                            amount = a, via = p.via, createdAt = now(),
+                        )
+                    }
+                }
+                goals.applyForTask(t.id, rows)
+                // directional touches still feed identity (bump activity)
+                plan.filter { it.amount == null }.forEach { p ->
+                    goals.getGoal(p.goalId)?.let { g ->
+                        goals.upsert(g.copy(lastActivityAt = now()))
+                    }
+                }
+            }
         }
         if (fx.reverseContribution) {
             habits?.reverseForTask(t.id)
+            goals?.reverseForTask(t.id) // subtracts exactly the ledger rows
         }
 
         taskDao.upsert(

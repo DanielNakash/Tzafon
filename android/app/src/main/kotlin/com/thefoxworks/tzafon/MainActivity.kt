@@ -32,6 +32,8 @@ import com.thefoxworks.tzafon.ui.alltasks.AllTasksViewModel
 import com.thefoxworks.tzafon.ui.backlog.BacklogScreen
 import com.thefoxworks.tzafon.ui.backlog.BacklogViewModel
 import com.thefoxworks.tzafon.ui.editor.TaskEditorScreen
+import com.thefoxworks.tzafon.ui.goals.GoalsScreen
+import com.thefoxworks.tzafon.ui.goals.GoalsViewModel
 import com.thefoxworks.tzafon.ui.habits.HabitsScreen
 import com.thefoxworks.tzafon.ui.habits.HabitsViewModel
 import com.thefoxworks.tzafon.ui.nav.DenBottomNav
@@ -64,15 +66,17 @@ class VmFactory(private val container: AppContainer) : ViewModelProvider.Factory
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T = when (modelClass) {
         AllTasksViewModel::class.java ->
-            AllTasksViewModel(container.taskRepository, container.sessionHorizonDays, container.habitRepository) as T
+            AllTasksViewModel(container.taskRepository, container.sessionHorizonDays, container.habitRepository, container.goalRepository) as T
         TodayViewModel::class.java ->
-            TodayViewModel(container.taskRepository, container.settings, container.habitRepository) as T
+            TodayViewModel(container.taskRepository, container.settings, container.habitRepository, container.goalRepository) as T
         PlanningViewModel::class.java ->
-            PlanningViewModel(container.taskRepository, container.settings, container.sessionHorizonDays, container.habitRepository) as T
+            PlanningViewModel(container.taskRepository, container.settings, container.sessionHorizonDays, container.habitRepository, container.goalRepository) as T
         BacklogViewModel::class.java ->
             BacklogViewModel(container.taskRepository) as T
         HabitsViewModel::class.java ->
-            HabitsViewModel(container.habitRepository, container.settings) as T
+            HabitsViewModel(container.habitRepository, container.settings, container.goalRepository) as T
+        GoalsViewModel::class.java ->
+            GoalsViewModel(container.goalRepository, container.habitRepository) as T
         else -> throw IllegalArgumentException("Unknown VM $modelClass")
     }
 }
@@ -150,7 +154,11 @@ fun TzafonNavHost(container: AppContainer) {
                 val vm: HabitsViewModel = viewModel(factory = VmFactory(container))
                 HabitsScreen(vm = vm)
             }
-            composable(Tab.DIRECTIONS.route) { PendingTabScreen(Tab.DIRECTIONS) } // M6
+            composable(Tab.DIRECTIONS.route) {
+                // interim goals home — the M6 hub nests these under themes
+                val vm: GoalsViewModel = viewModel(factory = VmFactory(container))
+                GoalsScreen(vm = vm)
+            }
             composable(Tab.JOURNEY.route) { PendingTabScreen(Tab.JOURNEY) }    // M8
 
             // ── reference views via the menu (FR-NAV-1) ──
@@ -210,6 +218,8 @@ fun TzafonNavHost(container: AppContainer) {
                 } ?: presetTitle?.let { TaskDraft(id = null, title = it) } // quick-add expand
                 val habits by container.habitRepository.observeHabits()
                     .collectAsStateWithLifecycle(initialValue = emptyList())
+                val editorGoals by container.goalRepository.observeGoals()
+                    .collectAsStateWithLifecycle(initialValue = emptyList())
                 TaskEditorScreen(
                     initial = initial,
                     today = today,
@@ -228,6 +238,7 @@ fun TzafonNavHost(container: AppContainer) {
                     },
                     onClose = { nav.popBackStack() },
                     habits = habits,
+                    goals = editorGoals,
                 )
             }
         }

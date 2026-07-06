@@ -82,5 +82,6 @@ short progress note (what changed, against which codes) → **git commit** refer
   `FR-CAPTURE-1/2`, `FR-REC-3`) — ✅ committed.
 - **M3** — Backlog state (`FR-BACKLOG-1..4`) — ✅ committed.
 - **M4** — Habits + Cues (`DM-HABIT`, `DM-CUE`, `FR-HAB`) — ✅ committed.
-- **M5** — Goals + attribution (`DM-GOAL`, `DM-ATTR`) — next.
+- **M5** — Goals + attribution (`DM-GOAL`, `DM-ATTR`) — ✅ committed.
+- **M6** — Themes + Directions hub (`DM-THEME`, `FR-DIR`) — next.
 Check `git log` and `PLAN.md §5` for the current frontier before continuing.

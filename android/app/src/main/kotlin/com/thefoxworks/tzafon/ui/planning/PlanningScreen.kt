@@ -79,7 +79,7 @@ fun PlanningScreen(
     fun requestToggle(t: Task) {
         val habit = state.habitsById[t.habitId]
         if (t.state != com.thefoxworks.tzafon.domain.model.TaskState.DONE &&
-            habit?.kind == com.thefoxworks.tzafon.domain.model.HabitKind.QUANTITATIVE
+            com.thefoxworks.tzafon.domain.attribution.Attribution.needsAmountPrompt(t, habit, state.goalsById)
         ) {
             amountTask = t
         } else {
@@ -290,7 +290,7 @@ fun PlanningScreen(
         val habit = state.habitsById[t.habitId]
         com.thefoxworks.tzafon.ui.components.AmountSheet(
             title = "How much? · ${habit?.name ?: t.title}",
-            unit = habit?.unit,
+            unit = com.thefoxworks.tzafon.domain.attribution.Attribution.promptUnit(t, habit, state.goalsById),
             suggested = habit?.target,
             onConfirm = { vm.toggleDone(t.id, habitAmount = it) },
             onClose = { amountTask = null },

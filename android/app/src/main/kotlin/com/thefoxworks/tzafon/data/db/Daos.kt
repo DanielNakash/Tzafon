@@ -95,3 +95,35 @@ interface HabitDao {
     @Query("DELETE FROM habit_logs WHERE sourceTaskId = :taskId AND source = 'TASK'")
     suspend fun deleteLogsForTask(taskId: String)
 }
+
+@Dao
+interface GoalDao {
+    @Query("SELECT * FROM goals")
+    fun observeAll(): Flow<List<GoalEntity>>
+
+    @Query("SELECT * FROM goals WHERE id = :id")
+    suspend fun get(id: String): GoalEntity?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsert(goal: GoalEntity)
+
+    @Query("DELETE FROM goals WHERE id = :id")
+    suspend fun delete(id: String)
+
+    // ── the contributions ledger (DM-ATTR-1 / NFR-DATA-2) ──
+
+    @Query("SELECT * FROM contributions")
+    fun observeContributions(): Flow<List<ContributionEntity>>
+
+    @Query("SELECT * FROM contributions WHERE taskId = :taskId")
+    suspend fun contributionsFor(taskId: String): List<ContributionEntity>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertContribution(row: ContributionEntity)
+
+    @Query("DELETE FROM contributions WHERE taskId = :taskId")
+    suspend fun deleteContributionsFor(taskId: String)
+
+    @Query("DELETE FROM contributions WHERE goalId = :goalId")
+    suspend fun deleteContributionsForGoal(goalId: String)
+}

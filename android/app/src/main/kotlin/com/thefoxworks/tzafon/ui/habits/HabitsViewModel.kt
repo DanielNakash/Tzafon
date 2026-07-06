@@ -28,18 +28,27 @@ data class HabitsUiState(
     val today: String = Dates.todayIso(),
     val weekStart: String = "SUNDAY",
     val cards: List<HabitCardState> = emptyList(),
+    /** for the editor's "serves a goal" pick (DM-HABIT-6) */
+    val goals: List<com.thefoxworks.tzafon.domain.model.Goal> = emptyList(),
+    val goalsById: Map<String, com.thefoxworks.tzafon.domain.model.Goal> = emptyMap(),
 )
 
 /** Habits (FR-HAB) — forgiving rate + cue + arc; no streaks, no scores. */
 class HabitsViewModel(
     private val repo: HabitRepository,
     settings: SettingsStore,
+    goalRepo: com.thefoxworks.tzafon.domain.model.GoalRepository,
 ) : ViewModel() {
 
     val today: String get() = Dates.todayIso()
 
     val uiState: StateFlow<HabitsUiState> =
-        combine(repo.observeHabits(), repo.observeLogs(), settings.weekStart) { habits, logs, weekStart ->
+        combine(
+            repo.observeHabits(),
+            repo.observeLogs(),
+            settings.weekStart,
+            goalRepo.observeGoals(),
+        ) { habits, logs, weekStart, goals ->
             val today = Dates.todayIso()
             HabitsUiState(
                 today = today,
@@ -56,6 +65,8 @@ class HabitsViewModel(
                         todayAmount = todayLog?.amount,
                     )
                 },
+                goals = goals,
+                goalsById = goals.associateBy { it.id },
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), HabitsUiState())
 

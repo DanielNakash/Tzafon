@@ -2,9 +2,11 @@ package com.thefoxworks.tzafon
 
 import android.app.Application
 import com.thefoxworks.tzafon.data.db.TzafonDatabase
+import com.thefoxworks.tzafon.data.repo.RoomGoalRepository
 import com.thefoxworks.tzafon.data.repo.RoomHabitRepository
 import com.thefoxworks.tzafon.data.repo.RoomTaskRepository
 import com.thefoxworks.tzafon.data.settings.SettingsStore
+import com.thefoxworks.tzafon.domain.model.GoalRepository
 import com.thefoxworks.tzafon.domain.model.HabitRepository
 import com.thefoxworks.tzafon.domain.model.TaskRepository
 import com.thefoxworks.tzafon.domain.recurrence.Recurrence
@@ -19,8 +21,9 @@ class AppContainer(app: Application) {
     private val db by lazy { TzafonDatabase.build(app) }
 
     val habitRepository: HabitRepository by lazy { RoomHabitRepository(db.habitDao()) }
+    val goalRepository: GoalRepository by lazy { RoomGoalRepository(db.goalDao()) }
     val taskRepository: TaskRepository by lazy {
-        RoomTaskRepository(db.taskDao(), db.seriesDao(), habitRepository)
+        RoomTaskRepository(db.taskDao(), db.seriesDao(), habitRepository, goalRepository)
     }
     val settings by lazy { SettingsStore(app) }
 

@@ -267,7 +267,9 @@ fun AllTasksScreen(
                                     onSheet = { sheetTask = it },
                                     onAmount = { amountTask = it },
                                     habitLabel = state.habitsById[e.task.habitId]?.name,
-                                    isQuantHabit = state.habitsById[e.task.habitId]?.kind == com.thefoxworks.tzafon.domain.model.HabitKind.QUANTITATIVE,
+                                    needsPrompt = com.thefoxworks.tzafon.domain.attribution.Attribution.needsAmountPrompt(
+                                        e.task, state.habitsById[e.task.habitId], state.goalsById,
+                                    ),
                                     last = e.last,
                                     summaries = state.ruleSummaries,
                                 )
@@ -345,7 +347,7 @@ fun AllTasksScreen(
         val habit = state.habitsById[t.habitId]
         com.thefoxworks.tzafon.ui.components.AmountSheet(
             title = "How much? · ${habit?.name ?: t.title}",
-            unit = habit?.unit,
+            unit = com.thefoxworks.tzafon.domain.attribution.Attribution.promptUnit(t, habit, state.goalsById),
             suggested = habit?.target,
             onConfirm = { vm.toggleDone(t.id, habitAmount = it) },
             onClose = { amountTask = null },
@@ -362,7 +364,7 @@ private fun TaskLine(
     onSheet: (Task) -> Unit,
     onAmount: (Task) -> Unit,
     habitLabel: String?,
-    isQuantHabit: Boolean,
+    needsPrompt: Boolean,
     last: Boolean,
     summaries: Map<String, String>,
 ) {
@@ -373,7 +375,7 @@ private fun TaskLine(
         onToggle = {
             when {
                 settled -> onSheet(task)
-                task.state != TaskState.DONE && isQuantHabit -> onAmount(task) // DM-HABIT-5
+                task.state != TaskState.DONE && needsPrompt -> onAmount(task) // DM-HABIT-5 / DM-GOAL-3
                 else -> vm.toggleDone(task.id)
             }
         },

@@ -77,6 +77,7 @@ fun HabitsScreen(
                 items(state.cards, key = { it.habit.id }) { card ->
                     HabitCard(
                         card = card,
+                        servesGoal = state.goalsById[card.habit.goalId]?.title,
                         onLog = {
                             if (card.habit.kind == HabitKind.QUANTITATIVE) {
                                 amountFor = card
@@ -125,6 +126,7 @@ fun HabitsScreen(
             onSave = { vm.save(it) },
             onDelete = { vm.delete(it) },
             onClose = { creating = false; editing = null },
+            goals = state.goals,
         )
     }
 
@@ -140,7 +142,7 @@ fun HabitsScreen(
 }
 
 @Composable
-private fun HabitCard(card: HabitCardState, onLog: () -> Unit, onOpen: () -> Unit) {
+private fun HabitCard(card: HabitCardState, servesGoal: String?, onLog: () -> Unit, onOpen: () -> Unit) {
     val h = card.habit
     val accent = Den.green // per-theme accents arrive with M6
     val isQuant = h.kind == HabitKind.QUANTITATIVE
@@ -171,6 +173,20 @@ private fun HabitCard(card: HabitCardState, onLog: () -> Unit, onOpen: () -> Uni
                     if (isQuant) "${fmt(h.target)} ${h.unit ?: ""}/day" else "${h.target.toInt()}× / week",
                     style = TextStyle(fontFamily = DenType.mono, fontSize = 10.sp),
                     color = accent,
+                )
+            }
+        }
+        if (servesGoal != null) {
+            Row(
+                Modifier.padding(top = 5.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(5.dp),
+            ) {
+                TzIcons.Target(12.dp, Den.rust)
+                Text(
+                    "serves: $servesGoal",
+                    style = TextStyle(fontFamily = DenType.mono, fontSize = 10.5.sp),
+                    color = Den.muted,
                 )
             }
         }

@@ -41,31 +41,40 @@ data class AllTasksUiState(
     val horizonDate: String = Dates.todayIso(),          // FR-ALL-4
     val horizonIndex: Int = 0,                           // divider slot in `groups`
     val habitsById: Map<String, Habit> = emptyMap(),     // M4 chips + quant prompt
+    val goalsById: Map<String, com.thefoxworks.tzafon.domain.model.Goal> = emptyMap(), // M5 prompt rule
 )
 
 class AllTasksViewModel(
     private val repo: TaskRepository,
     private val sessionHorizonDays: MutableStateFlow<Long>,
     habitRepo: HabitRepository,
+    goalRepo: com.thefoxworks.tzafon.domain.model.GoalRepository,
 ) : ViewModel() {
 
     private val visible = MutableStateFlow(VisibleStates())
     private val query = MutableStateFlow("")
     val today: String get() = Dates.todayIso()
 
-    private data class Sources(val tasks: List<Task>, val series: List<Series>, val habits: List<Habit>)
+    private data class Sources(
+        val tasks: List<Task>,
+        val series: List<Series>,
+        val habits: List<Habit>,
+        val goals: List<com.thefoxworks.tzafon.domain.model.Goal>,
+    )
 
     val uiState: StateFlow<AllTasksUiState> =
         combine(
-            combine(repo.observeTasks(), repo.observeSeries(), habitRepo.observeHabits()) { t, s, h ->
-                Sources(t, s, h)
-            },
+            combine(
+                repo.observeTasks(), repo.observeSeries(),
+                habitRepo.observeHabits(), goalRepo.observeGoals(),
+            ) { t, s, h, g -> Sources(t, s, h, g) },
             visible,
             query,
             sessionHorizonDays,
         ) { src, vis, q, horizonDays ->
             build(src.tasks, src.series, vis, q, horizonDays).copy(
                 habitsById = src.habits.associateBy { it.id },
+                goalsById = src.goals.associateBy { it.id },
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), AllTasksUiState())
 

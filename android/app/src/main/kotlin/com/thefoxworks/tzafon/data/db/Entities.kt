@@ -3,8 +3,14 @@ package com.thefoxworks.tzafon.data.db
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.thefoxworks.tzafon.domain.model.Contribution
+import com.thefoxworks.tzafon.domain.model.ContributionVia
 import com.thefoxworks.tzafon.domain.model.Cue
 import com.thefoxworks.tzafon.domain.model.CueType
+import com.thefoxworks.tzafon.domain.model.Goal
+import com.thefoxworks.tzafon.domain.model.GoalState
+import com.thefoxworks.tzafon.domain.model.GoalStep
+import com.thefoxworks.tzafon.domain.model.GoalType
 import com.thefoxworks.tzafon.domain.model.Habit
 import com.thefoxworks.tzafon.domain.model.HabitKind
 import com.thefoxworks.tzafon.domain.model.HabitLog
@@ -123,6 +129,36 @@ data class HabitLogEntity(
     val sourceTaskId: String? = null,
 )
 
+@Entity(tableName = "goals")
+data class GoalEntity(
+    @PrimaryKey val id: String,
+    val title: String,
+    val description: String = "",
+    val type: String = "GENERIC",
+    /** steps as label␟done records joined by ␞ (labels may contain commas) */
+    val steps: String = "",
+    val targetQty: Double = 0.0,
+    val unit: String? = null,
+    val currentQty: Double = 0.0,
+    val state: String = "ONGOING",
+    val deadline: String? = null,
+    val commitment: String? = null,
+    val primaryThemeId: String? = null,
+    val lastActivityAt: Long = 0,
+    val completedAt: Long? = null,
+    val createdAt: Long = 0,
+)
+
+@Entity(tableName = "contributions")
+data class ContributionEntity(
+    @PrimaryKey val id: String,
+    val taskId: String,
+    val goalId: String,
+    val amount: Double,
+    val via: String = "DIRECT",
+    val createdAt: Long = 0,
+)
+
 // ── mapping ───────────────────────────────────────────────────
 
 private fun csv(list: List<String>) = list.joinToString(",")
@@ -214,6 +250,47 @@ fun Habit.toEntity() = HabitEntity(
     cueType = cue?.type?.name, cueLabel = cue?.label, cueTime = cue?.time,
     primaryThemeId = primaryThemeId, goalId = goalId,
     startedAt = startedAt, createdAt = createdAt,
+)
+
+private const val STEP_SEP = ''  // between steps
+private const val FIELD_SEP = '' // label ␟ done
+
+private fun encodeSteps(steps: List<GoalStep>): String =
+    steps.joinToString(STEP_SEP.toString()) { "${it.label}$FIELD_SEP${if (it.done) 1 else 0}" }
+
+private fun decodeSteps(s: String): List<GoalStep> =
+    s.takeIf { it.isNotBlank() }?.split(STEP_SEP)?.map { rec ->
+        val i = rec.lastIndexOf(FIELD_SEP)
+        if (i == -1) GoalStep(rec, false)
+        else GoalStep(rec.substring(0, i), rec.substring(i + 1) == "1")
+    } ?: emptyList()
+
+fun GoalEntity.toDomain() = Goal(
+    id = id, title = title, description = description,
+    type = GoalType.valueOf(type), steps = decodeSteps(steps),
+    targetQty = targetQty, unit = unit, currentQty = currentQty,
+    state = GoalState.valueOf(state), deadline = deadline, commitment = commitment,
+    primaryThemeId = primaryThemeId, lastActivityAt = lastActivityAt,
+    completedAt = completedAt, createdAt = createdAt,
+)
+
+fun Goal.toEntity() = GoalEntity(
+    id = id, title = title, description = description,
+    type = type.name, steps = encodeSteps(steps),
+    targetQty = targetQty, unit = unit, currentQty = currentQty,
+    state = state.name, deadline = deadline, commitment = commitment,
+    primaryThemeId = primaryThemeId, lastActivityAt = lastActivityAt,
+    completedAt = completedAt, createdAt = createdAt,
+)
+
+fun ContributionEntity.toDomain() = Contribution(
+    id = id, taskId = taskId, goalId = goalId, amount = amount,
+    via = ContributionVia.valueOf(via), createdAt = createdAt,
+)
+
+fun Contribution.toEntity() = ContributionEntity(
+    id = id, taskId = taskId, goalId = goalId, amount = amount,
+    via = via.name, createdAt = createdAt,
 )
 
 fun HabitLogEntity.toDomain() = HabitLog(

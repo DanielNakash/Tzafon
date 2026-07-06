@@ -29,12 +29,14 @@ data class TodayUiState(
     val showSlippage: Boolean = false,
     val showOverload: Boolean = false,            // FR-TODAY-5
     val habitsById: Map<String, Habit> = emptyMap(), // M4 chips + quant prompt
+    val goalsById: Map<String, com.thefoxworks.tzafon.domain.model.Goal> = emptyMap(), // M5 prompt rule
 )
 
 class TodayViewModel(
     private val repo: TaskRepository,
     private val settings: SettingsStore,
     habitRepo: HabitRepository,
+    goalRepo: com.thefoxworks.tzafon.domain.model.GoalRepository,
 ) : ViewModel() {
 
     val today: String get() = Dates.todayIso()
@@ -45,9 +47,11 @@ class TodayViewModel(
             settings.slippageDismissedOn,
             settings.overloadDismissedOn,
             habitRepo.observeHabits(),
-        ) { tasks, slipDismissed, overDismissed, habits ->
+            goalRepo.observeGoals(),
+        ) { tasks, slipDismissed, overDismissed, habits, goals ->
             build(tasks, slipDismissed, overDismissed).copy(
                 habitsById = habits.associateBy { it.id },
+                goalsById = goals.associateBy { it.id },
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), TodayUiState())
 

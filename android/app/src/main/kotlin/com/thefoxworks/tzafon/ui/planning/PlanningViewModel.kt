@@ -29,6 +29,7 @@ data class PlanningUiState(
     val inbox: List<Task> = emptyList(),
     val undatedCount: Int = 0,
     val habitsById: Map<String, Habit> = emptyMap(), // M4 chips + quant prompt
+    val goalsById: Map<String, com.thefoxworks.tzafon.domain.model.Goal> = emptyMap(), // M5 prompt rule
 )
 
 /**
@@ -40,6 +41,7 @@ class PlanningViewModel(
     private val settings: SettingsStore,
     private val sessionHorizonDays: MutableStateFlow<Long>,
     habitRepo: HabitRepository,
+    goalRepo: com.thefoxworks.tzafon.domain.model.GoalRepository,
 ) : ViewModel() {
 
     val today: String get() = Dates.todayIso()
@@ -50,9 +52,11 @@ class PlanningViewModel(
             settings.planningPreset,
             settings.planningCustomEnd,
             habitRepo.observeHabits(),
-        ) { tasks, presetName, customEnd, habits ->
+            goalRepo.observeGoals(),
+        ) { tasks, presetName, customEnd, habits, goals ->
             build(tasks, RangePreset.parse(presetName), customEnd).copy(
                 habitsById = habits.associateBy { it.id },
+                goalsById = goals.associateBy { it.id },
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), PlanningUiState())
 

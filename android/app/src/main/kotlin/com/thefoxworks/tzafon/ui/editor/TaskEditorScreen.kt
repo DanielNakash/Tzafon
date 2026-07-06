@@ -69,6 +69,8 @@ fun TaskEditorScreen(
     onClose: () -> Unit,
     /** M4 — the habits available to link (DM-REL: at most one per task). */
     habits: List<com.thefoxworks.tzafon.domain.model.Habit> = emptyList(),
+    /** M5 — goals to link (many allowed, one typical — DM-TASK-5). */
+    goals: List<com.thefoxworks.tzafon.domain.model.Goal> = emptyList(),
 ) {
     // a quick-add expand passes a title-only draft (id = null) — still a new task
     val isNew = initial?.id == null
@@ -241,6 +243,47 @@ fun TaskEditorScreen(
                     TzIcons.Plus(14.dp, Den.muted)
                     Text(
                         "Link a habit — done ticks it",
+                        style = TextStyle(fontFamily = DenType.body, fontSize = 13.5.sp),
+                        color = Den.muted,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+            }
+
+            // goal links (M5) — many allowed, one typical
+            val linkedGoals = goals.filter { it.id in draft.goalIds }
+            Row(
+                Modifier.fillMaxWidth()
+                    .padding(top = 8.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .let {
+                        if (linkedGoals.isNotEmpty()) it.background(Den.card).border(1.dp, Den.line, RoundedCornerShape(12.dp))
+                        else it.border(1.dp, Den.line, RoundedCornerShape(12.dp))
+                    }
+                    .pressable { sheet = "goals" }
+                    .padding(horizontal = 13.dp, vertical = 11.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                if (linkedGoals.isNotEmpty()) {
+                    TzIcons.Target(14.dp, Den.rust)
+                    Text(
+                        linkedGoals.joinToString(" · ") { it.title },
+                        style = TextStyle(fontFamily = DenType.body, fontSize = 14.5.sp),
+                        color = Den.ink,
+                        modifier = Modifier.weight(1f),
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        if (linkedGoals.size > 1) "GOALS +${linkedGoals.size - 1}" else "GOAL",
+                        style = TextStyle(fontFamily = DenType.mono, fontSize = 9.5.sp),
+                        color = Den.faint,
+                    )
+                } else {
+                    TzIcons.Plus(14.dp, Den.muted)
+                    Text(
+                        "Link a goal — done moves it",
                         style = TextStyle(fontFamily = DenType.body, fontSize = 13.5.sp),
                         color = Den.muted,
                         modifier = Modifier.weight(1f),
@@ -569,6 +612,48 @@ fun TaskEditorScreen(
                             color = Den.muted,
                         )
                     }
+                }
+            }
+        }
+        "goals" -> DenSheet("Serves goals", onClose = { sheet = null }) {
+            Column {
+                Text(
+                    "Done moves each linked goal — once, and exactly reversed if you undo. One is plenty.",
+                    style = TextStyle(fontFamily = DenType.body, fontSize = 13.sp),
+                    color = Den.muted,
+                    modifier = Modifier.padding(top = 3.dp, bottom = 8.dp),
+                )
+                if (goals.isEmpty()) {
+                    Text(
+                        "No goals yet — aim at one in the Directions tab first.",
+                        style = TextStyle(fontFamily = DenType.body, fontSize = 14.sp),
+                        color = Den.muted,
+                        modifier = Modifier.padding(vertical = 14.dp),
+                    )
+                }
+                goals.filter { it.state == com.thefoxworks.tzafon.domain.model.GoalState.ONGOING }.forEach { g ->
+                    val on = g.id in draft.goalIds
+                    Row(
+                        Modifier.fillMaxWidth()
+                            .pressable {
+                                draft = draft.copy(
+                                    goalIds = if (on) draft.goalIds - g.id else draft.goalIds + g.id,
+                                )
+                            }
+                            .padding(vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(11.dp),
+                    ) {
+                        TzIcons.Target(15.dp, if (on) Den.rust else Den.muted)
+                        Text(
+                            g.title,
+                            style = TextStyle(fontFamily = DenType.body, fontSize = 15.5.sp),
+                            color = Den.ink,
+                            modifier = Modifier.weight(1f),
+                        )
+                        if (on) TzIcons.Check(15.dp, Den.rust, 2.6f)
+                    }
+                    Box(Modifier.fillMaxWidth().height(1.dp).background(Den.line2))
                 }
             }
         }

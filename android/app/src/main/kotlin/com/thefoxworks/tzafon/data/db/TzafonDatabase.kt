@@ -12,14 +12,19 @@ import androidx.sqlite.db.SupportSQLiteDatabase
  * milestones add tables/columns via destructive-free migrations.
  */
 @Database(
-    entities = [TaskEntity::class, SeriesEntity::class, HabitEntity::class, HabitLogEntity::class],
-    version = 2,
+    entities = [
+        TaskEntity::class, SeriesEntity::class,
+        HabitEntity::class, HabitLogEntity::class,
+        GoalEntity::class, ContributionEntity::class,
+    ],
+    version = 3,
     exportSchema = false,
 )
 abstract class TzafonDatabase : RoomDatabase() {
     abstract fun taskDao(): TaskDao
     abstract fun seriesDao(): SeriesDao
     abstract fun habitDao(): HabitDao
+    abstract fun goalDao(): GoalDao
 
     companion object {
         /** M4 — habits + per-date logs (DM-HABIT), purely additive. */
@@ -49,9 +54,38 @@ abstract class TzafonDatabase : RoomDatabase() {
             }
         }
 
+        /** M5 — goals + the contributions ledger (DM-GOAL, DM-ATTR). */
+        private val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """CREATE TABLE IF NOT EXISTS `goals` (
+                        `id` TEXT NOT NULL, `title` TEXT NOT NULL,
+                        `description` TEXT NOT NULL DEFAULT '',
+                        `type` TEXT NOT NULL DEFAULT 'GENERIC',
+                        `steps` TEXT NOT NULL DEFAULT '',
+                        `targetQty` REAL NOT NULL DEFAULT 0,
+                        `unit` TEXT, `currentQty` REAL NOT NULL DEFAULT 0,
+                        `state` TEXT NOT NULL DEFAULT 'ONGOING',
+                        `deadline` TEXT, `commitment` TEXT, `primaryThemeId` TEXT,
+                        `lastActivityAt` INTEGER NOT NULL DEFAULT 0,
+                        `completedAt` INTEGER,
+                        `createdAt` INTEGER NOT NULL DEFAULT 0,
+                        PRIMARY KEY(`id`))""",
+                )
+                db.execSQL(
+                    """CREATE TABLE IF NOT EXISTS `contributions` (
+                        `id` TEXT NOT NULL, `taskId` TEXT NOT NULL,
+                        `goalId` TEXT NOT NULL, `amount` REAL NOT NULL,
+                        `via` TEXT NOT NULL DEFAULT 'DIRECT',
+                        `createdAt` INTEGER NOT NULL DEFAULT 0,
+                        PRIMARY KEY(`id`))""",
+                )
+            }
+        }
+
         fun build(context: Context): TzafonDatabase =
             Room.databaseBuilder(context, TzafonDatabase::class.java, "tzafon.db")
-                .addMigrations(MIGRATION_1_2)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
                 .build()
     }
 }

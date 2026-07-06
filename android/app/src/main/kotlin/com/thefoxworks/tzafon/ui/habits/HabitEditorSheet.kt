@@ -53,8 +53,14 @@ fun HabitEditorSheet(
     onSave: (Habit) -> Unit,
     onDelete: (String) -> Unit,
     onClose: () -> Unit,
+    /** the DM-GOAL-4 rebound pre-fills the name ("make a habit of it") */
+    presetName: String? = null,
+    /** goals this habit may serve (DM-HABIT-6 / D2 — one) */
+    goals: List<com.thefoxworks.tzafon.domain.model.Goal> = emptyList(),
 ) {
-    var name by remember { mutableStateOf(initial?.name ?: "") }
+    var name by remember { mutableStateOf(initial?.name ?: presetName ?: "") }
+    var goalId by remember { mutableStateOf(initial?.goalId) }
+    var goalPick by remember { mutableStateOf(false) }
     var kind by remember { mutableStateOf(initial?.kind ?: HabitKind.FREQUENCY) }
     var target by remember { mutableStateOf(initial?.target ?: 3.0) }
     var unit by remember { mutableStateOf(initial?.unit ?: "") }
@@ -65,6 +71,42 @@ fun HabitEditorSheet(
 
     if (cueOpen) {
         CueSheet(current = cue, onSave = { cue = it }, onClose = { cueOpen = false })
+        return
+    }
+    if (goalPick) {
+        DenSheet(title = "Serves a goal", onClose = { goalPick = false }) {
+            Column {
+                Text(
+                    "The habit becomes the goal's engine — matching units auto-advance the bar.",
+                    style = TextStyle(fontFamily = DenType.body, fontSize = 13.sp),
+                    color = Den.muted,
+                    modifier = Modifier.padding(top = 3.dp, bottom = 8.dp),
+                )
+                goals.filter { it.state == com.thefoxworks.tzafon.domain.model.GoalState.ONGOING }.forEach { g ->
+                    Row(
+                        Modifier.fillMaxWidth()
+                            .pressable { goalId = g.id; goalPick = false }
+                            .padding(vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(11.dp),
+                    ) {
+                        TzIcons.Target(15.dp, Den.rust)
+                        Text(
+                            g.title,
+                            style = TextStyle(fontFamily = DenType.body, fontSize = 15.5.sp),
+                            color = Den.ink,
+                            modifier = Modifier.weight(1f),
+                        )
+                        if (goalId == g.id) TzIcons.Check(15.dp, Den.rust, 2.6f)
+                    }
+                }
+                if (goalId != null) {
+                    SheetGhostButton(label = "No goal for this one", modifier = Modifier.padding(top = 9.dp)) {
+                        goalId = null; goalPick = false
+                    }
+                }
+            }
+        }
         return
     }
 
@@ -210,6 +252,35 @@ fun HabitEditorSheet(
                 )
             }
 
+            if (goals.isNotEmpty() || goalId != null) {
+                SectionLabel("Serves a goal · optional", modifier = Modifier.padding(top = 16.dp))
+                val linked = goals.firstOrNull { it.id == goalId }
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(top = 6.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .border(1.dp, Den.line, RoundedCornerShape(12.dp))
+                        .pressable { goalPick = true }
+                        .padding(horizontal = 13.dp, vertical = 11.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    TzIcons.Target(14.dp, if (linked != null) Den.rust else Den.muted)
+                    Text(
+                        linked?.title ?: "Point it at a goal",
+                        style = TextStyle(fontFamily = DenType.body, fontSize = 14.sp),
+                        color = if (linked != null) Den.ink else Den.muted,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Text(
+                        if (linked != null) "GOAL" else "",
+                        style = TextStyle(fontFamily = DenType.mono, fontSize = 9.5.sp),
+                        color = Den.faint,
+                    )
+                }
+            }
+
             SectionLabel("Cue · when will you do it?", modifier = Modifier.padding(top = 16.dp))
             Row(
                 Modifier
@@ -256,7 +327,7 @@ fun HabitEditorSheet(
                         targetDays = targetDays.takeIf { kind == HabitKind.QUANTITATIVE },
                         cue = cue,
                         primaryThemeId = initial?.primaryThemeId,
-                        goalId = initial?.goalId,
+                        goalId = goalId,
                         startedAt = initial?.startedAt ?: 0,
                         createdAt = initial?.createdAt ?: 0,
                     ),
