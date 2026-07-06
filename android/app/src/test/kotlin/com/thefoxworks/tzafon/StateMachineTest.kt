@@ -127,4 +127,37 @@ class StateMachineTest {
             }
         }
     }
+
+    // ── M3 — the full FR-BACKLOG-3 out-of-backlog table ───────
+
+    @Test
+    fun `backlog to open is the pull - nothing reversed, links reactivate forward`() {
+        val fx = StateMachine.transition(TaskState.BACKLOG, TaskState.OPEN, isRecurring = false)
+        assertEquals(TaskState.OPEN, fx.newState)
+        assertFalse(fx.reverseContribution)
+        assertFalse(fx.clearToDoDate)
+    }
+
+    @Test
+    fun `backlog to done - did it without scheduling, counted once`() {
+        val fx = StateMachine.transition(TaskState.BACKLOG, TaskState.DONE, isRecurring = false)
+        assertEquals(TaskState.DONE, fx.newState)
+        assertTrue(fx.setCompleted)
+        assertTrue(fx.applyContribution)
+    }
+
+    @Test
+    fun `backlog to closed - decided against it`() {
+        val fx = StateMachine.transition(TaskState.BACKLOG, TaskState.CLOSED, isRecurring = false)
+        assertEquals(TaskState.CLOSED, fx.newState)
+        assertFalse(fx.reverseContribution) // nothing was ever contributed
+    }
+
+    @Test
+    fun `backlog to frozen is a no-op - both are parked`() {
+        val fx = StateMachine.transition(TaskState.BACKLOG, TaskState.FROZEN, isRecurring = false)
+        assertEquals(TaskState.BACKLOG, fx.newState)
+        assertFalse(fx.freezeSeries)
+        assertFalse(fx.clearCompleted)
+    }
 }

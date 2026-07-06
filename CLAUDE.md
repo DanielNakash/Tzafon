@@ -80,5 +80,6 @@ short progress note (what changed, against which codes) → **git commit** refer
 - **M1** — task state machine (`DM-TASK-1/2/3`, `FR-REC-5`, `FR-ALL-3`) — ✅ committed (`3b6394a`).
 - **M2** — action layer (`FR-NAV-1/2`, `FR-TODAY-1..6`, `FR-PLAN-1/2/3`, `FR-ALL-2/4/5`,
   `FR-CAPTURE-1/2`, `FR-REC-3`) — ✅ committed.
-- **M3** — Backlog state (`FR-BACKLOG-1..4`) — next.
+- **M3** — Backlog state (`FR-BACKLOG-1..4`) — ✅ committed.
+- **M4** — Habits + Cues (`DM-HABIT`, `DM-CUE`, `FR-HAB`) — next.
 Check `git log` and `PLAN.md §5` for the current frontier before continuing.

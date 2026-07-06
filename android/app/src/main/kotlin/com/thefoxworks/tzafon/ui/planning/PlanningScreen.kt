@@ -34,6 +34,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.thefoxworks.tzafon.domain.action.ActionLogic
 import com.thefoxworks.tzafon.domain.action.ActionLogic.RangePreset
 import com.thefoxworks.tzafon.domain.dates.Dates
+import com.thefoxworks.tzafon.domain.model.StateMachine
 import com.thefoxworks.tzafon.domain.model.Task
 import com.thefoxworks.tzafon.ui.capture.QuickAddSheet
 import com.thefoxworks.tzafon.ui.components.CalendarPicker
@@ -43,6 +44,7 @@ import com.thefoxworks.tzafon.ui.components.FoxLogo
 import com.thefoxworks.tzafon.ui.components.GroupHeader
 import com.thefoxworks.tzafon.ui.components.PillButton
 import com.thefoxworks.tzafon.ui.components.RustHeader
+import com.thefoxworks.tzafon.ui.components.StateSheet
 import com.thefoxworks.tzafon.ui.components.TaskCheckbox
 import com.thefoxworks.tzafon.ui.components.TaskRow
 import com.thefoxworks.tzafon.ui.components.pressable
@@ -64,13 +66,14 @@ fun PlanningScreen(
     onOpenAllTasks: () -> Unit,
     onOpenBacklog: (() -> Unit)? = null,
     onOpenSettings: (() -> Unit)? = null,
-    onSomeday: ((String) -> Unit)? = null, // enabled with Backlog in M3
 ) {
     val state by vm.uiState.collectAsStateWithLifecycle()
     var quickAdd by remember { mutableStateOf(false) }
     var menu by remember { mutableStateOf(false) }
     var rescheduleId by remember { mutableStateOf<String?>(null) }
     var customRange by remember { mutableStateOf(false) }
+    // FR-BACKLOG-2 — Someday on a recurring task opens the guard (offers Frozen)
+    var somedayGuardTask by remember { mutableStateOf<Task?>(null) }
 
     Box(Modifier.fillMaxSize().background(Den.bg)) {
         Column(Modifier.fillMaxSize()) {
@@ -152,7 +155,10 @@ fun PlanningScreen(
                                     onOpen = { onOpenTask(t.id) },
                                     onToday = { vm.doToday(t.id) },
                                     onReschedule = { rescheduleId = t.id },
-                                    onSomeday = onSomeday?.let { f -> { f(t.id) } },
+                                    onSomeday = {
+                                        if (t.seriesId == null) vm.someday(t.id)
+                                        else somedayGuardTask = t
+                                    },
                                     onDrop = { vm.drop(t.id) },
                                 )
                             }
@@ -256,6 +262,15 @@ fun PlanningScreen(
                 onPick = { d -> vm.setRange(RangePreset.CUSTOM, d); customRange = false },
             )
         }
+    }
+    somedayGuardTask?.let { t ->
+        StateSheet(
+            current = t.state,
+            isRecurring = true,
+            onPick = { target -> vm.toState(t.id, target) },
+            onClose = { somedayGuardTask = null },
+            initialGuard = StateMachine.Guard.RecurringCannotBacklog,
+        )
     }
 }
 

@@ -57,6 +57,11 @@ object StateMachine {
         }
         if (current == target) return Effects(target)
 
+        // FR-BACKLOG-3: Backlog → Frozen is a no-op — both are "parked"
+        if (current == TaskState.BACKLOG && target == TaskState.FROZEN) {
+            return Effects(TaskState.BACKLOG)
+        }
+
         val wasDone = current == TaskState.DONE
         val wasFrozen = current == TaskState.FROZEN
 

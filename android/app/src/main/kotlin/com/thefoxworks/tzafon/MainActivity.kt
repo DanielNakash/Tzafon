@@ -29,6 +29,8 @@ import com.thefoxworks.tzafon.domain.model.RecurrenceDraft
 import com.thefoxworks.tzafon.domain.model.TaskDraft
 import com.thefoxworks.tzafon.ui.alltasks.AllTasksScreen
 import com.thefoxworks.tzafon.ui.alltasks.AllTasksViewModel
+import com.thefoxworks.tzafon.ui.backlog.BacklogScreen
+import com.thefoxworks.tzafon.ui.backlog.BacklogViewModel
 import com.thefoxworks.tzafon.ui.editor.TaskEditorScreen
 import com.thefoxworks.tzafon.ui.nav.DenBottomNav
 import com.thefoxworks.tzafon.ui.nav.PendingTabScreen
@@ -65,6 +67,8 @@ class VmFactory(private val container: AppContainer) : ViewModelProvider.Factory
             TodayViewModel(container.taskRepository, container.settings) as T
         PlanningViewModel::class.java ->
             PlanningViewModel(container.taskRepository, container.settings, container.sessionHorizonDays) as T
+        BacklogViewModel::class.java ->
+            BacklogViewModel(container.taskRepository) as T
         else -> throw IllegalArgumentException("Unknown VM $modelClass")
     }
 }
@@ -123,6 +127,7 @@ fun TzafonNavHost(container: AppContainer) {
                     onExpandAdd = { title -> openEditor(title = title) },
                     onOpenPlanning = { goTab(Tab.PLANNING) },
                     onOpenAllTasks = { nav.navigate("alltasks") },
+                    onOpenBacklog = { nav.navigate("backlog") },
                 )
             }
 
@@ -133,6 +138,7 @@ fun TzafonNavHost(container: AppContainer) {
                     onOpenTask = { id -> openEditor(taskId = id) },
                     onExpandAdd = { title -> openEditor(title = title) },
                     onOpenAllTasks = { nav.navigate("alltasks") },
+                    onOpenBacklog = { nav.navigate("backlog") },
                 )
             }
 
@@ -147,6 +153,16 @@ fun TzafonNavHost(container: AppContainer) {
                     vm = vm,
                     onOpenTask = { id -> openEditor(taskId = id) },
                     onAdd = { openEditor() },
+                    onOpenBacklog = { nav.navigate("backlog") { launchSingleTop = true } },
+                )
+            }
+
+            composable("backlog") {
+                val vm: BacklogViewModel = viewModel(factory = VmFactory(container))
+                BacklogScreen(
+                    vm = vm,
+                    onOpenTask = { id -> openEditor(taskId = id) },
+                    onExpandAdd = { title -> openEditor(title = title) },
                 )
             }
 

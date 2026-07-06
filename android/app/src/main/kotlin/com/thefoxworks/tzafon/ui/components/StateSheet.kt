@@ -41,8 +41,10 @@ fun StateSheet(
     isRecurring: Boolean,
     onPick: (TaskState) -> Unit,
     onClose: () -> Unit,
+    /** open straight on a guard pane (e.g. Planning's Someday on a series) */
+    initialGuard: StateMachine.Guard? = null,
 ) {
-    var guard by remember { mutableStateOf<StateMachine.Guard?>(null) }
+    var guard by remember { mutableStateOf(initialGuard) }
 
     DenSheet(title = "Where does this stand?", onClose = onClose) {
         Column {
