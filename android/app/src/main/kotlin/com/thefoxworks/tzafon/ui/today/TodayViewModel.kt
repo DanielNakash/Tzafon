@@ -5,11 +5,17 @@ import androidx.lifecycle.viewModelScope
 import com.thefoxworks.tzafon.data.settings.SettingsStore
 import com.thefoxworks.tzafon.domain.action.ActionLogic
 import com.thefoxworks.tzafon.domain.dates.Dates
+import com.thefoxworks.tzafon.domain.model.Goal
+import com.thefoxworks.tzafon.domain.model.GoalRepository
 import com.thefoxworks.tzafon.domain.model.Habit
 import com.thefoxworks.tzafon.domain.model.HabitRepository
+import com.thefoxworks.tzafon.domain.model.Review
+import com.thefoxworks.tzafon.domain.model.ReviewRepository
 import com.thefoxworks.tzafon.domain.model.Task
 import com.thefoxworks.tzafon.domain.model.TaskRepository
+import com.thefoxworks.tzafon.domain.model.TaskState
 import com.thefoxworks.tzafon.domain.recurrence.Recurrence
+import com.thefoxworks.tzafon.domain.review.ReviewLogic
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -20,46 +26,58 @@ import java.time.ZoneId
 
 data class TodayUiState(
     val today: String = Dates.todayIso(),
-    val focus: List<Task> = emptyList(),          // DM-FOCUS markers (set in M7)
+    val focus: List<Task> = emptyList(),          // DM-FOCUS Today's-Focus marks
     val alsoToday: List<Task> = emptyList(),      // the reorderable main list
+    val weekPriorities: List<Task> = emptyList(), // the weekly strip (FR-LOOP-1)
     val doneToday: List<Task> = emptyList(),
     val doneCount: Int = 0,
     val totalCount: Int = 0,
     val slippedCount: Int = 0,                    // FR-TODAY-4
     val showSlippage: Boolean = false,
     val showOverload: Boolean = false,            // FR-TODAY-5
-    val habitsById: Map<String, Habit> = emptyMap(), // M4 chips + quant prompt
-    val goalsById: Map<String, com.thefoxworks.tzafon.domain.model.Goal> = emptyMap(), // M5 prompt rule
+    val habitsById: Map<String, Habit> = emptyMap(),
+    val goalsById: Map<String, Goal> = emptyMap(),
+    /** DM-REVIEW — the gentle invite ("SUNDAY · A GENTLE LOOK BACK") */
+    val reviewInvite: String? = null,
+    /** DM-FOCUS-2 — the ~3/day soft cap, nudged where it's set */
+    val focusOverCap: Boolean = false,
 )
 
 class TodayViewModel(
     private val repo: TaskRepository,
     private val settings: SettingsStore,
     habitRepo: HabitRepository,
-    goalRepo: com.thefoxworks.tzafon.domain.model.GoalRepository,
+    goalRepo: GoalRepository,
+    reviewRepo: ReviewRepository,
 ) : ViewModel() {
 
     val today: String get() = Dates.todayIso()
+
+    private data class Refs(val habits: List<Habit>, val goals: List<Goal>, val reviews: List<Review>, val weekStart: String)
 
     val uiState: StateFlow<TodayUiState> =
         combine(
             repo.observeTasks(),
             settings.slippageDismissedOn,
             settings.overloadDismissedOn,
-            habitRepo.observeHabits(),
-            goalRepo.observeGoals(),
-        ) { tasks, slipDismissed, overDismissed, habits, goals ->
-            build(tasks, slipDismissed, overDismissed).copy(
-                habitsById = habits.associateBy { it.id },
-                goalsById = goals.associateBy { it.id },
-            )
+            combine(
+                habitRepo.observeHabits(), goalRepo.observeGoals(),
+                reviewRepo.observeReviews(), settings.weekStart,
+            ) { h, g, r, ws -> Refs(h, g, r, ws) },
+        ) { tasks, slipDismissed, overDismissed, refs ->
+            build(tasks, slipDismissed, overDismissed, refs)
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), TodayUiState())
 
     init {
         viewModelScope.launch { repo.topUp(today, Recurrence.HORIZON_DAYS) }
     }
 
-    private fun build(tasks: List<Task>, slipDismissed: String?, overDismissed: String?): TodayUiState {
+    private fun build(
+        tasks: List<Task>,
+        slipDismissed: String?,
+        overDismissed: String?,
+        refs: Refs,
+    ): TodayUiState {
         val today = Dates.todayIso()
         val zone = ZoneId.systemDefault()
         val dayStart = LocalDate.parse(today).atStartOfDay(zone).toInstant().toEpochMilli()
@@ -72,23 +90,47 @@ class TodayViewModel(
             .sortedByDescending { it.completedAt ?: 0 }
         val slipped = ActionLogic.slippedCount(tasks, today)
 
+        // the weekly strip: priorities set at Review that aren't already on today
+        val slot = ReviewLogic.slotFor(today, refs.weekStart)
+        val weekPriorities = tasks.filter {
+            it.state == TaskState.OPEN && it.focusWeekStart == slot &&
+                !ActionLogic.isTodayTask(it, today)
+        }.sortedBy { it.toDoDate ?: "~" }
+
+        // the review invite (DM-REVIEW-4 window rules)
+        val existing = refs.reviews.firstOrNull { it.id == slot }
+        val invite = if (ReviewLogic.shouldSurface(existing, today, refs.weekStart)) {
+            ReviewLogic.inviteKicker(ReviewLogic.kindFor(slot), slot)
+        } else null
+
         return TodayUiState(
             today = today,
             focus = focus,
             alsoToday = also,
+            weekPriorities = weekPriorities,
             doneToday = done,
             doneCount = done.size,
             totalCount = open.size + done.size,
             slippedCount = slipped,
             showSlippage = slipped > 0 && slipDismissed != today,
-            // FR-TODAY-5: static threshold; must never nag alongside the focus
-            // cap nudge (which lives in the M7 review flow, not here)
-            showOverload = ActionLogic.isOverloaded(open.size) && overDismissed != today,
+            // FR-TODAY-5: static threshold; never nags alongside the focus cap
+            showOverload = ActionLogic.isOverloaded(open.size) && overDismissed != today && focus.size <= 3,
+            habitsById = refs.habits.associateBy { it.id },
+            goalsById = refs.goals.associateBy { it.id },
+            reviewInvite = invite,
+            focusOverCap = focus.size > 3,
         )
     }
 
     fun toggleDone(id: String, habitAmount: Double? = null) {
         viewModelScope.launch { repo.toggleDone(id, habitAmount) }
+    }
+
+    /** DM-FOCUS-1 — point a task north for today (or unpoint it). */
+    fun toggleFocus(task: Task) {
+        viewModelScope.launch {
+            repo.setFocusDate(task.id, if (ActionLogic.isFocusToday(task, today)) null else today)
+        }
     }
 
     fun dismissSlippage() {

@@ -271,6 +271,25 @@ class RoomTaskRepository(
         taskDao.setSortOrders(orders)
     }
 
+    override suspend fun setFocusDate(id: String, date: String?) {
+        val t = taskDao.get(id)?.toDomain() ?: return
+        taskDao.upsert(t.copy(focusDate = date).toEntity())
+    }
+
+    override suspend fun setWeekPriorities(ids: List<String>, weekStart: String) {
+        // clear old marks for this week, then stamp the chosen set
+        for (row in taskDao.getAll()) {
+            val t = row.toDomain()
+            val marked = t.focusWeekStart == weekStart
+            val shouldMark = t.id in ids
+            if (marked && !shouldMark) {
+                taskDao.upsert(t.copy(focusWeekStart = null).toEntity())
+            } else if (!marked && shouldMark) {
+                taskDao.upsert(t.copy(focusWeekStart = weekStart).toEntity())
+            }
+        }
+    }
+
     override suspend fun reschedule(id: String, newToDoDate: String?) {
         val t = taskDao.get(id)?.toDomain() ?: return
         taskDao.upsert(

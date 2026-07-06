@@ -53,4 +53,10 @@ interface TaskRepository {
      * overridden one-off, series untouched (v1.1.0 semantics).
      */
     suspend fun reschedule(id: String, newToDoDate: String?)
+
+    /** DM-FOCUS-1 — mark/unmark Today's Focus (a marker, not a store). */
+    suspend fun setFocusDate(id: String, date: String?)
+
+    /** DM-FOCUS-1 — set the week's priority marks in one pass (Review Plan). */
+    suspend fun setWeekPriorities(ids: List<String>, weekStart: String)
 }

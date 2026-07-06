@@ -53,6 +53,9 @@ fun TaskRow(
     habitLabel: String? = null,
     last: Boolean = false,
     chevron: Boolean = true,
+    /** DM-FOCUS-1 — Today's-Focus marker toggle (Today view only) */
+    focused: Boolean = false,
+    onFocusToggle: (() -> Unit)? = null,
 ) {
     val struck = task.state == TaskState.DONE || task.state == TaskState.CLOSED
     val ind = dueIndicator(task, today)
@@ -104,6 +107,19 @@ fun TaskRow(
                         task.cue?.let { CueChip(it.label) }
                         if (recurSummary != null) Chip(recurSummary, icon = { TzIcons.Repeat(12.dp, Den.faint) })
                     }
+                }
+            }
+            if (onFocusToggle != null) {
+                Box(
+                    Modifier.padding(top = 1.dp).pressable(onFocusToggle),
+                ) {
+                    Compass(
+                        size = 20.dp,
+                        ring = if (focused) Den.rust else Den.faint.a(0.7f),
+                        needleN = if (focused) Den.rust else Den.faint.a(0.7f),
+                        needleS = if (focused) Den.rust.a(0.5f) else Den.faint.a(0.4f),
+                        stroke = 2f,
+                    )
                 }
             }
             if (chevron) {

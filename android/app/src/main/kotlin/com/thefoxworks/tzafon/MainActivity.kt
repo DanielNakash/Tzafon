@@ -41,6 +41,9 @@ import com.thefoxworks.tzafon.ui.nav.PendingTabScreen
 import com.thefoxworks.tzafon.ui.nav.Tab
 import com.thefoxworks.tzafon.ui.planning.PlanningScreen
 import com.thefoxworks.tzafon.ui.planning.PlanningViewModel
+import com.thefoxworks.tzafon.ui.review.ReviewScreen
+import com.thefoxworks.tzafon.ui.review.ReviewViewModel
+import com.thefoxworks.tzafon.ui.settings.SettingsScreen
 import com.thefoxworks.tzafon.ui.theme.TzafonTheme
 import com.thefoxworks.tzafon.ui.today.TodayScreen
 import com.thefoxworks.tzafon.ui.today.TodayViewModel
@@ -68,7 +71,9 @@ class VmFactory(private val container: AppContainer) : ViewModelProvider.Factory
         AllTasksViewModel::class.java ->
             AllTasksViewModel(container.taskRepository, container.sessionHorizonDays, container.habitRepository, container.goalRepository) as T
         TodayViewModel::class.java ->
-            TodayViewModel(container.taskRepository, container.settings, container.habitRepository, container.goalRepository) as T
+            TodayViewModel(container.taskRepository, container.settings, container.habitRepository, container.goalRepository, container.reviewRepository) as T
+        ReviewViewModel::class.java ->
+            ReviewViewModel(container.reviewRepository, container.taskRepository, container.habitRepository, container.goalRepository, container.settings) as T
         PlanningViewModel::class.java ->
             PlanningViewModel(container.taskRepository, container.settings, container.sessionHorizonDays, container.habitRepository, container.goalRepository) as T
         BacklogViewModel::class.java ->
@@ -136,6 +141,8 @@ fun TzafonNavHost(container: AppContainer) {
                     onOpenPlanning = { goTab(Tab.PLANNING) },
                     onOpenAllTasks = { nav.navigate("alltasks") },
                     onOpenBacklog = { nav.navigate("backlog") },
+                    onOpenSettings = { nav.navigate("settings") },
+                    onOpenReview = { nav.navigate("review") },
                 )
             }
 
@@ -147,6 +154,7 @@ fun TzafonNavHost(container: AppContainer) {
                     onExpandAdd = { title -> openEditor(title = title) },
                     onOpenAllTasks = { nav.navigate("alltasks") },
                     onOpenBacklog = { nav.navigate("backlog") },
+                    onOpenSettings = { nav.navigate("settings") },
                 )
             }
 
@@ -178,6 +186,15 @@ fun TzafonNavHost(container: AppContainer) {
                     onOpenTask = { id -> openEditor(taskId = id) },
                     onExpandAdd = { title -> openEditor(title = title) },
                 )
+            }
+
+            composable("review") {
+                val vm: ReviewViewModel = viewModel(factory = VmFactory(container))
+                ReviewScreen(vm = vm, onClose = { nav.popBackStack() })
+            }
+
+            composable("settings") {
+                SettingsScreen(settings = container.settings, onClose = { nav.popBackStack() })
             }
 
             composable(

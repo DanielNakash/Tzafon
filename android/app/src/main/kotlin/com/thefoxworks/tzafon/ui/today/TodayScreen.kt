@@ -79,6 +79,7 @@ fun TodayScreen(
     onOpenAllTasks: () -> Unit,
     onOpenBacklog: (() -> Unit)? = null,
     onOpenSettings: (() -> Unit)? = null,
+    onOpenReview: (() -> Unit)? = null,
 ) {
     val state by vm.uiState.collectAsStateWithLifecycle()
     var doneOpen by remember { mutableStateOf(false) }
@@ -122,6 +123,38 @@ fun TodayScreen(
                     .verticalScroll(rememberScrollState())
                     .padding(start = 20.dp, end = 20.dp, bottom = 200.dp),
             ) {
+                // ── the review invite (DM-REVIEW-4 — an invitation, never a block) ──
+                if (state.reviewInvite != null && onOpenReview != null) {
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(top = 14.dp)
+                            .clip(RoundedCornerShape(13.dp))
+                            .background(Den.surface)
+                            .border(1.dp, Den.rust.a(0.3f), RoundedCornerShape(13.dp))
+                            .pressable(onOpenReview)
+                            .padding(horizontal = 14.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(11.dp),
+                    ) {
+                        Compass(size = 22.dp, ring = Den.rust, needleN = Den.rust, needleS = Den.faint, stroke = 2f)
+                        Column(Modifier.weight(1f)) {
+                            Text(
+                                state.reviewInvite!!,
+                                style = TextStyle(fontFamily = DenType.mono, fontSize = 9.5.sp, letterSpacing = 0.5.sp),
+                                color = Den.rust,
+                            )
+                            Text(
+                                "Your week, reflected — then a fresh start.",
+                                style = TextStyle(fontFamily = DenType.serif, fontSize = 15.5.sp, fontWeight = FontWeight.SemiBold),
+                                color = Den.ink,
+                                modifier = Modifier.padding(top = 2.dp),
+                            )
+                        }
+                        TzIcons.Chevron(17.dp, Den.rust)
+                    }
+                }
+
                 if (state.showSlippage) {
                     Banner(
                         text = buildAnnotatedString {
@@ -171,8 +204,16 @@ fun TodayScreen(
                                 last = i == state.focus.lastIndex,
                                 onToggle = { requestToggle(t) },
                                 onOpen = { onOpenTask(t.id) },
+                                onUnfocus = { vm.toggleFocus(t) },
                             )
                         }
+                    }
+                    // DM-FOCUS-2 — the soft cap, nudged right where it's set
+                    if (state.focusOverCap) {
+                        Nudge(
+                            text = "That's more than three pointed north. All fine — but a shorter list pulls harder.",
+                            modifier = Modifier.padding(top = 10.dp),
+                        )
                     }
                 }
 
@@ -204,6 +245,29 @@ fun TodayScreen(
                             onOpen = onOpenTask,
                             onPersist = { vm.persistOrder(it) },
                             habitLabel = { t -> state.habitsById[t.habitId]?.name },
+                            onFocusToggle = { t -> vm.toggleFocus(t) },
+                        )
+                    }
+                }
+
+                // ── this week's priorities (the strip set at Review) ──
+                if (state.weekPriorities.isNotEmpty()) {
+                    Row(
+                        Modifier.fillMaxWidth().padding(top = 20.dp, bottom = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        SectionLabel("This week's priorities · ${state.weekPriorities.size}")
+                        Box(Modifier.weight(1f).height(1.dp).background(Den.line2))
+                    }
+                    state.weekPriorities.forEachIndexed { i, t ->
+                        TaskRow(
+                            task = t,
+                            today = state.today,
+                            onToggle = { requestToggle(t) },
+                            onOpen = { onOpenTask(t.id) },
+                            habitLabel = state.habitsById[t.habitId]?.name,
+                            last = i == state.weekPriorities.lastIndex,
                         )
                     }
                 }
@@ -296,7 +360,13 @@ fun TodayScreen(
 
 /** Focus row (design FocusItem): bold title, serves/cue meta, no chevron. */
 @Composable
-private fun FocusItem(t: Task, last: Boolean, onToggle: () -> Unit, onOpen: () -> Unit) {
+private fun FocusItem(
+    t: Task,
+    last: Boolean,
+    onToggle: () -> Unit,
+    onOpen: () -> Unit,
+    onUnfocus: (() -> Unit)? = null,
+) {
     Column(Modifier.fillMaxWidth().pressable(onOpen)) {
         Row(
             Modifier.fillMaxWidth().padding(vertical = 13.dp),
@@ -311,6 +381,11 @@ private fun FocusItem(t: Task, last: Boolean, onToggle: () -> Unit, onOpen: () -
                 )
                 if (t.cue != null) {
                     Row(Modifier.padding(top = 6.dp)) { CueChip(t.cue.label) }
+                }
+            }
+            if (onUnfocus != null) {
+                Box(Modifier.pressable(onUnfocus).padding(top = 2.dp)) {
+                    Compass(size = 20.dp, ring = Den.rust, needleN = Den.rust, needleS = Den.rust.a(0.5f), stroke = 2f)
                 }
             }
         }
@@ -331,6 +406,7 @@ internal fun ReorderableTaskList(
     onOpen: (String) -> Unit,
     onPersist: (List<String>) -> Unit,
     habitLabel: (Task) -> String? = { null },
+    onFocusToggle: ((Task) -> Unit)? = null,
 ) {
     val ids = tasks.map { it.id }
     var localOrder by remember { mutableStateOf<List<String>?>(null) }
@@ -415,6 +491,8 @@ internal fun ReorderableTaskList(
                     onOpen = { onOpen(task.id) },
                     habitLabel = habitLabel(task),
                     last = index == displayed.lastIndex,
+                    focused = false,
+                    onFocusToggle = onFocusToggle?.let { f -> { f(task) } },
                 )
             }
         }

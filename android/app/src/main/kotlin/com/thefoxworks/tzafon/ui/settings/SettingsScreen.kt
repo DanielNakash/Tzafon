@@ -1,0 +1,183 @@
+package com.thefoxworks.tzafon.ui.settings
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.thefoxworks.tzafon.data.settings.SettingsStore
+import com.thefoxworks.tzafon.ui.components.FoxLogo
+import com.thefoxworks.tzafon.ui.components.RustHeader
+import com.thefoxworks.tzafon.ui.components.SectionLabel
+import com.thefoxworks.tzafon.ui.components.TzIcons
+import com.thefoxworks.tzafon.ui.components.pressable
+import com.thefoxworks.tzafon.ui.theme.Den
+import com.thefoxworks.tzafon.ui.theme.DenType
+import com.thefoxworks.tzafon.ui.theme.a
+import kotlinx.coroutines.launch
+
+/**
+ * Settings (FR-SET, design: SettingsScreen). The week start drives the
+ * Review day, habit periods and every fresh start (DM-REL-2). Sign-in
+ * arrives with the deferred Firebase step (M9b) — storage is local.
+ */
+@Composable
+fun SettingsScreen(
+    settings: SettingsStore,
+    onClose: () -> Unit,
+) {
+    val weekStart by settings.weekStart.collectAsStateWithLifecycle(initialValue = "SUNDAY")
+    val scope = rememberCoroutineScope()
+
+    Column(Modifier.fillMaxSize().background(Den.bg)) {
+        RustHeader(
+            title = "Settings",
+            kicker = "TZAFON",
+            compact = true,
+            right = {
+                Box(Modifier.pressable(onClose).padding(4.dp)) { TzIcons.X(20.dp, Den.cream) }
+            },
+        )
+
+        Column(
+            Modifier
+                .weight(1f)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 18.dp)
+                .padding(bottom = 40.dp),
+        ) {
+            // ── storage (Google SSO lands with M9b) ──
+            Row(
+                Modifier.fillMaxWidth()
+                    .padding(top = 16.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(Den.card)
+                    .border(1.dp, Den.line, RoundedCornerShape(14.dp))
+                    .padding(14.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(13.dp),
+            ) {
+                FoxLogo(44.dp, ring = Den.ink.a(0.06f))
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        "Yours, on this device",
+                        style = TextStyle(fontFamily = DenType.serif, fontSize = 16.5.sp, fontWeight = FontWeight.SemiBold),
+                        color = Den.ink,
+                    )
+                    Text(
+                        "Everything lives locally — sign-in and sync arrive later.",
+                        style = TextStyle(fontFamily = DenType.body, fontSize = 13.sp),
+                        color = Den.muted,
+                        modifier = Modifier.padding(top = 1.dp),
+                    )
+                }
+            }
+
+            // ── the week (FR-SET-1) ──
+            SectionLabel("The week", modifier = Modifier.padding(top = 20.dp, bottom = 9.dp))
+            Column(
+                Modifier.fillMaxWidth()
+                    .clip(RoundedCornerShape(13.dp))
+                    .background(Den.card)
+                    .border(1.dp, Den.line, RoundedCornerShape(13.dp))
+                    .padding(horizontal = 14.dp, vertical = 13.dp),
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    TzIcons.Calendar(17.dp, Den.rust)
+                    Text(
+                        "Week starts on",
+                        style = TextStyle(fontFamily = DenType.body, fontSize = 15.sp),
+                        color = Den.ink,
+                    )
+                }
+                Row(Modifier.fillMaxWidth().padding(top = 11.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    listOf("SUNDAY" to "Sun", "MONDAY" to "Mon", "SATURDAY" to "Sat").forEach { (key, label) ->
+                        val on = weekStart == key
+                        Box(
+                            Modifier.weight(1f)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(if (on) Den.rust else Color.Transparent)
+                                .border(1.dp, if (on) Den.rust else Den.line, RoundedCornerShape(8.dp))
+                                .pressable { scope.launch { settings.setWeekStart(key) } }
+                                .padding(vertical = 7.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                label,
+                                style = TextStyle(fontFamily = DenType.mono, fontSize = 12.sp),
+                                color = if (on) Color.White else Den.muted,
+                            )
+                        }
+                    }
+                }
+                Text(
+                    "Sets your Review day, habit periods and every “fresh start”.",
+                    style = TextStyle(fontFamily = DenType.body, fontSize = 11.5.sp, lineHeight = 16.sp),
+                    color = Den.faint,
+                    modifier = Modifier.padding(top = 9.dp),
+                )
+            }
+
+            // ── reminders (fire from M9) ──
+            SectionLabel("Reminders", modifier = Modifier.padding(top = 20.dp, bottom = 9.dp))
+            Row(
+                Modifier.fillMaxWidth()
+                    .clip(RoundedCornerShape(13.dp))
+                    .background(Den.card)
+                    .border(1.dp, Den.line, RoundedCornerShape(13.dp))
+                    .padding(horizontal = 14.dp, vertical = 13.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                TzIcons.Bell(17.dp, Den.rust)
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        "Cue-based reminders",
+                        style = TextStyle(fontFamily = DenType.body, fontSize = 15.sp),
+                        color = Den.ink,
+                    )
+                    Text(
+                        "Fires on your triggers — arrives with notifications.",
+                        style = TextStyle(fontFamily = DenType.body, fontSize = 12.5.sp),
+                        color = Den.muted,
+                        modifier = Modifier.padding(top = 1.dp),
+                    )
+                }
+                Text(
+                    "SOON",
+                    style = TextStyle(fontFamily = DenType.mono, fontSize = 9.5.sp, letterSpacing = 0.5.sp),
+                    color = Den.faint,
+                )
+            }
+
+            Text(
+                "Tzafon · צפון — the fox works · don't panic",
+                style = TextStyle(fontFamily = DenType.mono, fontSize = 10.sp, letterSpacing = 0.6.sp),
+                color = Den.faint,
+                modifier = Modifier.fillMaxWidth().padding(top = 28.dp),
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            )
+        }
+    }
+}

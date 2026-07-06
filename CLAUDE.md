@@ -84,5 +84,6 @@ short progress note (what changed, against which codes) → **git commit** refer
 - **M4** — Habits + Cues (`DM-HABIT`, `DM-CUE`, `FR-HAB`) — ✅ committed.
 - **M5** — Goals + attribution (`DM-GOAL`, `DM-ATTR`) — ✅ committed.
 - **M6** — Themes + Directions hub (`DM-THEME`, `FR-DIR`) — ✅ committed.
-- **M7** — Review + Focus loops (`DM-REVIEW`, `DM-FOCUS`, `FR-LOOP`, `FR-SET`) — next.
+- **M7** — Review + Focus loops (`DM-REVIEW`, `DM-FOCUS`, `FR-LOOP`, `FR-SET`) — ✅ committed.
+- **M8** — Journey (`FR-JOURNEY`) — next.
 Check `git log` and `PLAN.md §5` for the current frontier before continuing.

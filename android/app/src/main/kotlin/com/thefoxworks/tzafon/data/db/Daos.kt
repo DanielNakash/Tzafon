@@ -129,6 +129,18 @@ interface GoalDao {
 }
 
 @Dao
+interface ReviewDao {
+    @Query("SELECT * FROM reviews")
+    fun observeAll(): Flow<List<ReviewEntity>>
+
+    @Query("SELECT * FROM reviews WHERE id = :id")
+    suspend fun get(id: String): ReviewEntity?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsert(review: ReviewEntity)
+}
+
+@Dao
 interface ThemeDao {
     @Query("SELECT * FROM themes")
     fun observeAll(): Flow<List<ThemeEntity>>

@@ -16,9 +16,9 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         TaskEntity::class, SeriesEntity::class,
         HabitEntity::class, HabitLogEntity::class,
         GoalEntity::class, ContributionEntity::class,
-        ThemeEntity::class,
+        ThemeEntity::class, ReviewEntity::class,
     ],
-    version = 4,
+    version = 5,
     exportSchema = false,
 )
 abstract class TzafonDatabase : RoomDatabase() {
@@ -27,6 +27,7 @@ abstract class TzafonDatabase : RoomDatabase() {
     abstract fun habitDao(): HabitDao
     abstract fun goalDao(): GoalDao
     abstract fun themeDao(): ThemeDao
+    abstract fun reviewDao(): ReviewDao
 
     companion object {
         /** M4 — habits + per-date logs (DM-HABIT), purely additive. */
@@ -104,9 +105,25 @@ abstract class TzafonDatabase : RoomDatabase() {
             }
         }
 
+        /** M7 — the persisted review artifacts (DM-REVIEW-5). */
+        private val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """CREATE TABLE IF NOT EXISTS `reviews` (
+                        `id` TEXT NOT NULL,
+                        `kind` TEXT NOT NULL DEFAULT 'WEEKLY',
+                        `periodStart` TEXT NOT NULL, `periodEnd` TEXT NOT NULL,
+                        `status` TEXT NOT NULL DEFAULT 'PENDING',
+                        `reflectNote` TEXT, `snapshot` TEXT NOT NULL DEFAULT '',
+                        `completedAt` INTEGER,
+                        PRIMARY KEY(`id`))""",
+                )
+            }
+        }
+
         fun build(context: Context): TzafonDatabase =
             Room.databaseBuilder(context, TzafonDatabase::class.java, "tzafon.db")
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                 .build()
     }
 }

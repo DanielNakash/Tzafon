@@ -18,6 +18,9 @@ import com.thefoxworks.tzafon.domain.model.Habit
 import com.thefoxworks.tzafon.domain.model.HabitKind
 import com.thefoxworks.tzafon.domain.model.HabitLog
 import com.thefoxworks.tzafon.domain.model.LogSource
+import com.thefoxworks.tzafon.domain.model.Review
+import com.thefoxworks.tzafon.domain.model.ReviewKind
+import com.thefoxworks.tzafon.domain.model.ReviewStatus
 import com.thefoxworks.tzafon.domain.model.Series
 import com.thefoxworks.tzafon.domain.model.Task
 import com.thefoxworks.tzafon.domain.model.TaskState
@@ -167,6 +170,18 @@ data class ThemeEntity(
     val accentSlot: Int = 0,
     val createdAt: Long = 0,
     val archivedAt: Long? = null,
+)
+
+@Entity(tableName = "reviews")
+data class ReviewEntity(
+    @PrimaryKey val id: String,               // == periodStart
+    val kind: String = "WEEKLY",
+    val periodStart: String,
+    val periodEnd: String,
+    val status: String = "PENDING",
+    val reflectNote: String? = null,
+    val snapshot: String = "",
+    val completedAt: Long? = null,
 )
 
 @Entity(tableName = "contributions")
@@ -321,6 +336,20 @@ fun Goal.toEntity() = GoalEntity(
     primaryThemeId = primaryThemeId, themeIds = csv(themeIds),
     lastActivityAt = lastActivityAt,
     completedAt = completedAt, createdAt = createdAt,
+)
+
+fun ReviewEntity.toDomain() = Review(
+    id = id, kind = ReviewKind.valueOf(kind),
+    periodStart = periodStart, periodEnd = periodEnd,
+    status = ReviewStatus.valueOf(status),
+    reflectNote = reflectNote, snapshot = snapshot, completedAt = completedAt,
+)
+
+fun Review.toEntity() = ReviewEntity(
+    id = id, kind = kind.name,
+    periodStart = periodStart, periodEnd = periodEnd,
+    status = status.name,
+    reflectNote = reflectNote, snapshot = snapshot, completedAt = completedAt,
 )
 
 fun ContributionEntity.toDomain() = Contribution(

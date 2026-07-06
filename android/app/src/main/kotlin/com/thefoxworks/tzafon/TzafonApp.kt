@@ -25,6 +25,9 @@ class AppContainer(app: Application) {
     val habitRepository: HabitRepository by lazy { RoomHabitRepository(db.habitDao()) }
     val goalRepository: GoalRepository by lazy { RoomGoalRepository(db.goalDao()) }
     val themeRepository: ThemeRepository by lazy { RoomThemeRepository(db.themeDao()) }
+    val reviewRepository: com.thefoxworks.tzafon.domain.model.ReviewRepository by lazy {
+        com.thefoxworks.tzafon.data.repo.RoomReviewRepository(db.reviewDao())
+    }
     val taskRepository: TaskRepository by lazy {
         RoomTaskRepository(db.taskDao(), db.seriesDao(), habitRepository, goalRepository)
     }
