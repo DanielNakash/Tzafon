@@ -21,3 +21,8 @@ android/.kotlin/
 
 # Secrets (Firebase config lands in M9b, never committed)
 android/app/google-services.json
+
+# Release signing — keystore and its passwords never leave this machine
+android/keystore.properties
+*.jks
+*.keystore
