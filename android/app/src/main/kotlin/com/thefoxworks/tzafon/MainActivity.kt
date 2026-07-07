@@ -200,7 +200,11 @@ fun TzafonNavHost(container: AppContainer) {
             }
 
             composable("settings") {
-                SettingsScreen(settings = container.settings, onClose = { nav.popBackStack() })
+                SettingsScreen(
+                    settings = container.settings,
+                    auth = container.authRepository,
+                    onClose = { nav.popBackStack() },
+                )
             }
 
             composable(

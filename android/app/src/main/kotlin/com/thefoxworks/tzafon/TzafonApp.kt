@@ -1,12 +1,25 @@
 package com.thefoxworks.tzafon
 
 import android.app.Application
+import com.google.firebase.firestore.FirebaseFirestore
+import com.thefoxworks.tzafon.data.auth.FirebaseAuthRepository
+import com.thefoxworks.tzafon.data.db.ContributionEntity
+import com.thefoxworks.tzafon.data.db.GoalEntity
+import com.thefoxworks.tzafon.data.db.HabitEntity
+import com.thefoxworks.tzafon.data.db.HabitLogEntity
+import com.thefoxworks.tzafon.data.db.ReviewEntity
+import com.thefoxworks.tzafon.data.db.SeriesEntity
+import com.thefoxworks.tzafon.data.db.TaskEntity
+import com.thefoxworks.tzafon.data.db.ThemeEntity
 import com.thefoxworks.tzafon.data.db.TzafonDatabase
 import com.thefoxworks.tzafon.data.repo.RoomGoalRepository
 import com.thefoxworks.tzafon.data.repo.RoomHabitRepository
 import com.thefoxworks.tzafon.data.repo.RoomTaskRepository
 import com.thefoxworks.tzafon.data.repo.RoomThemeRepository
 import com.thefoxworks.tzafon.data.settings.SettingsStore
+import com.thefoxworks.tzafon.data.sync.FirestoreSync
+import com.thefoxworks.tzafon.data.sync.SyncSpec
+import com.thefoxworks.tzafon.domain.model.AuthRepository
 import com.thefoxworks.tzafon.domain.model.GoalRepository
 import com.thefoxworks.tzafon.domain.model.HabitRepository
 import com.thefoxworks.tzafon.domain.model.TaskRepository
@@ -42,6 +55,44 @@ class AppContainer(app: Application) {
     }
     val settings by lazy { SettingsStore(app) }
 
+    // ── M9b: Firebase auth + offline-first Firestore sync ──
+    val authRepository: AuthRepository by lazy { FirebaseAuthRepository(app) }
+
+    private val firestore by lazy { FirebaseFirestore.getInstance() }
+
+    /**
+     * The sync mirror writes raw rows straight through the DAOs (bypassing the
+     * repositories' business logic on purpose — a mirror must not re-run
+     * attribution/state effects). Room stays the UI's source of truth.
+     */
+    val syncManager by lazy {
+        val taskDao = db.taskDao(); val seriesDao = db.seriesDao()
+        val habitDao = db.habitDao(); val goalDao = db.goalDao()
+        val themeDao = db.themeDao(); val reviewDao = db.reviewDao()
+        FirestoreSync(
+            firestore,
+            listOf(
+                SyncSpec("tasks", TaskEntity::class.java, { taskDao.observeAll() }, { it.id },
+                    { taskDao.upsert(it) }, { taskDao.delete(it) }),
+                SyncSpec("series", SeriesEntity::class.java, { seriesDao.observeAll() }, { it.id },
+                    { seriesDao.upsert(it) }, { seriesDao.delete(it) }),
+                SyncSpec("habits", HabitEntity::class.java, { habitDao.observeAll() }, { it.id },
+                    { habitDao.upsert(it) }, { habitDao.delete(it) }),
+                SyncSpec("habitLogs", HabitLogEntity::class.java, { habitDao.observeLogs() },
+                    { "${it.habitId}::${it.date}" }, { habitDao.upsertLog(it) },
+                    { id -> id.split("::", limit = 2).let { habitDao.deleteLog(it[0], it[1]) } }),
+                SyncSpec("goals", GoalEntity::class.java, { goalDao.observeAll() }, { it.id },
+                    { goalDao.upsert(it) }, { goalDao.delete(it) }),
+                SyncSpec("contributions", ContributionEntity::class.java, { goalDao.observeContributions() },
+                    { it.id }, { goalDao.insertContribution(it) }, { goalDao.deleteContribution(it) }),
+                SyncSpec("themes", ThemeEntity::class.java, { themeDao.observeAll() }, { it.id },
+                    { themeDao.upsert(it) }, { themeDao.delete(it) }),
+                SyncSpec("reviews", ReviewEntity::class.java, { reviewDao.observeAll() }, { it.id },
+                    { reviewDao.upsert(it) }, { reviewDao.delete(it) }),
+            ),
+        )
+    }
+
     /**
      * FR-REC-3 / NFR-PERF-2 — the session's effective generation horizon in
      * days. Planning raises it when the user looks further ahead; All Tasks
@@ -76,6 +127,14 @@ class TzafonApp : Application() {
             ) { _, _, _, _ -> Unit }
                 .debounce(2000)
                 .collect { TopUpWorker.runNow(this@TzafonApp) }
+        }
+
+        // M9b: sync runs only while signed in (offline-first — local works either way)
+        appScope.launch {
+            container.authRepository.authState.collect { user ->
+                if (user != null) container.syncManager.start(user.uid)
+                else container.syncManager.stop()
+            }
         }
     }
 }

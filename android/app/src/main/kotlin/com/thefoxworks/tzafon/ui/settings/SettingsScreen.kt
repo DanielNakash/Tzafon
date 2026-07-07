@@ -1,6 +1,7 @@
 package com.thefoxworks.tzafon.ui.settings
 
 import android.Manifest
+import android.app.Activity
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -21,11 +22,15 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
@@ -38,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.thefoxworks.tzafon.data.settings.SettingsStore
+import com.thefoxworks.tzafon.domain.model.AuthRepository
 import com.thefoxworks.tzafon.ui.components.FoxLogo
 import com.thefoxworks.tzafon.ui.components.RustHeader
 import com.thefoxworks.tzafon.ui.components.SectionLabel
@@ -46,16 +52,18 @@ import com.thefoxworks.tzafon.ui.components.pressable
 import com.thefoxworks.tzafon.ui.theme.Den
 import com.thefoxworks.tzafon.ui.theme.DenType
 import com.thefoxworks.tzafon.ui.theme.a
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 /**
  * Settings (FR-SET, design: SettingsScreen). The week start drives the
- * Review day, habit periods and every fresh start (DM-REL-2). Sign-in
- * arrives with the deferred Firebase step (M9b) — storage is local.
+ * Review day, habit periods and every fresh start (DM-REL-2). The account
+ * card (M9b) turns on Firestore sync when signed in; local-first otherwise.
  */
 @Composable
 fun SettingsScreen(
     settings: SettingsStore,
+    auth: AuthRepository,
     onClose: () -> Unit,
 ) {
     val weekStart by settings.weekStart.collectAsStateWithLifecycle(initialValue = "SUNDAY")
@@ -78,32 +86,8 @@ fun SettingsScreen(
                 .padding(horizontal = 18.dp)
                 .padding(bottom = 40.dp),
         ) {
-            // ── storage (Google SSO lands with M9b) ──
-            Row(
-                Modifier.fillMaxWidth()
-                    .padding(top = 16.dp)
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(Den.card)
-                    .border(1.dp, Den.line, RoundedCornerShape(14.dp))
-                    .padding(14.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(13.dp),
-            ) {
-                FoxLogo(44.dp, ring = Den.ink.a(0.06f))
-                Column(Modifier.weight(1f)) {
-                    Text(
-                        "Yours, on this device",
-                        style = TextStyle(fontFamily = DenType.serif, fontSize = 16.5.sp, fontWeight = FontWeight.SemiBold),
-                        color = Den.ink,
-                    )
-                    Text(
-                        "Everything lives locally — sign-in and sync arrive later.",
-                        style = TextStyle(fontFamily = DenType.body, fontSize = 13.sp),
-                        color = Den.muted,
-                        modifier = Modifier.padding(top = 1.dp),
-                    )
-                }
-            }
+            // ── account + sync (M9b) ──
+            AccountCard(auth, scope)
 
             // ── the week (FR-SET-1) ──
             SectionLabel("The week", modifier = Modifier.padding(top = 20.dp, bottom = 9.dp))
@@ -202,6 +186,89 @@ fun SettingsScreen(
                 color = Den.faint,
                 modifier = Modifier.fillMaxWidth().padding(top = 28.dp),
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            )
+        }
+    }
+}
+
+/**
+ * Account + sync (M9b). Signed out: local-first with a Sign-in-with-Google
+ * button. Signed in: name/email + a Sign-out. Sign-in flips on the Firestore
+ * mirror via the auth-state collector in TzafonApp.
+ */
+@Composable
+private fun AccountCard(auth: AuthRepository, scope: CoroutineScope) {
+    val user by auth.authState.collectAsStateWithLifecycle(initialValue = null)
+    val context = LocalContext.current
+    var busy by remember { mutableStateOf(false) }
+    var error by remember { mutableStateOf<String?>(null) }
+
+    Column(
+        Modifier.fillMaxWidth()
+            .padding(top = 16.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .background(Den.card)
+            .border(1.dp, Den.line, RoundedCornerShape(14.dp))
+            .padding(14.dp),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(13.dp)) {
+            FoxLogo(44.dp, ring = Den.ink.a(0.06f))
+            Column(Modifier.weight(1f)) {
+                Text(
+                    if (user != null) (user!!.displayName ?: "Signed in") else "Yours, on this device",
+                    style = TextStyle(fontFamily = DenType.serif, fontSize = 16.5.sp, fontWeight = FontWeight.SemiBold),
+                    color = Den.ink,
+                )
+                Text(
+                    if (user != null) "${user!!.email ?: ""} · synced & backed up".trim()
+                    else "Everything lives here. Sign in to back up and sync across devices.",
+                    style = TextStyle(fontFamily = DenType.body, fontSize = 13.sp),
+                    color = Den.muted,
+                    modifier = Modifier.padding(top = 1.dp),
+                )
+            }
+        }
+
+        val signedIn = user != null
+        val label = when {
+            busy -> "Working…"
+            signedIn -> "Sign out"
+            else -> "Sign in with Google"
+        }
+        Box(
+            Modifier.fillMaxWidth().padding(top = 13.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(if (signedIn) Color.Transparent else Den.rust)
+                .border(1.dp, if (signedIn) Den.line else Den.rust, RoundedCornerShape(10.dp))
+                .pressable(label, Role.Button) {
+                    if (busy) return@pressable
+                    error = null
+                    val activity = context as? Activity ?: return@pressable
+                    scope.launch {
+                        busy = true
+                        if (signedIn) {
+                            auth.signOut()
+                        } else {
+                            error = auth.signIn(activity).exceptionOrNull()?.let { it.message ?: "Sign-in failed" }
+                        }
+                        busy = false
+                    }
+                }
+                .padding(vertical = 11.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                label,
+                style = TextStyle(fontFamily = DenType.body, fontSize = 14.sp, fontWeight = FontWeight.SemiBold),
+                color = if (signedIn) Den.ink else Color.White,
+            )
+        }
+        if (error != null) {
+            Text(
+                error!!,
+                style = TextStyle(fontFamily = DenType.body, fontSize = 12.sp, lineHeight = 16.sp),
+                color = Den.due,
+                modifier = Modifier.padding(top = 8.dp),
             )
         }
     }

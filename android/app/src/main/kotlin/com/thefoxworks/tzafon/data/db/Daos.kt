@@ -126,6 +126,10 @@ interface GoalDao {
 
     @Query("DELETE FROM contributions WHERE goalId = :goalId")
     suspend fun deleteContributionsForGoal(goalId: String)
+
+    /** Single-row delete — used by the sync mirror (M9b). */
+    @Query("DELETE FROM contributions WHERE id = :id")
+    suspend fun deleteContribution(id: String)
 }
 
 @Dao
@@ -138,6 +142,10 @@ interface ReviewDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(review: ReviewEntity)
+
+    /** Not deletable in-app; present so the sync mirror can honor a remote delete. */
+    @Query("DELETE FROM reviews WHERE id = :id")
+    suspend fun delete(id: String)
 }
 
 @Dao

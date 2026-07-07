@@ -88,6 +88,10 @@ short progress note (what changed, against which codes) → **git commit** refer
 - **M8** — Journey (`FR-JOURNEY`) — ✅ committed.
 - **M9** — notifications (`FR-NOTIF`), offline (`NFR-OFFLINE-1`), a11y (`NFR-A11Y-1`), DM-NOT audit,
   §9 sign-off, release build — ✅ committed, tagged **`v2.0.0`**.
-- **M9b** — Firebase Auth + Firestore sync behind the repository seam — deferred until the owner
-  provisions the Firebase project. (§9.1 data-in-Firestore rides with it; release signing config too.)
+- **M9b** — Firebase Auth (Google sign-in via Credential Manager) + offline-first Firestore sync
+  behind the repository seam — ✅ implemented & verified on-device (sign-in succeeds; sync engine
+  writes `users/{uid}/{collection}/{id}`). **Owner step remaining: deploy `android/firestore.rules`**
+  to the Firestore project (production-mode default-deny blocks writes until then). Firebase project
+  `tzafon-86e71` provisioned; `google-services.json` is local-only (git-ignored). Release signing is
+  wired (owner keystore).
 Check `git log` and `PLAN.md §5` for the current frontier before continuing.
