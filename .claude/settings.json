@@ -13,7 +13,13 @@
       "Bash(keytool -list *)",
       "Bash(cd *)",
       "Bash(sleep *)",
-      "Bash(grep *)"
+      "Bash(grep *)",
+      "Bash(git *)",
+      "Bash(cp *)",
+      "Bash(mkdir *)"
+    ],
+    "deny": [
+      "Bash(git push *)"
     ]
   }
 }
