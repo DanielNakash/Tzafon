@@ -31,3 +31,7 @@ with a `reason:` line and never built.
 ---
 
 <!-- Add requests below this line. -->
+## FR-2026-07-10-a
+status: groomed
+target: 2.1.0
+When creating a quick task in Today, default the date to today.
