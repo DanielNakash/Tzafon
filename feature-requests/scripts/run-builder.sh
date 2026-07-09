@@ -29,8 +29,9 @@ if grep -qi '^pipeline: paused' "$INBOX"; then
   exit 0
 fi
 
-# --- (2) Any groomed-but-unshipped work at all? (cheap grep) ---
-if ! grep -qE '^status:[[:space:]]*groomed[[:space:]]*$' "$INBOX"; then
+# --- (2) Any groomed-but-unshipped work at all? (fence-aware; ignores the header example) ---
+GROOMED_COUNT="$(awk '/^```/{f=!f; next} !f && /^status:[[:space:]]*groomed[[:space:]]*$/{c++} END{print c+0}' "$INBOX")"
+if [ "$GROOMED_COUNT" -eq 0 ]; then
   exit 0    # nothing to build; silent no-op
 fi
 

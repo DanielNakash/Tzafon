@@ -11,8 +11,11 @@ Run from the repo root (`/Users/danielnakash/LocalWorkshop/Tzafon`).
    `pipeline: paused`, append a `GROOM skipped paused` line to `feature-requests/PIPELINE_LOG.md`
    and stop.
 
-2. **Collect work.** Find every request block with `status: new`. If none, log
-   `GROOM noop no-new-requests` and stop.
+2. **Collect work.** Find every request block with `status: new`. **Ignore the template/example
+   block in the file header** — it lives inside a ``` code fence and is documentation, not a real
+   request. Only real request blocks (outside any code fence, below the "Add requests below this
+   line" marker) count. If there are no real new requests, log `GROOM noop no-new-requests`, do not
+   commit, and stop.
 
 3. **Compute the target version.** The current released version is the highest `git tag`
    (e.g. `v2.0.0`). The next target is the next **minor** bump (`2.0.0` → `2.1.0`). All
