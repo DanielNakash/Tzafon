@@ -17,9 +17,6 @@
       "Bash(git *)",
       "Bash(cp *)",
       "Bash(mkdir *)"
-    ],
-    "deny": [
-      "Bash(git push *)"
     ]
   }
 }
