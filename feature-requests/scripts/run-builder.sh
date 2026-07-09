@@ -19,6 +19,9 @@ export PATH="$SDK/platform-tools:$SDK/emulator:$SDK/cmdline-tools/latest/bin:$PA
 cd "$REPO"
 source "$REPO/feature-requests/scripts/_lib.sh"
 
+# Automation credentials (git-ignored) — headless auth token, see feature-requests/.env.example.
+[ -f "$REPO/feature-requests/.env" ] && source "$REPO/feature-requests/.env"
+
 # --- (0) Serialize: one pipeline job at a time (stale-lock aware). ---
 acquire_lock "$LOCK" "BUILD" || exit 0
 trap 'rmdir "$LOCK" 2>/dev/null' EXIT

@@ -23,6 +23,18 @@ The logic lives in two slash commands you can also run by hand in an interactive
 The scripts call the `claude` CLI at `$HOME/.local/bin/claude` (verified on this machine) — if
 `which claude` ever reports a different path, update the two files in `scripts/`.
 
+**Auth (required — do this first).** A launchd background job can't read the macOS login keychain
+where your interactive `claude` login lives, so headless runs fail with "Not logged in" unless you
+give them a token. Once, in a normal terminal:
+
+```sh
+claude setup-token            # opens a browser; prints a long-lived token (uses your subscription)
+cp feature-requests/.env.example feature-requests/.env
+# paste the token into feature-requests/.env  (this file is git-ignored)
+```
+
+Then install the schedule:
+
 ```sh
 cd /Users/danielnakash/LocalWorkshop/Tzafon
 chmod +x feature-requests/scripts/*.sh
@@ -41,6 +53,9 @@ Unload: `launchctl unload ~/Library/LaunchAgents/com.thefoxworks.tzafon.<job>.pl
 > not queued. The scripts pass `--permission-mode acceptEdits` so file writes/commits proceed, and
 > `adb`/`emulator`/`./gradlew`/`git commit`/`git tag` are already allow-listed. If you add a step
 > needing a new command, allow-list it first or the headless run will fail safe.
+>
+> If a run logs `Not logged in · Please run /login`, the token in `feature-requests/.env` is missing
+> or expired — regenerate with `claude setup-token`.
 
 ## Controls & safety
 

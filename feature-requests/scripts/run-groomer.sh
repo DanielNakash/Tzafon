@@ -15,6 +15,11 @@ ISO="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 cd "$REPO"
 source "$REPO/feature-requests/scripts/_lib.sh"
 
+# Automation credentials (git-ignored). launchd agents can't read the login keychain where the
+# interactive `claude` stores its OAuth session, so headless runs authenticate via a long-lived
+# token in this file (see feature-requests/.env.example). Without it: "Not logged in".
+[ -f "$REPO/feature-requests/.env" ] && source "$REPO/feature-requests/.env"
+
 # --- (0) Serialize: never overlap with a builder run or another groomer (stale-lock aware). ---
 acquire_lock "$LOCK" "GROOM" || exit 0
 trap 'rmdir "$LOCK" 2>/dev/null' EXIT
