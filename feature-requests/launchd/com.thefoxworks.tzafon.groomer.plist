@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.thefoxworks.tzafon.groomer</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/danielnakash/LocalWorkshop/Tzafon/feature-requests/scripts/run-groomer.sh</string>
+  </array>
+
+  <!-- Run at the top of every hour. -->
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Minute</key>
+    <integer>0</integer>
+  </dict>
+
+  <!-- If the Mac was asleep at the scheduled time, run once on wake. -->
+  <key>RunAtLoad</key>
+  <false/>
+
+  <key>StandardOutPath</key>
+  <string>/Users/danielnakash/LocalWorkshop/Tzafon/feature-requests/logs/groomer.launchd.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/danielnakash/LocalWorkshop/Tzafon/feature-requests/logs/groomer.launchd.err</string>
+</dict>
+</plist>
