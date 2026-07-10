@@ -25,6 +25,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -142,10 +145,15 @@ fun HabitsScreen(
 }
 
 @Composable
-private fun HabitCard(card: HabitCardState, servesGoal: String?, onLog: () -> Unit, onOpen: () -> Unit) {
+internal fun HabitCard(card: HabitCardState, servesGoal: String?, onLog: () -> Unit, onOpen: () -> Unit) {
     val h = card.habit
     val accent = Den.green // per-theme accents arrive with M6
     val isQuant = h.kind == HabitKind.QUANTITATIVE
+    // FR-HAB-5.2 — plain remember (not saveable): navigating away and back
+    // re-collapses every card. Persisting expand state would be a stealth
+    // "sticky detail" surface, which is the very density regression the
+    // collapse-by-default is trying to remove.
+    var expanded by remember { mutableStateOf(false) }
 
     Column(
         Modifier
@@ -153,205 +161,294 @@ private fun HabitCard(card: HabitCardState, servesGoal: String?, onLog: () -> Un
             .padding(bottom = 12.dp)
             .clip(RoundedCornerShape(16.dp))
             .background(Den.card)
-            .border(1.dp, Den.line, RoundedCornerShape(16.dp))
-            .pressable(onOpen)
-            .padding(horizontal = 16.dp, vertical = 15.dp),
+            .border(1.dp, Den.line, RoundedCornerShape(16.dp)),
     ) {
-        // ── name + target chip ──
-        Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text(
-                h.name,
-                style = TextStyle(fontFamily = DenType.serif, fontSize = 19.sp, fontWeight = FontWeight.SemiBold, lineHeight = 21.sp),
-                color = Den.ink,
-                modifier = Modifier.weight(1f),
-            )
-            Box(
-                Modifier.clip(RoundedCornerShape(999.dp)).background(accent.a(0.1f))
-                    .padding(horizontal = 9.dp, vertical = 4.dp),
-            ) {
-                Text(
-                    if (isQuant) "${fmt(h.target)} ${h.unit ?: ""}/day" else "${h.target.toInt()}× / week",
-                    style = TextStyle(fontFamily = DenType.mono, fontSize = 10.sp),
-                    color = accent,
-                )
-            }
-        }
-        if (servesGoal != null) {
-            Row(
-                Modifier.padding(top = 5.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(5.dp),
-            ) {
-                TzIcons.Target(12.dp, Den.rust)
-                Text(
-                    "serves: $servesGoal",
-                    style = TextStyle(fontFamily = DenType.mono, fontSize = 10.5.sp),
-                    color = Den.muted,
-                )
-            }
-        }
-
-        // ── cue, front and centre ──
-        if (h.cue != null) {
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(top = 12.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(Den.amber.a(0.1f))
-                    .padding(horizontal = 12.dp, vertical = 9.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                TzIcons.Cue(14.dp, Den.rust)
-                Text(
-                    buildAnnotatedString {
-                        append("When ")
-                        withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
-                            append(h.cue.label.removePrefix("After ").removePrefix("after "))
-                        }
-                    },
-                    style = TextStyle(fontFamily = DenType.body, fontSize = 13.5.sp),
-                    color = Den.ink,
-                )
-            }
-        } else {
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(top = 12.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .border(1.dp, Den.line2, RoundedCornerShape(10.dp))
-                    .padding(horizontal = 12.dp, vertical = 9.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                TzIcons.Cue(14.dp, Den.faint)
-                Text(
-                    "No cue yet — without one it's just a tracker",
-                    style = TextStyle(fontFamily = DenType.body, fontSize = 12.5.sp),
-                    color = Den.faint,
-                )
-            }
-        }
-
-        // ── this week: forgiving rate ──
-        Row(
-            Modifier.fillMaxWidth().padding(top = 14.dp),
-            verticalAlignment = Alignment.Bottom,
-        ) {
-            Column(Modifier.weight(1f)) {
-                Text(
-                    "THIS WEEK",
-                    style = TextStyle(fontFamily = DenType.mono, fontSize = 10.5.sp, letterSpacing = 0.5.sp),
-                    color = Den.faint,
-                )
-                Text(
-                    buildAnnotatedString {
-                        if (isQuant) {
-                            append("${fmt(card.week.amountSum)} ${h.unit ?: ""}")
-                            withStyle(SpanStyle(fontSize = 13.sp, color = Den.muted, fontWeight = FontWeight.Normal)) {
-                                append(" · ${card.week.doneDays} of ${h.targetDays ?: 7} days")
-                            }
-                        } else {
-                            append("${card.week.doneDays} of ${h.target.toInt()}")
-                            withStyle(SpanStyle(fontSize = 13.sp, color = Den.muted, fontWeight = FontWeight.Normal)) {
-                                append(" done")
-                            }
-                        }
-                    },
-                    style = TextStyle(fontFamily = DenType.serif, fontSize = 17.sp, fontWeight = FontWeight.SemiBold),
-                    color = Den.ink,
-                    modifier = Modifier.padding(top = 2.dp),
-                )
-            }
-            if (!isQuant) {
-                WeekDots(done = card.week.doneDays, total = h.target.toInt(), accent = accent)
-            }
-        }
-        if (isQuant) {
-            QuantBars(amounts = card.week.amounts, target = h.target, accent = accent)
-        }
-
-        // ── log today ──
+        // ── FR-HAB-5 collapsed header: name + log + expand — the only three
+        //     affordances visible when the card is closed. Tap the row (chevron
+        //     or name area) to toggle; the log pill has its own hit target.
+        val headerCd = if (expanded) "Collapse habit ${h.name}" else "Expand habit ${h.name}"
         Row(
             Modifier
                 .fillMaxWidth()
-                .padding(top = 12.dp)
-                .height(40.dp)
-                .clip(RoundedCornerShape(11.dp))
-                .background(accent.a(if (card.loggedToday && !isQuant) 0.22f else 0.1f))
-                .border(1.dp, accent.a(0.5f), RoundedCornerShape(11.dp))
-                .pressable(onLog),
+                .semantics(mergeDescendants = false) { contentDescription = headerCd }
+                .pressable(
+                    label = headerCd,
+                    role = Role.Button,
+                ) { expanded = !expanded }
+                .padding(horizontal = 14.dp, vertical = 11.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            TzIcons.Check(16.dp, accent, 2.6f)
+            TzIcons.Chevron(
+                18.dp,
+                Den.muted,
+                dir = if (expanded) TzIcons.Dir.DOWN else TzIcons.Dir.RIGHT,
+            )
             Text(
-                when {
-                    isQuant && card.loggedToday -> "Logged ${fmt(card.todayAmount ?: 0.0)} ${h.unit ?: ""} — edit"
-                    isQuant -> "Log today's ${h.unit ?: "amount"}"
-                    card.loggedToday -> "Done today — tap to undo"
-                    else -> "Mark today done"
-                },
-                style = TextStyle(fontFamily = DenType.body, fontSize = 14.sp, fontWeight = FontWeight.SemiBold),
-                color = accent,
-                modifier = Modifier.padding(start = 8.dp),
+                h.name,
+                style = TextStyle(fontFamily = DenType.serif, fontSize = 17.sp, fontWeight = FontWeight.SemiBold, lineHeight = 20.sp),
+                color = Den.ink,
+                modifier = Modifier.weight(1f),
+            )
+            CollapsedLogPill(
+                loggedToday = card.loggedToday,
+                isQuant = isQuant,
+                accent = accent,
+                onLog = onLog,
             )
         }
 
-        // ── fresh start after a lapse (DM-HABIT-4) ──
-        if (card.freshStart) {
-            Row(
+        if (expanded) {
+            // Body sits under a distinct pressable that opens the editor — the
+            // collapsed row still owns expand/collapse, so tapping body vs
+            // header is unambiguous.
+            Column(
                 Modifier
                     .fillMaxWidth()
-                    .padding(top = 12.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(Den.surface)
-                    .padding(horizontal = 12.dp, vertical = 9.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    .pressable(onOpen)
+                    .padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 15.dp),
             ) {
-                TzIcons.Sprout(16.dp, Den.green)
-                Text(
-                    buildAnnotatedString {
-                        append("Missed a few last week? Normal. ")
-                        withStyle(SpanStyle(fontWeight = FontWeight.Bold, color = Den.ink)) {
-                            append("New week, clean slate.")
-                        }
-                    },
-                    style = TextStyle(fontFamily = DenType.body, fontSize = 12.5.sp, lineHeight = 17.5.sp),
-                    color = Den.muted,
-                )
-            }
-        }
-
-        // ── 5-week history + long arc ──
-        Column(Modifier.fillMaxWidth().padding(top = 14.dp)) {
-            Box(Modifier.fillMaxWidth().height(1.dp).background(Den.line2))
-            Row(
-                Modifier.fillMaxWidth().padding(top = 12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(14.dp),
-            ) {
-                HistoryGrid(weeks = card.grid, accent = accent)
-                Column(Modifier.weight(1f)) {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        TzIcons.Sprout(15.dp, Den.green)
+                // ── FR-HAB-1 details: target chip + serves link ──
+                Row(
+                    Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    Box(
+                        Modifier.clip(RoundedCornerShape(999.dp)).background(accent.a(0.1f))
+                            .padding(horizontal = 9.dp, vertical = 4.dp),
+                    ) {
                         Text(
-                            card.arc,
-                            style = TextStyle(fontFamily = DenType.mono, fontSize = 11.sp),
+                            if (isQuant) "${fmt(h.target)} ${h.unit ?: ""}/day" else "${h.target.toInt()}× / week",
+                            style = TextStyle(fontFamily = DenType.mono, fontSize = 10.sp),
+                            color = accent,
+                        )
+                    }
+                    if (servesGoal != null) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(5.dp),
+                        ) {
+                            TzIcons.Target(12.dp, Den.rust)
+                            Text(
+                                "serves: $servesGoal",
+                                style = TextStyle(fontFamily = DenType.mono, fontSize = 10.5.sp),
+                                color = Den.muted,
+                            )
+                        }
+                    }
+                }
+
+                // ── FR-HAB-5.4: cue immediately below the header once open ──
+                if (h.cue != null) {
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(top = 12.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(Den.amber.a(0.1f))
+                            .padding(horizontal = 12.dp, vertical = 9.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        TzIcons.Cue(14.dp, Den.rust)
+                        Text(
+                            buildAnnotatedString {
+                                append("When ")
+                                withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
+                                    append(h.cue.label.removePrefix("After ").removePrefix("after "))
+                                }
+                            },
+                            style = TextStyle(fontFamily = DenType.body, fontSize = 13.5.sp),
+                            color = Den.ink,
+                        )
+                    }
+                } else {
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(top = 12.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .border(1.dp, Den.line2, RoundedCornerShape(10.dp))
+                            .padding(horizontal = 12.dp, vertical = 9.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        TzIcons.Cue(14.dp, Den.faint)
+                        Text(
+                            "No cue yet — without one it's just a tracker",
+                            style = TextStyle(fontFamily = DenType.body, fontSize = 12.5.sp),
+                            color = Den.faint,
+                        )
+                    }
+                }
+
+                // ── this week: forgiving rate ──
+                Row(
+                    Modifier.fillMaxWidth().padding(top = 14.dp),
+                    verticalAlignment = Alignment.Bottom,
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            "THIS WEEK",
+                            style = TextStyle(fontFamily = DenType.mono, fontSize = 10.5.sp, letterSpacing = 0.5.sp),
+                            color = Den.faint,
+                        )
+                        Text(
+                            buildAnnotatedString {
+                                if (isQuant) {
+                                    append("${fmt(card.week.amountSum)} ${h.unit ?: ""}")
+                                    withStyle(SpanStyle(fontSize = 13.sp, color = Den.muted, fontWeight = FontWeight.Normal)) {
+                                        append(" · ${card.week.doneDays} of ${h.targetDays ?: 7} days")
+                                    }
+                                } else {
+                                    append("${card.week.doneDays} of ${h.target.toInt()}")
+                                    withStyle(SpanStyle(fontSize = 13.sp, color = Den.muted, fontWeight = FontWeight.Normal)) {
+                                        append(" done")
+                                    }
+                                }
+                            },
+                            style = TextStyle(fontFamily = DenType.serif, fontSize = 17.sp, fontWeight = FontWeight.SemiBold),
+                            color = Den.ink,
+                            modifier = Modifier.padding(top = 2.dp),
+                        )
+                    }
+                    if (!isQuant) {
+                        WeekDots(done = card.week.doneDays, total = h.target.toInt(), accent = accent)
+                    }
+                }
+                if (isQuant) {
+                    QuantBars(amounts = card.week.amounts, target = h.target, accent = accent)
+                }
+
+                // ── log today (full-width, the same affordance as collapsed) ──
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(top = 12.dp)
+                        .height(40.dp)
+                        .clip(RoundedCornerShape(11.dp))
+                        .background(accent.a(if (card.loggedToday && !isQuant) 0.22f else 0.1f))
+                        .border(1.dp, accent.a(0.5f), RoundedCornerShape(11.dp))
+                        .pressable(onLog),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center,
+                ) {
+                    TzIcons.Check(16.dp, accent, 2.6f)
+                    Text(
+                        when {
+                            isQuant && card.loggedToday -> "Logged ${fmt(card.todayAmount ?: 0.0)} ${h.unit ?: ""} — edit"
+                            isQuant -> "Log today's ${h.unit ?: "amount"}"
+                            card.loggedToday -> "Done today — tap to undo"
+                            else -> "Mark today done"
+                        },
+                        style = TextStyle(fontFamily = DenType.body, fontSize = 14.sp, fontWeight = FontWeight.SemiBold),
+                        color = accent,
+                        modifier = Modifier.padding(start = 8.dp),
+                    )
+                }
+
+                // ── fresh start after a lapse (DM-HABIT-4) ──
+                if (card.freshStart) {
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(top = 12.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(Den.surface)
+                            .padding(horizontal = 12.dp, vertical = 9.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        TzIcons.Sprout(16.dp, Den.green)
+                        Text(
+                            buildAnnotatedString {
+                                append("Missed a few last week? Normal. ")
+                                withStyle(SpanStyle(fontWeight = FontWeight.Bold, color = Den.ink)) {
+                                    append("New week, clean slate.")
+                                }
+                            },
+                            style = TextStyle(fontFamily = DenType.body, fontSize = 12.5.sp, lineHeight = 17.5.sp),
                             color = Den.muted,
                         )
                     }
-                    Text(
-                        "LAST 5 WEEKS",
-                        style = TextStyle(fontFamily = DenType.mono, fontSize = 9.sp, letterSpacing = 0.3.sp),
-                        color = Den.faint,
-                        modifier = Modifier.padding(top = 3.dp),
-                    )
+                }
+
+                // ── 5-week history + long arc ──
+                Column(Modifier.fillMaxWidth().padding(top = 14.dp)) {
+                    Box(Modifier.fillMaxWidth().height(1.dp).background(Den.line2))
+                    Row(
+                        Modifier.fillMaxWidth().padding(top = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(14.dp),
+                    ) {
+                        HistoryGrid(weeks = card.grid, accent = accent)
+                        Column(Modifier.weight(1f)) {
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                TzIcons.Sprout(15.dp, Den.green)
+                                Text(
+                                    card.arc,
+                                    style = TextStyle(fontFamily = DenType.mono, fontSize = 11.sp),
+                                    color = Den.muted,
+                                )
+                            }
+                            Text(
+                                "LAST 5 WEEKS",
+                                style = TextStyle(fontFamily = DenType.mono, fontSize = 9.sp, letterSpacing = 0.3.sp),
+                                color = Den.faint,
+                                modifier = Modifier.padding(top = 3.dp),
+                            )
+                        }
+                    }
                 }
             }
         }
+    }
+}
+
+/**
+ * FR-HAB-5.1 — the compact one-tap log affordance for the collapsed row.
+ * Behaviour matches the full-width log-today pill inside the expanded card:
+ * frequency habits toggle done/undo on tap; quantitative habits open the
+ * "how much?" prompt (owner: parent, via [onLog]).
+ */
+@Composable
+private fun CollapsedLogPill(
+    loggedToday: Boolean,
+    isQuant: Boolean,
+    accent: androidx.compose.ui.graphics.Color,
+    onLog: () -> Unit,
+) {
+    val doneStyle = loggedToday && !isQuant
+    Row(
+        Modifier
+            .height(34.dp)
+            .clip(RoundedCornerShape(999.dp))
+            .background(accent.a(if (doneStyle) 0.24f else 0.12f))
+            .border(1.dp, accent.a(0.5f), RoundedCornerShape(999.dp))
+            .pressable(
+                label = when {
+                    doneStyle -> "Undo today's log"
+                    isQuant -> "Log today's amount"
+                    else -> "Mark today done"
+                },
+                role = Role.Button,
+                onClick = onLog,
+            )
+            .padding(horizontal = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(5.dp),
+    ) {
+        TzIcons.Check(13.dp, accent, 2.6f)
+        Text(
+            if (doneStyle) "Done" else "Log",
+            style = TextStyle(
+                fontFamily = DenType.mono,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.SemiBold,
+                letterSpacing = 0.5.sp,
+            ),
+            color = accent,
+        )
     }
 }
 
