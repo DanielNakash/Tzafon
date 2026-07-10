@@ -19,6 +19,9 @@ android/.kotlin/
 # Claude local settings
 .claude/settings.local.json
 
+# Emulator screenshots captured during build-and-verify
+.screenshots/
+
 # Secrets (Firebase config lands in M9b, never committed)
 android/app/google-services.json
 

@@ -65,6 +65,7 @@ import com.thefoxworks.tzafon.ui.habits.HabitEditorSheet
 import com.thefoxworks.tzafon.ui.theme.Den
 import com.thefoxworks.tzafon.ui.theme.DenType
 import com.thefoxworks.tzafon.ui.theme.a
+import com.thefoxworks.tzafon.ui.theme.contentDir
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -410,12 +411,12 @@ private fun ThemeRow(entry: ThemeBoardEntry, modifier: Modifier = Modifier, onOp
             Column(Modifier.weight(1f)) {
                 Text(
                     entry.theme.name,
-                    style = TextStyle(fontFamily = DenType.serif, fontSize = 16.5.sp, fontWeight = FontWeight.SemiBold, lineHeight = 18.sp),
+                    style = TextStyle(fontFamily = DenType.serif, fontSize = 16.5.sp, fontWeight = FontWeight.SemiBold, lineHeight = 18.sp).contentDir(),
                     color = Den.ink,
                 )
                 Text(
                     "“${entry.theme.why}”",
-                    style = TextStyle(fontFamily = DenType.serif, fontSize = 12.5.sp, fontStyle = FontStyle.Italic),
+                    style = TextStyle(fontFamily = DenType.serif, fontSize = 12.5.sp, fontStyle = FontStyle.Italic).contentDir(),
                     color = Den.muted,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -470,12 +471,12 @@ private fun ExpandedTheme(
             Column(Modifier.weight(1f)) {
                 Text(
                     entry.theme.name,
-                    style = TextStyle(fontFamily = DenType.serif, fontSize = 19.sp, fontWeight = FontWeight.SemiBold, lineHeight = 20.sp),
+                    style = TextStyle(fontFamily = DenType.serif, fontSize = 19.sp, fontWeight = FontWeight.SemiBold, lineHeight = 20.sp).contentDir(),
                     color = Den.ink,
                 )
                 Text(
                     "“${entry.theme.why}”",
-                    style = TextStyle(fontFamily = DenType.serif, fontSize = 13.sp, fontStyle = FontStyle.Italic),
+                    style = TextStyle(fontFamily = DenType.serif, fontSize = 13.sp, fontStyle = FontStyle.Italic).contentDir(),
                     color = Den.muted,
                     modifier = Modifier.padding(top = 3.dp),
                 )
@@ -637,7 +638,7 @@ private fun UpcomingRow(theme: Theme, modifier: Modifier = Modifier, onOpen: () 
         Column(Modifier.weight(1f)) {
             Text(
                 theme.name,
-                style = TextStyle(fontFamily = DenType.serif, fontSize = 16.sp, fontWeight = FontWeight.SemiBold),
+                style = TextStyle(fontFamily = DenType.serif, fontSize = 16.sp, fontWeight = FontWeight.SemiBold).contentDir(),
                 color = Den.ink,
             )
             Text(
@@ -665,7 +666,7 @@ private fun ArchivedRow(theme: Theme, modifier: Modifier = Modifier, onOpen: () 
         Column(Modifier.weight(1f)) {
             Text(
                 theme.name,
-                style = TextStyle(fontFamily = DenType.body, fontSize = 15.sp),
+                style = TextStyle(fontFamily = DenType.body, fontSize = 15.sp).contentDir(),
                 color = Den.muted,
             )
             Text(

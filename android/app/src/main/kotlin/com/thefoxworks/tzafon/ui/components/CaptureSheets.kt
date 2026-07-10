@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -34,6 +35,7 @@ import com.thefoxworks.tzafon.domain.model.CueType
 import com.thefoxworks.tzafon.ui.theme.Den
 import com.thefoxworks.tzafon.ui.theme.DenType
 import com.thefoxworks.tzafon.ui.theme.a
+import com.thefoxworks.tzafon.ui.theme.contentDir
 
 /**
  * DM-CUE — "When X, I will do Y", always one line, never a wizard.
@@ -79,7 +81,7 @@ fun CueSheet(
                 BasicTextField(
                     value = label,
                     onValueChange = { label = it },
-                    textStyle = TextStyle(fontFamily = DenType.body, fontSize = 15.5.sp, color = Den.ink),
+                    textStyle = TextStyle(fontFamily = DenType.body, fontSize = 15.5.sp, color = Den.ink).contentDir(),
                     cursorBrush = SolidColor(Den.rust),
                     singleLine = true,
                     decorationBox = { inner ->
@@ -257,29 +259,40 @@ fun AmountSheet(
     }
 }
 
+/**
+ * FR-HAB-6 — the primary confirmation button used by the create-habit,
+ * create-goal, create-theme (and analogous) flows. The label routes through
+ * the Material 3 [ColorScheme] so it always pairs correctly with the container
+ * (default: `primary` + `onPrimary`, i.e. rust + cream). Callers overriding
+ * `color` should override [contentColor] with the matching on-role to keep
+ * WCAG AA ≥ 4.5:1 (e.g. `error` + `onError` for delete confirmations).
+ */
 @Composable
 fun SheetPrimaryButton(
     label: String,
     enabled: Boolean = true,
-    color: Color = Den.rust,
+    color: Color = MaterialTheme.colorScheme.primary,
+    contentColor: Color = MaterialTheme.colorScheme.onPrimary,
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
 ) {
+    // Opacity is baked into the colors (not applied via a Modifier.alpha layer): an
+    // alpha(1f) graphics layer over .background() was dropping the fill, leaving the
+    // enabled button invisible (cream text on the sheet). See FR-HAB-6.
     Row(
         modifier
             .fillMaxWidth()
             .height(50.dp)
             .clip(RoundedCornerShape(13.dp))
-            .background(color)
-            .alpha(if (enabled) 1f else 0.45f)
-            .let { if (enabled) it.pressable(onClick) else it },
+            .background(if (enabled) color else color.copy(alpha = 0.45f))
+            .then(if (enabled) Modifier.pressable(onClick) else Modifier),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center,
     ) {
         Text(
             label,
             style = TextStyle(fontFamily = DenType.body, fontSize = 15.5.sp, fontWeight = FontWeight.SemiBold),
-            color = Color.White,
+            color = if (enabled) contentColor else contentColor.copy(alpha = 0.7f),
         )
     }
 }

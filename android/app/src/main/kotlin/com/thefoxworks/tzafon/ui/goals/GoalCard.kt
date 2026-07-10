@@ -34,6 +34,7 @@ import com.thefoxworks.tzafon.ui.components.pressable
 import com.thefoxworks.tzafon.ui.theme.Den
 import com.thefoxworks.tzafon.ui.theme.DenType
 import com.thefoxworks.tzafon.ui.theme.a
+import com.thefoxworks.tzafon.ui.theme.contentDir
 
 /**
  * The design GoalCard (FR-DIR-4): type tag, endowed bar, steps with
@@ -98,7 +99,7 @@ fun GoalCard(
         }
         Text(
             goal.title,
-            style = TextStyle(fontFamily = DenType.serif, fontSize = 17.sp, fontWeight = FontWeight.SemiBold, lineHeight = 19.5.sp),
+            style = TextStyle(fontFamily = DenType.serif, fontSize = 17.sp, fontWeight = FontWeight.SemiBold, lineHeight = 19.5.sp).contentDir(),
             color = Den.ink,
             modifier = Modifier.padding(top = 7.dp),
         )
@@ -168,7 +169,7 @@ fun GoalCard(
                                 style = TextStyle(
                                     fontFamily = DenType.body, fontSize = 12.sp,
                                     textDecoration = if (s.done) TextDecoration.LineThrough else TextDecoration.None,
-                                ),
+                                ).contentDir(),
                                 color = if (s.done) Den.muted else Den.ink,
                             )
                         }
@@ -179,7 +180,7 @@ fun GoalCard(
             GoalType.GENERIC -> if (goal.description.isNotBlank()) {
                 Text(
                     goal.description,
-                    style = TextStyle(fontFamily = DenType.body, fontSize = 12.5.sp, fontStyle = FontStyle.Italic),
+                    style = TextStyle(fontFamily = DenType.body, fontSize = 12.5.sp, fontStyle = FontStyle.Italic).contentDir(),
                     color = Den.muted,
                     modifier = Modifier.padding(top = 8.dp),
                 )
@@ -209,7 +210,7 @@ fun GoalCard(
                             TzIcons.Repeat(11.dp, accent)
                             Text(
                                 h.name,
-                                style = TextStyle(fontFamily = DenType.mono, fontSize = 10.5.sp),
+                                style = TextStyle(fontFamily = DenType.mono, fontSize = 10.5.sp).contentDir(),
                                 color = accent,
                             )
                         }

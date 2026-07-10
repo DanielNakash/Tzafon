@@ -25,6 +25,7 @@ import com.thefoxworks.tzafon.domain.model.TaskState
 import com.thefoxworks.tzafon.ui.theme.Den
 import com.thefoxworks.tzafon.ui.theme.DenType
 import com.thefoxworks.tzafon.ui.theme.a
+import com.thefoxworks.tzafon.ui.theme.contentDir
 
 /** Which due indicator (if any) a task shows today — v1.1.0 dueIndicator. */
 enum class DueIndicator { NONE, DEADLINE, TODAY }
@@ -82,12 +83,14 @@ fun TaskRow(
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
                         task.title,
-                        style = DenType.rowTitle,
+                        style = DenType.rowTitle.contentDir(),
                         color = if (struck) Den.muted else Den.ink,
                         textDecoration = if (struck) TextDecoration.LineThrough else TextDecoration.None,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f, fill = false),
+                        // fill the weighted slot so RTL (content-direction) titles right-align,
+                        // matching the Habits list; the trailing pill sits at the row's edge.
+                        modifier = Modifier.weight(1f),
                     )
                     when (ind) {
                         DueIndicator.DEADLINE -> DeadlinePill()
@@ -104,7 +107,7 @@ fun TaskRow(
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
                         if (servesLabel != null) Serves(servesLabel, servesAccent)
-                        if (habitLabel != null) Chip(habitLabel, icon = { TzIcons.Repeat(12.dp, Den.faint) })
+                        if (habitLabel != null) Chip(habitLabel, icon = { TzIcons.Repeat(12.dp, Den.faint) }, userContent = true)
                         task.cue?.let { CueChip(it.label) }
                         if (recurSummary != null) Chip(recurSummary, icon = { TzIcons.Repeat(12.dp, Den.faint) })
                     }

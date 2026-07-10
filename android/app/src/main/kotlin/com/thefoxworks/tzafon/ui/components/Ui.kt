@@ -46,6 +46,7 @@ import com.thefoxworks.tzafon.domain.model.TaskState
 import com.thefoxworks.tzafon.ui.theme.Den
 import com.thefoxworks.tzafon.ui.theme.DenType
 import com.thefoxworks.tzafon.ui.theme.a
+import com.thefoxworks.tzafon.ui.theme.contentDir
 
 /** Ripple-free press — the design's .ft-press feel. */
 fun Modifier.pressable(onClick: () -> Unit): Modifier = pressable(null, null, onClick)
@@ -173,16 +174,21 @@ fun Chip(
     color: Color = Den.muted,
     icon: (@Composable () -> Unit)? = null,
     modifier: Modifier = Modifier,
+    /** FR-DESIGN-3 — when true, the chip label carries user-authored content
+     *  (habit name, cue label, theme name…) and its paragraph direction should
+     *  resolve from the first strong character. Chrome-only chips (recurrence
+     *  summaries, "serves"…) stay LTR. */
+    userContent: Boolean = false,
 ) {
     Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
         icon?.invoke()
-        Text(text, style = DenType.chip, color = color, maxLines = 1)
+        Text(text, style = if (userContent) DenType.chip.contentDir() else DenType.chip, color = color, maxLines = 1)
     }
 }
 
 @Composable
 fun CueChip(text: String, modifier: Modifier = Modifier) {
-    Chip(text, color = Den.muted, icon = { TzIcons.Cue(12.dp, Den.amber) }, modifier = modifier)
+    Chip(text, color = Den.muted, icon = { TzIcons.Cue(12.dp, Den.amber) }, modifier = modifier, userContent = true)
 }
 
 /** "serves: <theme>" — the auto-bridge made visible (PRIN-5). */
@@ -191,7 +197,7 @@ fun Serves(label: String, accent: Color, plus: Int = 0, modifier: Modifier = Mod
     Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
         Dot(accent, 7.dp)
         Text("serves", style = DenType.chip, color = Den.faint)
-        Text(label, style = DenType.chip.copy(fontWeight = FontWeight.SemiBold), color = accent, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(label, style = DenType.chip.copy(fontWeight = FontWeight.SemiBold).contentDir(), color = accent, maxLines = 1, overflow = TextOverflow.Ellipsis)
         if (plus > 0) Text("+$plus", style = DenType.chip, color = Den.faint)
     }
 }

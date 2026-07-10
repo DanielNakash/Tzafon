@@ -52,6 +52,7 @@ import com.thefoxworks.tzafon.ui.components.pressable
 import com.thefoxworks.tzafon.ui.theme.Den
 import com.thefoxworks.tzafon.ui.theme.DenType
 import com.thefoxworks.tzafon.ui.theme.a
+import com.thefoxworks.tzafon.ui.theme.contentDir
 
 /**
  * Full-screen task editor (v1.1.0 TaskEditor.jsx parity): title, description,
@@ -696,6 +697,11 @@ private fun EdSection(text: String) {
     SectionLabel(text, modifier = Modifier.padding(top = 22.dp, bottom = 10.dp, start = 4.dp))
 }
 
+/**
+ * FR-DESIGN-3 — task title & description are user-authored; the input's
+ * TextStyle carries TextDirection.Content so Hebrew/Arabic titles render RTL
+ * with the caret at the correct edge (see `TextStyle.contentDir()`).
+ */
 @Composable
 private fun EdInput(
     value: String,
@@ -704,10 +710,11 @@ private fun EdInput(
     textStyle: TextStyle,
     minLines: Int = 1,
 ) {
+    val styled = textStyle.contentDir()
     BasicTextField(
         value = value,
         onValueChange = onChange,
-        textStyle = textStyle,
+        textStyle = styled,
         minLines = minLines,
         cursorBrush = SolidColor(Den.rust),
         decorationBox = { inner ->
@@ -719,7 +726,7 @@ private fun EdInput(
                     .padding(14.dp),
             ) {
                 if (value.isEmpty()) {
-                    Text(placeholder, style = textStyle.copy(color = Den.faint, fontWeight = FontWeight.Normal))
+                    Text(placeholder, style = styled.copy(color = Den.faint, fontWeight = FontWeight.Normal))
                 }
                 inner()
             }
