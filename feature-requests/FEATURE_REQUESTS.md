@@ -59,3 +59,13 @@ Add RTL (Right To Left) support for text fields while editing and viewing them. 
 status: groomed
 target: 2.2.0
 Add an option to edit the Habit's details - name, frequency etc. as in a new habit creation.
+
+## FR-2026-07-10-f
+status: groomed
+target: 2.2.0
+There's nowhere in the app an option to add a new Goal. I think it would make most sense for it to live in the Directions View. Consider how to include an add option for a Goal without hurting the existing capability to add a Theme. The form has to include all the details required for a Goal.
+
+## FR-2026-07-10-g
+status: groomed
+target: 2.2.0
+The menu that is reachable through the logo of "The Fox Works" is very unintuitive. Please replace it with the traditional "hamburger" icon.
