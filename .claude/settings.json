@@ -1,6 +1,6 @@
 {
   "env": {
-    "PATH": "/Users/danielnakash/Library/Android/sdk/platform-tools:${PATH}"
+    "PATH": "/Users/danielnakash/Library/Android/sdk/platform-tools:/Users/danielnakash/Library/Android/sdk/emulator:/Users/danielnakash/Library/Android/sdk/cmdline-tools/latest/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/opt/homebrew/bin:${PATH}"
   },
   "permissions": {
     "allow": [
