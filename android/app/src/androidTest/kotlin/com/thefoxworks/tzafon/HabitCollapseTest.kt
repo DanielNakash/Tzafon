@@ -64,13 +64,14 @@ class HabitCollapseTest {
         grid = List(5) { List(7) { 0 } },
         loggedToday = false,
         todayAmount = null,
+        hasHistory = false,
     )
 
     @Test
     fun rendersCollapsed_showsOnlyName_logControl_expandAffordance() {
         rule.setContent {
             TzafonTheme {
-                HabitCard(card = card, servesGoal = null, onLog = {}, onOpen = {})
+                HabitCard(card = card, servesGoal = null, onLog = {}, onEdit = {})
             }
         }
 
@@ -88,7 +89,7 @@ class HabitCollapseTest {
         var logs = 0
         rule.setContent {
             TzafonTheme {
-                HabitCard(card = card, servesGoal = null, onLog = { logs++ }, onOpen = {})
+                HabitCard(card = card, servesGoal = null, onLog = { logs++ }, onEdit = {})
             }
         }
 
@@ -102,7 +103,7 @@ class HabitCollapseTest {
     fun expandThenCollapse_revealsFullContentsAndHidesAgain() {
         rule.setContent {
             TzafonTheme {
-                HabitCard(card = card, servesGoal = null, onLog = {}, onOpen = {})
+                HabitCard(card = card, servesGoal = null, onLog = {}, onEdit = {})
             }
         }
 
@@ -132,7 +133,7 @@ class HabitCollapseTest {
                     // The key drives a fresh composition — analogous to leaving
                     // and returning to the Habits tab.
                     androidx.compose.runtime.key(mountKey) {
-                        HabitCard(card = card, servesGoal = null, onLog = {}, onOpen = {})
+                        HabitCard(card = card, servesGoal = null, onLog = {}, onEdit = {})
                     }
                 }
             }
@@ -155,7 +156,7 @@ class HabitCollapseTest {
     fun noStreakOrAdherenceSurface_inEitherState() {
         rule.setContent {
             TzafonTheme {
-                HabitCard(card = card, servesGoal = null, onLog = {}, onOpen = {})
+                HabitCard(card = card, servesGoal = null, onLog = {}, onEdit = {})
             }
         }
 

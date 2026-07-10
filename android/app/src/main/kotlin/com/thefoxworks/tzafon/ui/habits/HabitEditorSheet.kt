@@ -58,6 +58,14 @@ fun HabitEditorSheet(
     presetName: String? = null,
     /** goals this habit may serve (DM-HABIT-6 / D2 — one) */
     goals: List<com.thefoxworks.tzafon.domain.model.Goal> = emptyList(),
+    /**
+     * FR-HAB-7.4 — when the habit already has logged history, the `kind`
+     * chooser is locked: switching would reinterpret past logs (a frequency
+     * tick has no `amount`; a quantitative entry has no meaningful "did it
+     * happen" boolean once the numeric target moves). At create time this is
+     * always false.
+     */
+    hasHistory: Boolean = false,
 ) {
     var name by remember { mutableStateOf(initial?.name ?: presetName ?: "") }
     var goalId by remember { mutableStateOf(initial?.goalId) }
@@ -173,9 +181,22 @@ fun HabitEditorSheet(
             )
 
             SectionLabel("Kind", modifier = Modifier.padding(top = 16.dp))
+            val kindLocked = hasHistory && initial != null
             Row(Modifier.padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-                KindChip("TIMES A WEEK", kind == HabitKind.FREQUENCY) { kind = HabitKind.FREQUENCY }
-                KindChip("AN AMOUNT A DAY", kind == HabitKind.QUANTITATIVE) { kind = HabitKind.QUANTITATIVE }
+                KindChip("TIMES A WEEK", kind == HabitKind.FREQUENCY, enabled = !kindLocked) {
+                    kind = HabitKind.FREQUENCY
+                }
+                KindChip("AN AMOUNT A DAY", kind == HabitKind.QUANTITATIVE, enabled = !kindLocked) {
+                    kind = HabitKind.QUANTITATIVE
+                }
+            }
+            if (kindLocked) {
+                Text(
+                    "Kind is fixed once you've logged this habit — delete and recreate if you need to switch.",
+                    style = TextStyle(fontFamily = DenType.body, fontSize = 12.sp, lineHeight = 16.5.sp),
+                    color = Den.faint,
+                    modifier = Modifier.padding(top = 6.dp),
+                )
             }
 
             if (kind == HabitKind.FREQUENCY) {
@@ -345,19 +366,33 @@ fun HabitEditorSheet(
 }
 
 @Composable
-private fun KindChip(label: String, on: Boolean, onClick: () -> Unit) {
+private fun KindChip(label: String, on: Boolean, enabled: Boolean = true, onClick: () -> Unit) {
+    val bg = when {
+        on && enabled -> Den.green
+        on && !enabled -> Den.green.a(0.45f)
+        else -> Color.Transparent
+    }
+    val border = when {
+        on -> Den.green.a(if (enabled) 1f else 0.45f)
+        else -> Den.line
+    }
+    val textColor = when {
+        on -> Color.White.copy(alpha = if (enabled) 1f else 0.85f)
+        enabled -> Den.muted
+        else -> Den.faint
+    }
     Box(
         Modifier
             .clip(RoundedCornerShape(999.dp))
-            .background(if (on) Den.green else Color.Transparent)
-            .border(1.dp, if (on) Den.green else Den.line, RoundedCornerShape(999.dp))
-            .pressable(onClick)
+            .background(bg)
+            .border(1.dp, border, RoundedCornerShape(999.dp))
+            .let { if (enabled) it.pressable(onClick) else it }
             .padding(horizontal = 11.dp, vertical = 6.dp),
     ) {
         Text(
             label,
             style = TextStyle(fontFamily = DenType.mono, fontSize = 10.sp, letterSpacing = 0.3.sp),
-            color = if (on) Color.White else Den.muted,
+            color = textColor,
         )
     }
 }

@@ -22,6 +22,13 @@ data class HabitCardState(
     val grid: List<List<Int>>,     // 5 weeks × 7 days
     val loggedToday: Boolean,
     val todayAmount: Double?,
+    /**
+     * FR-HAB-7.4 — any logged history at all locks the `kind` field in the
+     * editor. Includes days marked "not done" and quantitative zero-amount
+     * entries: once a log row exists the "did it happen" projection is real
+     * data, and changing `kind` would reinterpret it in place.
+     */
+    val hasHistory: Boolean,
 )
 
 data class HabitsUiState(
@@ -63,6 +70,7 @@ class HabitsViewModel(
                         grid = HabitMath.historyGrid(h, logs, today, weekStart),
                         loggedToday = todayLog != null,
                         todayAmount = todayLog?.amount,
+                        hasHistory = logs.any { it.habitId == h.id },
                     )
                 },
                 goals = goals,

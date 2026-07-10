@@ -89,7 +89,7 @@ fun HabitsScreen(
                                 vm.logToday(card.habit.id, done = !card.loggedToday)
                             }
                         },
-                        onOpen = { editing = card.habit },
+                        onEdit = { editing = card.habit },
                     )
                 }
 
@@ -125,12 +125,16 @@ fun HabitsScreen(
     }
 
     if (creating || editing != null) {
+        val hasHistory = editing?.let { e ->
+            state.cards.firstOrNull { it.habit.id == e.id }?.hasHistory ?: false
+        } ?: false
         HabitEditorSheet(
             initial = editing,
             onSave = { vm.save(it) },
             onDelete = { vm.delete(it) },
             onClose = { creating = false; editing = null },
             goals = state.goals,
+            hasHistory = hasHistory,
         )
     }
 
@@ -146,7 +150,7 @@ fun HabitsScreen(
 }
 
 @Composable
-internal fun HabitCard(card: HabitCardState, servesGoal: String?, onLog: () -> Unit, onOpen: () -> Unit) {
+internal fun HabitCard(card: HabitCardState, servesGoal: String?, onLog: () -> Unit, onEdit: () -> Unit) {
     val h = card.habit
     val accent = Den.green // per-theme accents arrive with M6
     val isQuant = h.kind == HabitKind.QUANTITATIVE
@@ -164,32 +168,44 @@ internal fun HabitCard(card: HabitCardState, servesGoal: String?, onLog: () -> U
             .background(Den.card)
             .border(1.dp, Den.line, RoundedCornerShape(16.dp)),
     ) {
-        // ── FR-HAB-5 collapsed header: name + log + expand — the only three
-        //     affordances visible when the card is closed. Tap the row (chevron
-        //     or name area) to toggle; the log pill has its own hit target.
+        // ── FR-HAB-5 + FR-HAB-7.1 collapsed header: name + edit + log + expand
+        //     — four affordances, each an isolated hit target. Tap the name
+        //     area to toggle expand; the edit pencil and log pill route
+        //     separately per FR-HAB-7.2.
         val headerCd = if (expanded) "Collapse habit ${h.name}" else "Expand habit ${h.name}"
         Row(
             Modifier
                 .fillMaxWidth()
-                .semantics(mergeDescendants = false) { contentDescription = headerCd }
-                .pressable(
-                    label = headerCd,
-                    role = Role.Button,
-                ) { expanded = !expanded }
                 .padding(horizontal = 14.dp, vertical = 11.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            TzIcons.Chevron(
-                18.dp,
-                Den.muted,
-                dir = if (expanded) TzIcons.Dir.DOWN else TzIcons.Dir.RIGHT,
-            )
-            Text(
-                h.name,
-                style = TextStyle(fontFamily = DenType.serif, fontSize = 17.sp, fontWeight = FontWeight.SemiBold, lineHeight = 20.sp).contentDir(),
-                color = Den.ink,
-                modifier = Modifier.weight(1f),
+            Row(
+                Modifier
+                    .weight(1f)
+                    .semantics(mergeDescendants = false) { contentDescription = headerCd }
+                    .pressable(
+                        label = headerCd,
+                        role = Role.Button,
+                    ) { expanded = !expanded },
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                TzIcons.Chevron(
+                    18.dp,
+                    Den.muted,
+                    dir = if (expanded) TzIcons.Dir.DOWN else TzIcons.Dir.RIGHT,
+                )
+                Text(
+                    h.name,
+                    style = TextStyle(fontFamily = DenType.serif, fontSize = 17.sp, fontWeight = FontWeight.SemiBold, lineHeight = 20.sp).contentDir(),
+                    color = Den.ink,
+                    modifier = Modifier.weight(1f),
+                )
+            }
+            CollapsedEditPill(
+                habitName = h.name,
+                onEdit = onEdit,
             )
             CollapsedLogPill(
                 loggedToday = card.loggedToday,
@@ -206,7 +222,11 @@ internal fun HabitCard(card: HabitCardState, servesGoal: String?, onLog: () -> U
             Column(
                 Modifier
                     .fillMaxWidth()
-                    .pressable(onOpen)
+                    .pressable(
+                        label = "Edit habit ${h.name}",
+                        role = Role.Button,
+                        onClick = onEdit,
+                    )
                     .padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 15.dp),
             ) {
                 // ── FR-HAB-1 details: target chip + serves link ──
@@ -403,6 +423,34 @@ internal fun HabitCard(card: HabitCardState, servesGoal: String?, onLog: () -> U
                 }
             }
         }
+    }
+}
+
+/**
+ * FR-HAB-7.1 / FR-HAB-7.2 — the compact edit affordance for the collapsed row.
+ * A single-purpose icon button beside the log pill so edit no longer requires
+ * an expand tap first (the discoverability regression `FR-HAB-5`'s collapse
+ * introduced). Owns its own hit target so the log control never doubles as
+ * the edit route (`FR-HAB-7.2`).
+ */
+@Composable
+private fun CollapsedEditPill(habitName: String, onEdit: () -> Unit) {
+    val cd = "Edit habit $habitName"
+    Box(
+        Modifier
+            .size(34.dp)
+            .clip(RoundedCornerShape(999.dp))
+            .background(Den.ink.a(0.05f))
+            .border(1.dp, Den.line, RoundedCornerShape(999.dp))
+            .semantics { contentDescription = cd }
+            .pressable(
+                label = cd,
+                role = Role.Button,
+                onClick = onEdit,
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        TzIcons.Pencil(15.dp, Den.muted)
     }
 }
 
