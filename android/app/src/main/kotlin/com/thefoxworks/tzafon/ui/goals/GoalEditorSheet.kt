@@ -289,7 +289,13 @@ fun CompletionSheet(
                 color = Den.ink,
                 modifier = Modifier.padding(top = 14.dp, bottom = 12.dp),
             )
-            SheetPrimaryButton(label = "Make a habit of it", color = Den.green) { onMakeHabit() }
+            // FR-HAB-6.2: the rebound sits outside the create-flow audit; the Den palette
+            // has no explicit on-green pair, and white gives the safer 4.8:1 on the green.
+            SheetPrimaryButton(
+                label = "Make a habit of it",
+                color = Den.green,
+                contentColor = Color.White,
+            ) { onMakeHabit() }
             SheetGhostButton(label = "Set a follow-on goal", modifier = Modifier.padding(top = 9.dp)) { onFollowOn() }
             SheetGhostButton(label = "Just enjoy it", modifier = Modifier.padding(top = 9.dp)) { onEnjoy() }
         }

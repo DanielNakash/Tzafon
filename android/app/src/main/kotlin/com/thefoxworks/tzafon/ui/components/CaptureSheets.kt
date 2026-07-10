@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -257,11 +258,20 @@ fun AmountSheet(
     }
 }
 
+/**
+ * FR-HAB-6 — the primary confirmation button used by the create-habit,
+ * create-goal, create-theme (and analogous) flows. The label routes through
+ * the Material 3 [ColorScheme] so it always pairs correctly with the container
+ * (default: `primary` + `onPrimary`, i.e. rust + cream). Callers overriding
+ * `color` should override [contentColor] with the matching on-role to keep
+ * WCAG AA ≥ 4.5:1 (e.g. `error` + `onError` for delete confirmations).
+ */
 @Composable
 fun SheetPrimaryButton(
     label: String,
     enabled: Boolean = true,
-    color: Color = Den.rust,
+    color: Color = MaterialTheme.colorScheme.primary,
+    contentColor: Color = MaterialTheme.colorScheme.onPrimary,
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
 ) {
@@ -279,7 +289,7 @@ fun SheetPrimaryButton(
         Text(
             label,
             style = TextStyle(fontFamily = DenType.body, fontSize = 15.5.sp, fontWeight = FontWeight.SemiBold),
-            color = Color.White,
+            color = contentColor,
         )
     }
 }
