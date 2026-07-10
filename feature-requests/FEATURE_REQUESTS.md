@@ -72,3 +72,20 @@ status: implemented
 target: 2.2.0
 implemented: 2.2.0 / d827a6e
 The menu that is reachable through the logo of "The Fox Works" is very unintuitive. Please replace it with the traditional "hamburger" icon.
+
+## FR-2026-07-10-h
+status: groomed
+target: 2.3.0
+implemented: (auto)
+Add an "about" section:
+* Accessing the "About" section shall be from the hamburger menu.
+* It shall include:
+    * Title - "About"
+    * The following text:
+        * First row - "Produced by The Fox Works"
+        * Second row - "Implemented by Claude"
+        * The app's current version number in the following pattern - "Version X.Y.Z"
+    * The logo of "The Fox Works"
+    * Under the logo, a link:
+        * Display text: "Contact Us"
+        * URL for triggering an email to thefoxworksdotnet@gmail.com 
