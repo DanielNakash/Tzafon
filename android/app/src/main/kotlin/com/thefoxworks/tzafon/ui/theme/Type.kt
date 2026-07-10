@@ -5,8 +5,18 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.sp
 import com.thefoxworks.tzafon.R
+
+/**
+ * FR-DESIGN-3 — apply on TextStyle used to render user-authored strings
+ * (task titles, habit names, cue labels, etc.). Directs Compose to resolve
+ * paragraph direction from the first strong character per the Unicode
+ * Bidirectional Algorithm, so Hebrew/Arabic content renders RTL with the
+ * caret at the correct edge while chrome remains LTR.
+ */
+fun TextStyle.contentDir(): TextStyle = copy(textDirection = TextDirection.Content)
 
 /**
  * Den type stack (FR-DESIGN-1): Newsreader (serif — titles), Hanken Grotesk

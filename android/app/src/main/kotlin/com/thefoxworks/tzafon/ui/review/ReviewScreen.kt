@@ -52,6 +52,7 @@ import com.thefoxworks.tzafon.ui.components.pressable
 import com.thefoxworks.tzafon.ui.theme.Den
 import com.thefoxworks.tzafon.ui.theme.DenType
 import com.thefoxworks.tzafon.ui.theme.a
+import com.thefoxworks.tzafon.ui.theme.contentDir
 
 /**
  * The Review loop (DM-REVIEW, design: ReviewReflect/ReviewPlan) — two
@@ -236,7 +237,7 @@ private fun ReflectStep(state: ReviewUiState, note: String, onNote: (String) -> 
                         Dot(Den.green, 8.dp)
                         Text(
                             r.name,
-                            style = TextStyle(fontFamily = DenType.body, fontSize = 14.5.sp, fontWeight = FontWeight.Medium),
+                            style = TextStyle(fontFamily = DenType.body, fontSize = 14.5.sp, fontWeight = FontWeight.Medium).contentDir(),
                             color = Den.ink,
                             modifier = Modifier.weight(1f),
                         )
@@ -266,7 +267,7 @@ private fun ReflectStep(state: ReviewUiState, note: String, onNote: (String) -> 
                     TzIcons.Target(16.dp, Den.rust)
                     Text(
                         d.title,
-                        style = TextStyle(fontFamily = DenType.body, fontSize = 14.5.sp, fontWeight = FontWeight.Medium),
+                        style = TextStyle(fontFamily = DenType.body, fontSize = 14.5.sp, fontWeight = FontWeight.Medium).contentDir(),
                         color = Den.ink,
                         modifier = Modifier.weight(1f),
                     )
@@ -292,7 +293,7 @@ private fun ReflectStep(state: ReviewUiState, note: String, onNote: (String) -> 
         BasicTextField(
             value = note,
             onValueChange = onNote,
-            textStyle = TextStyle(fontFamily = DenType.serif, fontSize = 15.sp, fontStyle = FontStyle.Italic, color = Den.ink),
+            textStyle = TextStyle(fontFamily = DenType.serif, fontSize = 15.sp, fontStyle = FontStyle.Italic, color = Den.ink).contentDir(),
             cursorBrush = SolidColor(Den.rust),
             decorationBox = { inner ->
                 Box(Modifier.padding(top = 6.dp)) {
@@ -369,7 +370,7 @@ private fun PlanStep(state: ReviewUiState, onTogglePick: (String) -> Unit, onFre
                         style = TextStyle(
                             fontFamily = DenType.body, fontSize = 14.5.sp,
                             fontWeight = if (on) FontWeight.SemiBold else FontWeight.Normal,
-                        ),
+                        ).contentDir(),
                         color = if (on) Den.ink else Den.muted,
                     )
                     state.servesByTask[t.id]?.let { serves ->

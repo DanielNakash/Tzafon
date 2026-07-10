@@ -41,6 +41,7 @@ import com.thefoxworks.tzafon.ui.components.pressable
 import com.thefoxworks.tzafon.ui.theme.Den
 import com.thefoxworks.tzafon.ui.theme.DenType
 import com.thefoxworks.tzafon.ui.theme.a
+import com.thefoxworks.tzafon.ui.theme.contentDir
 
 /**
  * Create / edit a goal (DM-GOAL-1): three types, honest starting progress,
@@ -150,7 +151,7 @@ fun GoalEditorSheet(
                             BasicTextField(
                                 value = newStep,
                                 onValueChange = { newStep = it },
-                                textStyle = TextStyle(fontFamily = DenType.body, fontSize = 13.5.sp, color = Den.ink),
+                                textStyle = TextStyle(fontFamily = DenType.body, fontSize = 13.5.sp, color = Den.ink).contentDir(),
                                 cursorBrush = SolidColor(Den.rust),
                                 singleLine = true,
                                 decorationBox = { inner ->
@@ -328,11 +329,14 @@ private fun EditorField(
     serif: Boolean = false,
     number: Boolean = false,
 ) {
-    val style = if (serif) {
+    val baseStyle = if (serif) {
         TextStyle(fontFamily = DenType.serif, fontSize = 18.sp, fontWeight = FontWeight.SemiBold, color = Den.ink)
     } else {
         TextStyle(fontFamily = DenType.body, fontSize = 15.sp, color = Den.ink)
     }
+    // FR-DESIGN-3: user-authored strings resolve direction from first strong
+    // character; numeric fields stay LTR (digits carry no directional signal).
+    val style = if (number) baseStyle else baseStyle.contentDir()
     BasicTextField(
         value = value,
         onValueChange = onChange,

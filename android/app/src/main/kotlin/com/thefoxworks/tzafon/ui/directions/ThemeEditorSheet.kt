@@ -40,6 +40,7 @@ import com.thefoxworks.tzafon.ui.components.pressable
 import com.thefoxworks.tzafon.ui.theme.Den
 import com.thefoxworks.tzafon.ui.theme.DenType
 import com.thefoxworks.tzafon.ui.theme.a
+import com.thefoxworks.tzafon.ui.theme.contentDir
 
 /**
  * Create / edit a theme (DM-THEME-1): approach-framed name, the mandatory
@@ -269,7 +270,7 @@ private fun Field(
         serif -> TextStyle(fontFamily = DenType.serif, fontSize = 18.sp, fontWeight = FontWeight.SemiBold, color = Den.ink)
         italic -> TextStyle(fontFamily = DenType.serif, fontSize = 15.sp, fontStyle = FontStyle.Italic, color = Den.ink)
         else -> TextStyle(fontFamily = DenType.body, fontSize = 15.sp, color = Den.ink)
-    }
+    }.contentDir()
     BasicTextField(
         value = value,
         onValueChange = onChange,

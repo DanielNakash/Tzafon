@@ -47,6 +47,7 @@ import com.thefoxworks.tzafon.ui.components.pressable
 import com.thefoxworks.tzafon.ui.theme.Den
 import com.thefoxworks.tzafon.ui.theme.DenType
 import com.thefoxworks.tzafon.ui.theme.a
+import com.thefoxworks.tzafon.ui.theme.contentDir
 import kotlin.math.max
 import kotlin.math.roundToInt
 
@@ -186,7 +187,7 @@ internal fun HabitCard(card: HabitCardState, servesGoal: String?, onLog: () -> U
             )
             Text(
                 h.name,
-                style = TextStyle(fontFamily = DenType.serif, fontSize = 17.sp, fontWeight = FontWeight.SemiBold, lineHeight = 20.sp),
+                style = TextStyle(fontFamily = DenType.serif, fontSize = 17.sp, fontWeight = FontWeight.SemiBold, lineHeight = 20.sp).contentDir(),
                 color = Den.ink,
                 modifier = Modifier.weight(1f),
             )
@@ -259,7 +260,7 @@ internal fun HabitCard(card: HabitCardState, servesGoal: String?, onLog: () -> U
                                     append(h.cue.label.removePrefix("After ").removePrefix("after "))
                                 }
                             },
-                            style = TextStyle(fontFamily = DenType.body, fontSize = 13.5.sp),
+                            style = TextStyle(fontFamily = DenType.body, fontSize = 13.5.sp).contentDir(),
                             color = Den.ink,
                         )
                     }

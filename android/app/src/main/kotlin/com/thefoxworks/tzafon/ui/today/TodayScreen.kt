@@ -63,6 +63,7 @@ import com.thefoxworks.tzafon.ui.nav.AppMenuSheet
 import com.thefoxworks.tzafon.ui.theme.Den
 import com.thefoxworks.tzafon.ui.theme.DenType
 import com.thefoxworks.tzafon.ui.theme.a
+import com.thefoxworks.tzafon.ui.theme.contentDir
 import kotlin.math.roundToInt
 
 /**
@@ -377,7 +378,7 @@ private fun FocusItem(
             Column(Modifier.weight(1f)) {
                 Text(
                     t.title,
-                    style = TextStyle(fontFamily = DenType.body, fontSize = 16.5.sp, fontWeight = FontWeight.SemiBold, lineHeight = 21.5.sp),
+                    style = TextStyle(fontFamily = DenType.body, fontSize = 16.5.sp, fontWeight = FontWeight.SemiBold, lineHeight = 21.5.sp).contentDir(),
                     color = Den.ink,
                 )
                 if (t.cue != null) {

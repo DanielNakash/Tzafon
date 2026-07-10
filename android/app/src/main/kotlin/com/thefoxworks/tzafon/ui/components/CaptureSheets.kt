@@ -35,6 +35,7 @@ import com.thefoxworks.tzafon.domain.model.CueType
 import com.thefoxworks.tzafon.ui.theme.Den
 import com.thefoxworks.tzafon.ui.theme.DenType
 import com.thefoxworks.tzafon.ui.theme.a
+import com.thefoxworks.tzafon.ui.theme.contentDir
 
 /**
  * DM-CUE — "When X, I will do Y", always one line, never a wizard.
@@ -80,7 +81,7 @@ fun CueSheet(
                 BasicTextField(
                     value = label,
                     onValueChange = { label = it },
-                    textStyle = TextStyle(fontFamily = DenType.body, fontSize = 15.5.sp, color = Den.ink),
+                    textStyle = TextStyle(fontFamily = DenType.body, fontSize = 15.5.sp, color = Den.ink).contentDir(),
                     cursorBrush = SolidColor(Den.rust),
                     singleLine = true,
                     decorationBox = { inner ->

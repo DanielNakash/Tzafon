@@ -41,6 +41,7 @@ import com.thefoxworks.tzafon.ui.components.pressable
 import com.thefoxworks.tzafon.ui.theme.Den
 import com.thefoxworks.tzafon.ui.theme.DenType
 import com.thefoxworks.tzafon.ui.theme.a
+import com.thefoxworks.tzafon.ui.theme.contentDir
 
 /**
  * Create / edit a habit (DM-HABIT-1): kind, gentle weekly target, unit,
@@ -146,7 +147,7 @@ fun HabitEditorSheet(
             BasicTextField(
                 value = name,
                 onValueChange = { name = it },
-                textStyle = TextStyle(fontFamily = DenType.serif, fontSize = 18.sp, fontWeight = FontWeight.SemiBold, color = Den.ink),
+                textStyle = TextStyle(fontFamily = DenType.serif, fontSize = 18.sp, fontWeight = FontWeight.SemiBold, color = Den.ink).contentDir(),
                 cursorBrush = SolidColor(Den.rust),
                 singleLine = true,
                 decorationBox = { inner ->
@@ -225,7 +226,7 @@ fun HabitEditorSheet(
                         BasicTextField(
                             value = unit,
                             onValueChange = { unit = it },
-                            textStyle = TextStyle(fontFamily = DenType.body, fontSize = 15.sp, color = Den.ink),
+                            textStyle = TextStyle(fontFamily = DenType.body, fontSize = 15.sp, color = Den.ink).contentDir(),
                             cursorBrush = SolidColor(Den.rust),
                             singleLine = true,
                             decorationBox = { inner ->

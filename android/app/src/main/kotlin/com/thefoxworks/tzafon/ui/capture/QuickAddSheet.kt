@@ -39,6 +39,7 @@ import com.thefoxworks.tzafon.ui.components.TzIcons
 import com.thefoxworks.tzafon.ui.components.pressable
 import com.thefoxworks.tzafon.ui.theme.Den
 import com.thefoxworks.tzafon.ui.theme.DenType
+import com.thefoxworks.tzafon.ui.theme.contentDir
 
 /**
  * FR-CAPTURE-1 — the one-line quick-add (design: QuickAdd). Title + Enter
@@ -86,7 +87,7 @@ fun QuickAddSheet(
                     fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = Den.ink,
-                ),
+                ).contentDir(),
                 cursorBrush = SolidColor(Den.rust),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                 keyboardActions = KeyboardActions(onDone = {

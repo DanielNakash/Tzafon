@@ -46,6 +46,7 @@ import com.thefoxworks.tzafon.ui.components.TzIcons
 import com.thefoxworks.tzafon.ui.theme.Den
 import com.thefoxworks.tzafon.ui.theme.DenType
 import com.thefoxworks.tzafon.ui.theme.a
+import com.thefoxworks.tzafon.ui.theme.contentDir
 
 private fun accentFor(theme: Theme?): Color =
     theme?.let { Den.themeAccents[it.accentSlot % 3] } ?: Den.rust
@@ -170,7 +171,7 @@ private fun MilestoneRow(m: Milestone, topPad: androidx.compose.ui.unit.Dp) {
         Column(Modifier.weight(1f)) {
             Text(
                 m.goal.title,
-                style = TextStyle(fontFamily = DenType.serif, fontSize = 16.5.sp, fontWeight = FontWeight.SemiBold),
+                style = TextStyle(fontFamily = DenType.serif, fontSize = 16.5.sp, fontWeight = FontWeight.SemiBold).contentDir(),
                 color = Den.ink,
             )
             if (m.theme != null) {
@@ -197,7 +198,7 @@ private fun ArcRow(arc: Arc, topPad: androidx.compose.ui.unit.Dp) {
         TzIcons.Sprout(17.dp, accentFor(arc.theme))
         Text(
             arc.habit.name,
-            style = TextStyle(fontFamily = DenType.serif, fontSize = 16.sp, fontWeight = FontWeight.SemiBold),
+            style = TextStyle(fontFamily = DenType.serif, fontSize = 16.sp, fontWeight = FontWeight.SemiBold).contentDir(),
             color = Den.ink,
         )
         Text(
@@ -251,7 +252,7 @@ private fun ReviewTimelineRow(row: ReviewRow, last: Boolean) {
             if (row.note != null) {
                 Text(
                     "“${row.note}”",
-                    style = TextStyle(fontFamily = DenType.serif, fontStyle = FontStyle.Italic, fontSize = 14.5.sp, lineHeight = 20.sp),
+                    style = TextStyle(fontFamily = DenType.serif, fontStyle = FontStyle.Italic, fontSize = 14.5.sp, lineHeight = 20.sp).contentDir(),
                     color = Den.ink,
                     modifier = Modifier.padding(top = 3.dp),
                 )
