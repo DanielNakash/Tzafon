@@ -42,6 +42,7 @@ import com.thefoxworks.tzafon.domain.model.HabitKind
 import com.thefoxworks.tzafon.ui.components.AmountSheet
 import com.thefoxworks.tzafon.ui.components.Fab
 import com.thefoxworks.tzafon.ui.components.LayerHeader
+import com.thefoxworks.tzafon.ui.nav.AppMenuSheet
 import com.thefoxworks.tzafon.ui.components.TzIcons
 import com.thefoxworks.tzafon.ui.components.pressable
 import com.thefoxworks.tzafon.ui.theme.Den
@@ -59,11 +60,15 @@ import kotlin.math.roundToInt
 @Composable
 fun HabitsScreen(
     vm: HabitsViewModel,
+    onOpenAllTasks: () -> Unit = {},
+    onOpenBacklog: () -> Unit = {},
+    onOpenSettings: () -> Unit = {},
 ) {
     val state by vm.uiState.collectAsStateWithLifecycle()
     var editing by remember { mutableStateOf<Habit?>(null) }   // non-null = editor open
     var creating by remember { mutableStateOf(false) }
     var amountFor by remember { mutableStateOf<HabitCardState?>(null) }
+    var menu by remember { mutableStateOf(false) }
 
     Box(Modifier.fillMaxSize().background(Den.bg)) {
         Column(Modifier.fillMaxSize()) {
@@ -72,6 +77,7 @@ fun HabitsScreen(
                 title = "Habits",
                 accent = Den.green,
                 sub = "Aim for the rate, not perfection. Miss one — that's normal. It's the long arc that counts.",
+                onMenu = { menu = true },
             )
 
             LazyColumn(
@@ -145,6 +151,15 @@ fun HabitsScreen(
             suggested = card.todayAmount ?: card.habit.target,
             onConfirm = { vm.logToday(card.habit.id, done = true, amount = it) },
             onClose = { amountFor = null },
+        )
+    }
+
+    if (menu) {
+        AppMenuSheet(
+            onClose = { menu = false },
+            onAllTasks = onOpenAllTasks,
+            onBacklog = onOpenBacklog,
+            onSettings = onOpenSettings,
         )
     }
 }

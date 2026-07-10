@@ -20,6 +20,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -41,6 +44,7 @@ import com.thefoxworks.tzafon.ui.components.Dot
 import com.thefoxworks.tzafon.ui.components.GroupHeader
 import com.thefoxworks.tzafon.ui.components.Kicker
 import com.thefoxworks.tzafon.ui.components.LayerHeader
+import com.thefoxworks.tzafon.ui.nav.AppMenuSheet
 import com.thefoxworks.tzafon.ui.components.Serves
 import com.thefoxworks.tzafon.ui.components.TzIcons
 import com.thefoxworks.tzafon.ui.theme.Den
@@ -57,8 +61,14 @@ private fun accentFor(theme: Theme?): Color =
  * Deliberately no badges, streaks, points, or comparisons (FR-JOURNEY-3).
  */
 @Composable
-fun JourneyScreen(vm: JourneyViewModel) {
+fun JourneyScreen(
+    vm: JourneyViewModel,
+    onOpenAllTasks: () -> Unit = {},
+    onOpenBacklog: () -> Unit = {},
+    onOpenSettings: () -> Unit = {},
+) {
     val state by vm.uiState.collectAsStateWithLifecycle()
+    var menu by remember { mutableStateOf(false) }
 
     Column(Modifier.fillMaxSize().background(Den.surface)) {
         LayerHeader(
@@ -67,6 +77,7 @@ fun JourneyScreen(vm: JourneyViewModel) {
             accent = Den.rust,
             compass = true,
             sub = "Not a trophy case — a mirror. Who you're becoming, in your own past and your own words.",
+            onMenu = { menu = true },
         )
 
         LazyColumn(
@@ -112,6 +123,15 @@ fun JourneyScreen(vm: JourneyViewModel) {
                     ReviewTimelineRow(state.reviewRows[i], last = i == state.reviewRows.size - 1)
                 }
             }
+        }
+
+        if (menu) {
+            AppMenuSheet(
+                onClose = { menu = false },
+                onAllTasks = onOpenAllTasks,
+                onBacklog = onOpenBacklog,
+                onSettings = onOpenSettings,
+            )
         }
     }
 }

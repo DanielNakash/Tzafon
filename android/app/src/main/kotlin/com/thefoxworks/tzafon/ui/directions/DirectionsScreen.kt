@@ -64,6 +64,7 @@ import com.thefoxworks.tzafon.ui.components.pressable
 import com.thefoxworks.tzafon.ui.goals.CompletionSheet
 import com.thefoxworks.tzafon.ui.goals.GoalCard
 import com.thefoxworks.tzafon.ui.goals.GoalEditorSheet
+import com.thefoxworks.tzafon.ui.nav.AppMenuSheet
 import com.thefoxworks.tzafon.ui.habits.HabitEditorSheet
 import com.thefoxworks.tzafon.ui.theme.Den
 import com.thefoxworks.tzafon.ui.theme.DenType
@@ -80,7 +81,12 @@ private fun accentFor(theme: Theme): Color = Den.themeAccents[theme.accentSlot %
  * upcoming and archive behind the scope selector.
  */
 @Composable
-fun DirectionsScreen(vm: DirectionsViewModel) {
+fun DirectionsScreen(
+    vm: DirectionsViewModel,
+    onOpenAllTasks: () -> Unit = {},
+    onOpenBacklog: () -> Unit = {},
+    onOpenSettings: () -> Unit = {},
+) {
     val state by vm.uiState.collectAsStateWithLifecycle()
     var scope by rememberSaveable { mutableStateOf("active") }
     var expandedId by rememberSaveable { mutableStateOf<String?>(null) }
@@ -96,6 +102,7 @@ fun DirectionsScreen(vm: DirectionsViewModel) {
     var habitEditor by remember { mutableStateOf<Pair<Habit?, String?>?>(null) }
     var updateFor by remember { mutableStateOf<Goal?>(null) }
     var celebrate by remember { mutableStateOf<Goal?>(null) }
+    var menu by remember { mutableStateOf(false) }
 
     Box(Modifier.fillMaxSize().background(Den.surface)) {
         Column(Modifier.fillMaxSize()) {
@@ -104,6 +111,7 @@ fun DirectionsScreen(vm: DirectionsViewModel) {
                 title = "Your bearings",
                 accent = Den.rust,
                 sub = "The few directions everything serves — three at most. Tap a bearing to open it.",
+                onMenu = { menu = true },
             )
 
             LazyColumn(
@@ -310,6 +318,15 @@ fun DirectionsScreen(vm: DirectionsViewModel) {
             onEnjoy = { vm.completeGoal(g); celebrate = null },
             onFollowOn = { vm.completeGoal(g); celebrate = null; goalEditor = null to g.primaryThemeId },
             onMakeHabit = { vm.completeGoal(g); celebrate = null; habitEditor = null to g.primaryThemeId },
+        )
+    }
+
+    if (menu) {
+        AppMenuSheet(
+            onClose = { menu = false },
+            onAllTasks = onOpenAllTasks,
+            onBacklog = onOpenBacklog,
+            onSettings = onOpenSettings,
         )
     }
 }

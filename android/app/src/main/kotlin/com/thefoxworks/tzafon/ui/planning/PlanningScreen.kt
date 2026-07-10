@@ -95,7 +95,7 @@ fun PlanningScreen(
                 compact = true,
                 metaLeft = Dates.fmtDate(state.today, state.today),
                 metaRight = "${state.undatedCount} undated",
-                right = { HeaderMenuButton(onClick = { menu = true }) },
+                onMenu = { menu = true },
                 bottomContent = {
                     Row(
                         Modifier.horizontalScroll(rememberScrollState()),

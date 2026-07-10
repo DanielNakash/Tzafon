@@ -39,6 +39,7 @@ fun RustHeader(
     compact: Boolean = false,
     compass: Boolean = false,
     right: (@Composable () -> Unit)? = null,
+    onMenu: (() -> Unit)? = null,
     bottomContent: (@Composable () -> Unit)? = null,
 ) {
     Box(Modifier.fillMaxWidth().background(Den.rust).clipToBounds()) {
@@ -56,7 +57,13 @@ fun RustHeader(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Kicker(kicker, color = Den.cream.a(0.82f))
                 Box(Modifier.weight(1f))
-                right?.invoke() ?: FoxLogo(30.dp, ring = Den.cream.a(0.9f))
+                // The menu (when present) is an anchored overlay below, kept at a fixed
+                // position so it sits at the same height on every screen (FR-NAV-3).
+                when {
+                    right != null -> right()
+                    onMenu == null -> FoxLogo(30.dp, ring = Den.cream.a(0.9f))
+                    else -> {}
+                }
             }
             Text(
                 title,
@@ -81,6 +88,11 @@ fun RustHeader(
             }
             if (bottomContent != null) {
                 Box(Modifier.padding(top = 12.dp, bottom = 16.dp)) { bottomContent() }
+            }
+        }
+        if (onMenu != null) {
+            Box(Modifier.align(Alignment.TopEnd).statusBarsPadding().padding(top = 2.dp, end = 12.dp)) {
+                HeaderMenuButton(onClick = onMenu, color = Den.cream)
             }
         }
     }
@@ -118,6 +130,7 @@ fun LayerHeader(
     accent: Color = Den.rust,
     compass: Boolean = false,
     mascot: (@Composable () -> Unit)? = null,
+    onMenu: (() -> Unit)? = null,
 ) {
     Box(Modifier.fillMaxWidth().background(Den.surface)) {
         if (compass) {
@@ -134,7 +147,11 @@ fun LayerHeader(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Kicker(kicker, color = accent)
                 Box(Modifier.weight(1f))
-                if (mascot != null) mascot() else if (!compass) FoxLogo(30.dp, ring = Den.ink.a(0.06f))
+                when {
+                    mascot != null -> mascot()
+                    !compass && onMenu == null -> FoxLogo(30.dp, ring = Den.ink.a(0.06f))
+                    else -> {}
+                }
             }
             Text(
                 title,
@@ -151,6 +168,11 @@ fun LayerHeader(
                     maxLines = 3,
                     overflow = TextOverflow.Ellipsis,
                 )
+            }
+        }
+        if (onMenu != null) {
+            Box(Modifier.align(Alignment.TopEnd).statusBarsPadding().padding(top = 2.dp, end = 12.dp)) {
+                HeaderMenuButton(onClick = onMenu, color = Den.ink.a(0.7f))
             }
         }
         Box(Modifier.align(Alignment.BottomStart).fillMaxWidth().height(1.dp).background(Den.line))

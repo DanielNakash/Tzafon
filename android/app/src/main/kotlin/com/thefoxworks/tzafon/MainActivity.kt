@@ -109,12 +109,15 @@ fun TzafonNavHost(container: AppContainer) {
         }
     }
 
-    fun openEditor(taskId: String? = null, title: String? = null) {
-        val route = when {
-            taskId != null -> "editor?taskId=$taskId"
-            !title.isNullOrBlank() -> "editor?title=${Uri.encode(title)}"
-            else -> "editor"
+    // presetToday: FR-TODAY-7 — a NEW task added from the Today view defaults its
+    // toDoDate to today, whether via inline quick-add or the full editor (expand).
+    fun openEditor(taskId: String? = null, title: String? = null, presetToday: Boolean = false) {
+        val params = buildList {
+            if (taskId != null) add("taskId=$taskId")
+            if (!title.isNullOrBlank()) add("title=${Uri.encode(title)}")
+            if (presetToday) add("presetToday=true")
         }
+        val route = if (params.isEmpty()) "editor" else "editor?" + params.joinToString("&")
         nav.navigate(route)
     }
 
@@ -140,7 +143,7 @@ fun TzafonNavHost(container: AppContainer) {
                 TodayScreen(
                     vm = vm,
                     onOpenTask = { id -> openEditor(taskId = id) },
-                    onExpandAdd = { title -> openEditor(title = title) },
+                    onExpandAdd = { title -> openEditor(title = title, presetToday = true) },
                     onOpenPlanning = { goTab(Tab.PLANNING) },
                     onOpenAllTasks = { nav.navigate("alltasks") },
                     onOpenBacklog = { nav.navigate("backlog") },
@@ -163,15 +166,30 @@ fun TzafonNavHost(container: AppContainer) {
 
             composable(Tab.HABITS.route) {
                 val vm: HabitsViewModel = viewModel(factory = VmFactory(container))
-                HabitsScreen(vm = vm)
+                HabitsScreen(
+                    vm = vm,
+                    onOpenAllTasks = { nav.navigate("alltasks") },
+                    onOpenBacklog = { nav.navigate("backlog") },
+                    onOpenSettings = { nav.navigate("settings") },
+                )
             }
             composable(Tab.DIRECTIONS.route) {
                 val vm: DirectionsViewModel = viewModel(factory = VmFactory(container))
-                DirectionsScreen(vm = vm)
+                DirectionsScreen(
+                    vm = vm,
+                    onOpenAllTasks = { nav.navigate("alltasks") },
+                    onOpenBacklog = { nav.navigate("backlog") },
+                    onOpenSettings = { nav.navigate("settings") },
+                )
             }
             composable(Tab.JOURNEY.route) {
                 val vm: JourneyViewModel = viewModel(factory = VmFactory(container))
-                JourneyScreen(vm = vm)
+                JourneyScreen(
+                    vm = vm,
+                    onOpenAllTasks = { nav.navigate("alltasks") },
+                    onOpenBacklog = { nav.navigate("backlog") },
+                    onOpenSettings = { nav.navigate("settings") },
+                )
             }
 
             // ── reference views via the menu (FR-NAV-1) ──
@@ -208,14 +226,16 @@ fun TzafonNavHost(container: AppContainer) {
             }
 
             composable(
-                route = "editor?taskId={taskId}&title={title}",
+                route = "editor?taskId={taskId}&title={title}&presetToday={presetToday}",
                 arguments = listOf(
                     navArgument("taskId") { type = NavType.StringType; nullable = true; defaultValue = null },
                     navArgument("title") { type = NavType.StringType; nullable = true; defaultValue = null },
+                    navArgument("presetToday") { type = NavType.BoolType; defaultValue = false },
                 ),
             ) { backStack ->
                 val taskId = backStack.arguments?.getString("taskId")
                 val presetTitle = backStack.arguments?.getString("title")
+                val presetToday = backStack.arguments?.getBoolean("presetToday") == true
                 val repo = container.taskRepository
                 // hydrate the draft synchronously off the DB (small row; simple M0 path)
                 val initial: TaskDraft? = taskId?.let {
@@ -241,7 +261,13 @@ fun TzafonNavHost(container: AppContainer) {
                             commitment = t.commitment,
                         )
                     }
-                } ?: presetTitle?.let { TaskDraft(id = null, title = it) } // quick-add expand
+                } ?: run {
+                    // New task. From Today (presetToday) it defaults toDoDate = today so it
+                    // lands in the Today list; elsewhere it stays undated (FR-CAPTURE-2).
+                    if (presetTitle != null || presetToday) {
+                        TaskDraft(id = null, title = presetTitle ?: "", toDoDate = if (presetToday) today else null)
+                    } else null
+                }
                 val habits by container.habitRepository.observeHabits()
                     .collectAsStateWithLifecycle(initialValue = emptyList())
                 val editorGoals by container.goalRepository.observeGoals()

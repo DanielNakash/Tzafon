@@ -114,7 +114,7 @@ fun TodayScreen(
                 metaLeft = "Your north for the day",
                 metaRight = "${state.doneCount} / ${state.totalCount} done",
                 progress = pct,
-                right = { HeaderMenuButton(onClick = { menu = true }) },
+                onMenu = { menu = true },
             )
 
             Column(
