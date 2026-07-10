@@ -50,3 +50,8 @@ Fix - When creating a new Habit, the colors of the button for confirmation make 
 status: groomed
 target: 2.1.0
 Add RTL (Right To Left) support for text fields while editing and viewing them. For example, the task title.
+
+## FR-2026-07-10-e
+status: groomed
+target: 2.2.0
+Add an option to edit the Habit's details - name, frequency etc. as in a new habit creation.
