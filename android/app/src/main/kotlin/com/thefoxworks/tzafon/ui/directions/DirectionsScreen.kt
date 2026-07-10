@@ -33,6 +33,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -50,6 +52,7 @@ import com.thefoxworks.tzafon.domain.model.HabitKind
 import com.thefoxworks.tzafon.domain.model.Theme
 import com.thefoxworks.tzafon.ui.components.AmountSheet
 import com.thefoxworks.tzafon.ui.components.Compass
+import com.thefoxworks.tzafon.ui.components.DenSheet
 import com.thefoxworks.tzafon.ui.components.Fab
 import com.thefoxworks.tzafon.ui.components.GroupHeader
 import com.thefoxworks.tzafon.ui.components.LayerHeader
@@ -85,6 +88,9 @@ fun DirectionsScreen(vm: DirectionsViewModel) {
     var creatingTheme by remember { mutableStateOf(false) }
     var archiveFor by remember { mutableStateOf<Theme?>(null) }
     var capBlocked by remember { mutableStateOf<Theme?>(null) }
+    // FR-DIR-7 — hub-level two-option create chooser + hub-scoped goal editor.
+    var hubChooser by remember { mutableStateOf(false) }
+    var creatingHubGoal by remember { mutableStateOf(false) }
     // goal/habit flows
     var goalEditor by remember { mutableStateOf<Pair<Goal?, String?>?>(null) }  // (goal, themeId)
     var habitEditor by remember { mutableStateOf<Pair<Habit?, String?>?>(null) }
@@ -213,8 +219,31 @@ fun DirectionsScreen(vm: DirectionsViewModel) {
         }
 
         Box(Modifier.align(Alignment.BottomEnd).padding(end = 20.dp, bottom = 104.dp)) {
-            Fab(onClick = { creatingTheme = true }, label = "Theme")
+            // FR-DIR-7.1 — one hub-level primary create, routed via a chooser to
+            // "Add a goal" or "Add a theme". The FAB itself no longer prejudges
+            // which one you meant.
+            Fab(onClick = { hubChooser = true }, label = "Create")
         }
+    }
+
+    if (hubChooser) {
+        HubCreateChooser(
+            onAddGoal = { hubChooser = false; creatingHubGoal = true },
+            onAddTheme = { hubChooser = false; creatingTheme = true },
+            onClose = { hubChooser = false },
+        )
+    }
+
+    if (creatingHubGoal) {
+        GoalEditorSheet(
+            initial = null,
+            onSave = { vm.saveGoal(it, null) },
+            onDelete = { vm.deleteGoal(it) },
+            onComplete = { celebrate = it },
+            onClose = { creatingHubGoal = false },
+            showThemePicker = true,
+            activeThemes = state.active.map { it.theme },
+        )
     }
 
     // ── sheets ──
@@ -711,6 +740,88 @@ private fun QuietNote(text: String) {
         modifier = Modifier.fillMaxWidth().padding(top = 40.dp, start = 30.dp, end = 30.dp),
     )
 }
+
+/**
+ * FR-DIR-7.1 — hub-level two-option create chooser. Kept intentionally sparse:
+ * two labelled rows, no extra copy — the chooser's only job is to route the
+ * primary create action to the right editor. Direction-layer objects (theme
+ * and goal) are peers at this tier, so they get equal visual weight here.
+ */
+@Composable
+internal fun HubCreateChooser(
+    onAddGoal: () -> Unit,
+    onAddTheme: () -> Unit,
+    onClose: () -> Unit,
+) {
+    DenSheet(title = "What are you adding?", onClose = onClose) {
+        Column {
+            ChooserRow(
+                icon = { TzIcons.Target(18.dp, Den.rust) },
+                label = "Add a goal",
+                sub = "A finish line — stepped, an amount, or a direction.",
+                onClick = onAddGoal,
+                contentDescription = "Add a goal",
+            )
+            ChooserRow(
+                icon = { Compass(size = 18.dp, ring = Den.rust, needleN = Den.rust, needleS = Den.rust.a(0.4f), stroke = 1.8f) },
+                label = "Add a theme",
+                sub = "A direction with a why — a season's bearing.",
+                onClick = onAddTheme,
+                contentDescription = "Add a theme",
+                modifier = Modifier.padding(top = 10.dp),
+            )
+        }
+    }
+}
+
+@Composable
+private fun ChooserRow(
+    icon: @Composable () -> Unit,
+    label: String,
+    sub: String,
+    onClick: () -> Unit,
+    contentDescription: String,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(13.dp))
+            .background(Den.card)
+            .border(1.dp, Den.line, RoundedCornerShape(13.dp))
+            .semanticsCd(contentDescription)
+            .pressable(label = contentDescription, role = androidx.compose.ui.semantics.Role.Button, onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 13.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Box(
+            Modifier.size(38.dp).clip(RoundedCornerShape(999.dp)).background(Den.rust.a(0.1f)),
+            contentAlignment = Alignment.Center,
+        ) { icon() }
+        Column(Modifier.weight(1f)) {
+            Text(
+                label,
+                style = TextStyle(fontFamily = DenType.serif, fontSize = 16.sp, fontWeight = FontWeight.SemiBold),
+                color = Den.ink,
+            )
+            Text(
+                sub,
+                style = TextStyle(fontFamily = DenType.body, fontSize = 12.5.sp, lineHeight = 17.sp),
+                color = Den.muted,
+                modifier = Modifier.padding(top = 2.dp),
+            )
+        }
+        TzIcons.Chevron(16.dp, Den.faint, dir = TzIcons.Dir.RIGHT)
+    }
+}
+
+private fun Modifier.semanticsCd(cd: String): Modifier =
+    this.then(
+        Modifier.semantics {
+            this.contentDescription = cd
+        },
+    )
 
 private fun fmt(v: Double): String =
     if (v % 1.0 == 0.0) "%,d".format(v.toLong()) else v.toString()

@@ -29,9 +29,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.layout.FlowRow
 import com.thefoxworks.tzafon.domain.model.Goal
 import com.thefoxworks.tzafon.domain.model.GoalStep
 import com.thefoxworks.tzafon.domain.model.GoalType
+import com.thefoxworks.tzafon.domain.model.Theme
 import com.thefoxworks.tzafon.ui.components.DenSheet
 import com.thefoxworks.tzafon.ui.components.SectionLabel
 import com.thefoxworks.tzafon.ui.components.SheetGhostButton
@@ -55,6 +57,14 @@ fun GoalEditorSheet(
     onDelete: (String) -> Unit,
     onComplete: (Goal) -> Unit,
     onClose: () -> Unit,
+    /**
+     * FR-DIR-7.3 — the hub-level "Add a goal" route is not scoped to a single
+     * theme (unlike the nested "Add a goal to this theme" route). When true,
+     * the sheet renders a theme picker so the user chooses a primaryThemeId at
+     * save time (including a "no theme (orphan)" option).
+     */
+    showThemePicker: Boolean = false,
+    activeThemes: List<Theme> = emptyList(),
 ) {
     var title by remember { mutableStateOf(initial?.title ?: "") }
     var type by remember { mutableStateOf(initial?.type ?: GoalType.STEPPED) }
@@ -66,6 +76,7 @@ fun GoalEditorSheet(
     var currentText by remember { mutableStateOf(initial?.currentQty?.takeIf { it > 0 }?.let(::fmtNum) ?: "") }
     var unit by remember { mutableStateOf(initial?.unit ?: "") }
     var commitment by remember { mutableStateOf(initial?.commitment ?: "") }
+    var pickedThemeId by remember { mutableStateOf<String?>(initial?.primaryThemeId) }
     var confirmDelete by remember { mutableStateOf(false) }
 
     DenSheet(
@@ -221,6 +232,20 @@ fun GoalEditorSheet(
                 }
             }
 
+            if (showThemePicker) {
+                SectionLabel("Theme", modifier = Modifier.padding(top = 14.dp))
+                FlowRow(
+                    Modifier.padding(top = 6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(7.dp),
+                    verticalArrangement = Arrangement.spacedBy(7.dp),
+                ) {
+                    TypeChip("No theme", pickedThemeId == null) { pickedThemeId = null }
+                    activeThemes.forEach { t ->
+                        TypeChip(t.name, pickedThemeId == t.id) { pickedThemeId = t.id }
+                    }
+                }
+            }
+
             SectionLabel("Commitment · optional", modifier = Modifier.padding(top = 14.dp))
             EditorField(
                 value = commitment,
@@ -246,7 +271,7 @@ fun GoalEditorSheet(
                         state = initial?.state ?: com.thefoxworks.tzafon.domain.model.GoalState.ONGOING,
                         deadline = initial?.deadline,
                         commitment = commitment.trim().takeIf { it.isNotBlank() },
-                        primaryThemeId = initial?.primaryThemeId,
+                        primaryThemeId = if (showThemePicker) pickedThemeId else initial?.primaryThemeId,
                         lastActivityAt = initial?.lastActivityAt ?: 0,
                         completedAt = initial?.completedAt,
                         createdAt = initial?.createdAt ?: 0,
