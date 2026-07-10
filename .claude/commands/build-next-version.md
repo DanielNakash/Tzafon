@@ -49,6 +49,15 @@ reviews and merges. Never mark requests implemented unless the tag was created.
 7. **Bump version.** In `android/app/build.gradle`, set `versionName = "<target>"` and increment
    `versionCode` by 1.
 
+7b. **Update the changelog.** In `CHANGELOG.md` (repo root), prepend a new
+   `## [<target>] — <today, YYYY-MM-DD>` section directly under the intro/`---`, above the
+   previous top version. Summarize the shipped requests in user-facing language grouped under
+   **Added** / **Changed** / **Fixed** (only the groups that apply), each bullet citing its `FR-*`
+   code — mirror the tone and structure of the existing entries. Add the tag-comparison link
+   `[<target>]: https://github.com/DanielNakash/Tzafon/releases/tag/v<target>` with the others at
+   the bottom. Do not rewrite older entries. (If `CHANGELOG.md` is absent, create it in the format
+   of the existing one.)
+
 8. **Release build.** `cd android && ./gradlew assembleRelease` (signs with the owner keystore).
    Verify the APK exists and is signed. Copy it to `feature-requests/releases/Tzafon-<target>.apk`.
 
