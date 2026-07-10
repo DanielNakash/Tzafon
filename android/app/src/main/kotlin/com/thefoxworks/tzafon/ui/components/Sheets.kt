@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -59,7 +60,9 @@ fun DenSheet(title: String, onClose: () -> Unit, content: @Composable () -> Unit
         },
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     ) {
-        Column(Modifier.padding(horizontal = 18.dp).navigationBarsPadding()) {
+        // imePadding lifts the sheet content (incl. the primary confirm button) above the
+        // soft keyboard; without it, focusing a text field pushes the button out of view.
+        Column(Modifier.padding(horizontal = 18.dp).navigationBarsPadding().imePadding()) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(title, style = TextStyle(fontFamily = DenType.serif, fontSize = 23.sp, fontWeight = FontWeight.SemiBold), color = Den.ink)
                 Box(Modifier.weight(1f))

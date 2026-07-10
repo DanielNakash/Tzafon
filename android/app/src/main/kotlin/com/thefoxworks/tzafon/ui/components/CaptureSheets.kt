@@ -276,21 +276,23 @@ fun SheetPrimaryButton(
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
 ) {
+    // Opacity is baked into the colors (not applied via a Modifier.alpha layer): an
+    // alpha(1f) graphics layer over .background() was dropping the fill, leaving the
+    // enabled button invisible (cream text on the sheet). See FR-HAB-6.
     Row(
         modifier
             .fillMaxWidth()
             .height(50.dp)
             .clip(RoundedCornerShape(13.dp))
-            .background(color)
-            .alpha(if (enabled) 1f else 0.45f)
-            .let { if (enabled) it.pressable(onClick) else it },
+            .background(if (enabled) color else color.copy(alpha = 0.45f))
+            .then(if (enabled) Modifier.pressable(onClick) else Modifier),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center,
     ) {
         Text(
             label,
             style = TextStyle(fontFamily = DenType.body, fontSize = 15.5.sp, fontWeight = FontWeight.SemiBold),
-            color = contentColor,
+            color = if (enabled) contentColor else contentColor.copy(alpha = 0.7f),
         )
     }
 }

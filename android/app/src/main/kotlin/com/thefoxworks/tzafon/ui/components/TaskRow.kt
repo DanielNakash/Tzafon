@@ -88,7 +88,9 @@ fun TaskRow(
                         textDecoration = if (struck) TextDecoration.LineThrough else TextDecoration.None,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f, fill = false),
+                        // fill the weighted slot so RTL (content-direction) titles right-align,
+                        // matching the Habits list; the trailing pill sits at the row's edge.
+                        modifier = Modifier.weight(1f),
                     )
                     when (ind) {
                         DueIndicator.DEADLINE -> DeadlinePill()
