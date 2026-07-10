@@ -43,7 +43,9 @@ import com.thefoxworks.tzafon.ui.theme.DenType
 /**
  * FR-CAPTURE-1 — the one-line quick-add (design: QuickAdd). Title + Enter
  * saves; EXPAND opens the full editor with the typed title carried over.
- * FR-CAPTURE-2 — nothing here sets a date: capture lands in the Inbox.
+ * FR-CAPTURE-2 — the default capture path lands in the Inbox (undated). Today's
+ * own quick-add overrides this via FR-TODAY-7 and passes [datedByDefault] = true;
+ * the sheet then suppresses the "inbox" helper line so the copy isn't misleading.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,6 +53,7 @@ fun QuickAddSheet(
     onSave: (String) -> Unit,
     onExpand: (String) -> Unit,
     onClose: () -> Unit,
+    datedByDefault: Boolean = false,
 ) {
     var title by remember { mutableStateOf("") }
     val focus = remember { FocusRequester() }
@@ -138,12 +141,14 @@ fun QuickAddSheet(
                         .padding(horizontal = 8.dp, vertical = 6.dp),
                 )
             }
-            Text(
-                "Just a title is enough. No date needed — it lands in your inbox to schedule later.",
-                style = TextStyle(fontFamily = DenType.body, fontSize = 12.sp, lineHeight = 16.5.sp),
-                color = Den.faint,
-                modifier = Modifier.padding(top = 10.dp),
-            )
+            if (!datedByDefault) {
+                Text(
+                    "Just a title is enough. No date needed — it lands in your inbox to schedule later.",
+                    style = TextStyle(fontFamily = DenType.body, fontSize = 12.sp, lineHeight = 16.5.sp),
+                    color = Den.faint,
+                    modifier = Modifier.padding(top = 10.dp),
+                )
+            }
         }
     }
 

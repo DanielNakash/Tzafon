@@ -336,6 +336,7 @@ fun TodayScreen(
             onSave = { vm.quickAdd(it) },
             onExpand = { title -> quickAdd = false; onExpandAdd(title) },
             onClose = { quickAdd = false },
+            datedByDefault = true, // FR-TODAY-7: Today's quick-add pre-fills toDoDate = today.
         )
     }
     if (menu) {

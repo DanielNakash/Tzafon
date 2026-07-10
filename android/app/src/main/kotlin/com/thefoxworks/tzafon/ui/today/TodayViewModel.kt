@@ -151,10 +151,21 @@ class TodayViewModel(
     fun quickAdd(title: String) {
         viewModelScope.launch {
             repo.saveDraft(
-                com.thefoxworks.tzafon.domain.model.TaskDraft(id = null, title = title),
+                quickAddDraft(title, today),
                 com.thefoxworks.tzafon.domain.model.EditScope.ONE,
                 today,
             )
         }
+    }
+
+    companion object {
+        /**
+         * FR-TODAY-7 — Today's own quick-add pre-fills `toDoDate` to today so the task
+         * lands in the Today list immediately (FR-TODAY-1 membership rule). All other
+         * capture surfaces retain FR-CAPTURE-2's undated default; this default only
+         * fires for the initial write from Today's quick-add.
+         */
+        fun quickAddDraft(title: String, today: String): com.thefoxworks.tzafon.domain.model.TaskDraft =
+            com.thefoxworks.tzafon.domain.model.TaskDraft(id = null, title = title, toDoDate = today)
     }
 }
