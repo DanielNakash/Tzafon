@@ -49,7 +49,7 @@ import com.thefoxworks.tzafon.ui.components.Banner
 import com.thefoxworks.tzafon.ui.components.Compass
 import com.thefoxworks.tzafon.ui.components.CueChip
 import com.thefoxworks.tzafon.ui.components.Fab
-import com.thefoxworks.tzafon.ui.components.FoxLogo
+import com.thefoxworks.tzafon.ui.components.HeaderMenuButton
 import com.thefoxworks.tzafon.ui.components.GroupHeader
 import com.thefoxworks.tzafon.ui.components.Nudge
 import com.thefoxworks.tzafon.ui.components.PillButton
@@ -114,7 +114,7 @@ fun TodayScreen(
                 metaLeft = "Your north for the day",
                 metaRight = "${state.doneCount} / ${state.totalCount} done",
                 progress = pct,
-                right = { Box(Modifier.pressable { menu = true }) { FoxLogo(30.dp, ring = Den.cream.a(0.9f)) } },
+                right = { HeaderMenuButton(onClick = { menu = true }) },
             )
 
             Column(

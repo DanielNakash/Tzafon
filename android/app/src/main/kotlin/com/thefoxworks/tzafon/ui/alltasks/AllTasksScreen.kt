@@ -52,6 +52,7 @@ import com.thefoxworks.tzafon.domain.model.Task
 import com.thefoxworks.tzafon.domain.model.TaskState
 import com.thefoxworks.tzafon.ui.components.Fab
 import com.thefoxworks.tzafon.ui.components.GroupHeader
+import com.thefoxworks.tzafon.ui.components.HeaderMenuButton
 import com.thefoxworks.tzafon.ui.components.RustHeader
 import com.thefoxworks.tzafon.ui.components.StateSheet
 import com.thefoxworks.tzafon.ui.components.TaskRow
@@ -165,11 +166,7 @@ fun AllTasksScreen(
                 title = "All Tasks",
                 kicker = "COMPLETE INDEX",
                 compact = true,
-                right = {
-                    Box(Modifier.pressable { menu = true }.padding(4.dp)) {
-                        TzIcons.Menu(20.dp, Den.cream)
-                    }
-                },
+                right = { HeaderMenuButton(onClick = { menu = true }) },
                 bottomContent = {
                     Column {
                         // ── search (FR-ALL-2) ──

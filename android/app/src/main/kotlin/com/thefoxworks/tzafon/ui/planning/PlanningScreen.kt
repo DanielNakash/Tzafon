@@ -40,7 +40,7 @@ import com.thefoxworks.tzafon.ui.capture.QuickAddSheet
 import com.thefoxworks.tzafon.ui.components.CalendarPicker
 import com.thefoxworks.tzafon.ui.components.DenSheet
 import com.thefoxworks.tzafon.ui.components.Fab
-import com.thefoxworks.tzafon.ui.components.FoxLogo
+import com.thefoxworks.tzafon.ui.components.HeaderMenuButton
 import com.thefoxworks.tzafon.ui.components.GroupHeader
 import com.thefoxworks.tzafon.ui.components.PillButton
 import com.thefoxworks.tzafon.ui.components.RustHeader
@@ -95,7 +95,7 @@ fun PlanningScreen(
                 compact = true,
                 metaLeft = Dates.fmtDate(state.today, state.today),
                 metaRight = "${state.undatedCount} undated",
-                right = { Box(Modifier.pressable { menu = true }) { FoxLogo(30.dp, ring = Den.cream.a(0.9f)) } },
+                right = { HeaderMenuButton(onClick = { menu = true }) },
                 bottomContent = {
                     Row(
                         Modifier.horizontalScroll(rememberScrollState()),

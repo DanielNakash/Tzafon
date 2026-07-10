@@ -17,6 +17,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.thefoxworks.tzafon.ui.theme.Den
@@ -81,6 +83,29 @@ fun RustHeader(
                 Box(Modifier.padding(top = 12.dp, bottom = 16.dp)) { bottomContent() }
             }
         }
+    }
+}
+
+/**
+ * FR-NAV-3 — the hamburger that opens `AppMenuSheet` on views that mount it
+ * (Today · Planning · All Tasks). Kept as a small shared composable so the
+ * three call sites cannot drift: same icon, same hit target, same content
+ * description. The Fox Works roundel (`FoxLogo`) is preserved elsewhere as an
+ * identity mark per `FR-NAV-3.4`.
+ */
+@Composable
+fun HeaderMenuButton(
+    onClick: () -> Unit,
+    color: Color = Den.cream,
+) {
+    TouchTarget(
+        visualSize = 30.dp,
+        onClick = onClick,
+        label = "Menu",
+        role = Role.Button,
+        semantics = { contentDescription = "Menu" },
+    ) {
+        TzIcons.Menu(20.dp, color)
     }
 }
 
