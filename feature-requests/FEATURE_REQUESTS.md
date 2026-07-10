@@ -35,3 +35,18 @@ with a `reason:` line and never built.
 status: groomed
 target: 2.1.0
 When creating a quick task in Today, default the date to today.
+
+## FR-2026-07-10-b
+status: groomed
+target: 2.1.0
+Currently in Habits View, each Habit shows its full set of details. Already with 3 habits it gets a bit difficult to quickly see all the habits. The default state should be a collapsed view showing the habit name, the log activity button, and an option to expand it to see all the details.
+
+## FR-2026-07-10-c
+status: groomed
+target: 2.1.0
+Fix - When creating a new Habit, the colors of the button for confirmation make it unreadable (white text on a bright background).
+
+## FR-2026-07-10-d
+status: groomed
+target: 2.1.0
+Add RTL (Right To Left) support for text fields while editing and viewing them. For example, the task title.
