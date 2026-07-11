@@ -9,6 +9,16 @@ to the versioned requirements documents in the repo.
 
 ---
 
+## [2.3.0] — 2026-07-11
+
+### Added
+- **About screen** (`FR-ABOUT-1`, `FR-NAV-4`) — a new **About** entry in the "Around the den"
+  menu (Today · Planning · Habits · Directions · Journey · All Tasks) opens a reference
+  screen that identifies the producer ("The Fox Works"), the implementer ("Claude"), and the
+  running version (`Version X.Y.Z`, read from the shipped build), with the Fox Works roundel
+  and a one-tap **Contact Us** mailto link to `thefoxworksdotnet@gmail.com`. If no email app
+  is available, an inline hint appears instead of a crash.
+
 ## [2.2.0] — 2026-07-10
 
 ### Added
@@ -75,6 +85,7 @@ the new name **Tzafon**. Local-first persistence (Room) behind repository interf
 - **Cloud sync (behind the seam)** — Firebase Auth (Google sign-in) and offline-first
   Firestore sync, kept behind the repository interfaces (`M9b`).
 
+[2.3.0]: https://github.com/DanielNakash/Tzafon/releases/tag/v2.3.0
 [2.2.0]: https://github.com/DanielNakash/Tzafon/releases/tag/v2.2.0
 [2.1.0]: https://github.com/DanielNakash/Tzafon/releases/tag/v2.1.0
 [2.0.0]: https://github.com/DanielNakash/Tzafon/releases/tag/v2.0.0

@@ -74,9 +74,9 @@ implemented: 2.2.0 / d827a6e
 The menu that is reachable through the logo of "The Fox Works" is very unintuitive. Please replace it with the traditional "hamburger" icon.
 
 ## FR-2026-07-10-h
-status: groomed
+status: implemented
 target: 2.3.0
-implemented: (auto)
+implemented: 2.3.0 / 6511c5a
 Add an "about" section:
 * Accessing the "About" section shall be from the hamburger menu.
 * It shall include:
