@@ -105,6 +105,7 @@ fun AllTasksScreen(
     onAdd: () -> Unit,
     onOpenBacklog: (() -> Unit)? = null,
     onOpenSettings: (() -> Unit)? = null,
+    onOpenAbout: (() -> Unit)? = null,
 ) {
     val state by vm.uiState.collectAsStateWithLifecycle()
     var sheetTask by remember { mutableStateOf<Task?>(null) }
@@ -338,6 +339,7 @@ fun AllTasksScreen(
             onAllTasks = { }, // already here
             onBacklog = onOpenBacklog,
             onSettings = onOpenSettings,
+            onAbout = onOpenAbout,
         )
     }
     amountTask?.let { t ->

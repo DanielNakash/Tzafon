@@ -66,6 +66,7 @@ fun PlanningScreen(
     onOpenAllTasks: () -> Unit,
     onOpenBacklog: (() -> Unit)? = null,
     onOpenSettings: (() -> Unit)? = null,
+    onOpenAbout: (() -> Unit)? = null,
 ) {
     val state by vm.uiState.collectAsStateWithLifecycle()
     var quickAdd by remember { mutableStateOf(false) }
@@ -257,6 +258,7 @@ fun PlanningScreen(
             onAllTasks = onOpenAllTasks,
             onBacklog = onOpenBacklog,
             onSettings = onOpenSettings,
+            onAbout = onOpenAbout,
         )
     }
     rescheduleId?.let { id ->

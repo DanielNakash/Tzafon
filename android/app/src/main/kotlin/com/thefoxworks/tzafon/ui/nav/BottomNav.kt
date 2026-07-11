@@ -109,6 +109,7 @@ fun AppMenuSheet(
     onAllTasks: () -> Unit,
     onBacklog: (() -> Unit)? = null,
     onSettings: (() -> Unit)? = null,
+    onAbout: (() -> Unit)? = null,
 ) {
     DenSheet(title = "Around the den", onClose = onClose) {
         Column {
@@ -123,6 +124,13 @@ fun AppMenuSheet(
             if (onSettings != null) {
                 MenuRow("Settings", "Week start, reminders, account", { TzIcons.Bell(17.dp, Den.muted) }) {
                     onClose(); onSettings()
+                }
+            }
+            // FR-NAV-4 — About is unconditionally rendered when a callback is
+            // supplied. Placed after Settings so the daily-path ordering holds.
+            if (onAbout != null) {
+                MenuRow("About", "Producer, implementer, contact", { TzIcons.Info(17.dp, Den.rust) }) {
+                    onClose(); onAbout()
                 }
             }
         }

@@ -66,6 +66,7 @@ fun JourneyScreen(
     onOpenAllTasks: () -> Unit = {},
     onOpenBacklog: () -> Unit = {},
     onOpenSettings: () -> Unit = {},
+    onOpenAbout: () -> Unit = {},
 ) {
     val state by vm.uiState.collectAsStateWithLifecycle()
     var menu by remember { mutableStateOf(false) }
@@ -131,6 +132,7 @@ fun JourneyScreen(
                 onAllTasks = onOpenAllTasks,
                 onBacklog = onOpenBacklog,
                 onSettings = onOpenSettings,
+                onAbout = onOpenAbout,
             )
         }
     }

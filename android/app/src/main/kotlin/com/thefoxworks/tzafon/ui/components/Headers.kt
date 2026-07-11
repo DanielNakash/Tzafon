@@ -40,6 +40,7 @@ fun RustHeader(
     compass: Boolean = false,
     right: (@Composable () -> Unit)? = null,
     onMenu: (() -> Unit)? = null,
+    onBack: (() -> Unit)? = null,
     bottomContent: (@Composable () -> Unit)? = null,
 ) {
     Box(Modifier.fillMaxWidth().background(Den.rust).clipToBounds()) {
@@ -55,12 +56,25 @@ fun RustHeader(
                 .padding(start = 20.dp, end = 20.dp, top = if (compact) 4.dp else 8.dp, bottom = if (bottomContent != null) 0.dp else if (compact) 14.dp else 18.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Kicker(kicker, color = Den.cream.a(0.82f))
+                if (onBack != null) {
+                    TouchTarget(
+                        visualSize = 24.dp,
+                        onClick = onBack,
+                        label = "Back",
+                        role = Role.Button,
+                        semantics = { contentDescription = "Back" },
+                    ) { TzIcons.Back(22.dp, Den.cream) }
+                } else {
+                    Kicker(kicker, color = Den.cream.a(0.82f))
+                }
                 Box(Modifier.weight(1f))
                 // The menu (when present) is an anchored overlay below, kept at a fixed
                 // position so it sits at the same height on every screen (FR-NAV-3).
                 when {
                     right != null -> right()
+                    // A left-slot back-button surface (e.g. About) is a leaf —
+                    // the header carries no identity mark and no menu trigger.
+                    onBack != null -> {}
                     onMenu == null -> FoxLogo(30.dp, ring = Den.cream.a(0.9f))
                     else -> {}
                 }

@@ -86,6 +86,7 @@ fun DirectionsScreen(
     onOpenAllTasks: () -> Unit = {},
     onOpenBacklog: () -> Unit = {},
     onOpenSettings: () -> Unit = {},
+    onOpenAbout: () -> Unit = {},
 ) {
     val state by vm.uiState.collectAsStateWithLifecycle()
     var scope by rememberSaveable { mutableStateOf("active") }
@@ -327,6 +328,7 @@ fun DirectionsScreen(
             onAllTasks = onOpenAllTasks,
             onBacklog = onOpenBacklog,
             onSettings = onOpenSettings,
+            onAbout = onOpenAbout,
         )
     }
 }

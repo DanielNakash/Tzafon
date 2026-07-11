@@ -80,6 +80,7 @@ fun TodayScreen(
     onOpenAllTasks: () -> Unit,
     onOpenBacklog: (() -> Unit)? = null,
     onOpenSettings: (() -> Unit)? = null,
+    onOpenAbout: (() -> Unit)? = null,
     onOpenReview: (() -> Unit)? = null,
 ) {
     val state by vm.uiState.collectAsStateWithLifecycle()
@@ -346,6 +347,7 @@ fun TodayScreen(
             onAllTasks = onOpenAllTasks,
             onBacklog = onOpenBacklog,
             onSettings = onOpenSettings,
+            onAbout = onOpenAbout,
         )
     }
     amountTask?.let { t ->

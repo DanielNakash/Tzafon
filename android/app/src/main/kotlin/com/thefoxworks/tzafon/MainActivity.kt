@@ -27,6 +27,7 @@ import androidx.navigation.navArgument
 import com.thefoxworks.tzafon.domain.dates.Dates
 import com.thefoxworks.tzafon.domain.model.RecurrenceDraft
 import com.thefoxworks.tzafon.domain.model.TaskDraft
+import com.thefoxworks.tzafon.ui.about.AboutScreen
 import com.thefoxworks.tzafon.ui.alltasks.AllTasksScreen
 import com.thefoxworks.tzafon.ui.alltasks.AllTasksViewModel
 import com.thefoxworks.tzafon.ui.backlog.BacklogScreen
@@ -148,6 +149,7 @@ fun TzafonNavHost(container: AppContainer) {
                     onOpenAllTasks = { nav.navigate("alltasks") },
                     onOpenBacklog = { nav.navigate("backlog") },
                     onOpenSettings = { nav.navigate("settings") },
+                    onOpenAbout = { nav.navigate("about") },
                     onOpenReview = { nav.navigate("review") },
                 )
             }
@@ -161,6 +163,7 @@ fun TzafonNavHost(container: AppContainer) {
                     onOpenAllTasks = { nav.navigate("alltasks") },
                     onOpenBacklog = { nav.navigate("backlog") },
                     onOpenSettings = { nav.navigate("settings") },
+                    onOpenAbout = { nav.navigate("about") },
                 )
             }
 
@@ -171,6 +174,7 @@ fun TzafonNavHost(container: AppContainer) {
                     onOpenAllTasks = { nav.navigate("alltasks") },
                     onOpenBacklog = { nav.navigate("backlog") },
                     onOpenSettings = { nav.navigate("settings") },
+                    onOpenAbout = { nav.navigate("about") },
                 )
             }
             composable(Tab.DIRECTIONS.route) {
@@ -180,6 +184,7 @@ fun TzafonNavHost(container: AppContainer) {
                     onOpenAllTasks = { nav.navigate("alltasks") },
                     onOpenBacklog = { nav.navigate("backlog") },
                     onOpenSettings = { nav.navigate("settings") },
+                    onOpenAbout = { nav.navigate("about") },
                 )
             }
             composable(Tab.JOURNEY.route) {
@@ -189,6 +194,7 @@ fun TzafonNavHost(container: AppContainer) {
                     onOpenAllTasks = { nav.navigate("alltasks") },
                     onOpenBacklog = { nav.navigate("backlog") },
                     onOpenSettings = { nav.navigate("settings") },
+                    onOpenAbout = { nav.navigate("about") },
                 )
             }
 
@@ -200,6 +206,7 @@ fun TzafonNavHost(container: AppContainer) {
                     onOpenTask = { id -> openEditor(taskId = id) },
                     onAdd = { openEditor() },
                     onOpenBacklog = { nav.navigate("backlog") { launchSingleTop = true } },
+                    onOpenAbout = { nav.navigate("about") },
                 )
             }
 
@@ -223,6 +230,10 @@ fun TzafonNavHost(container: AppContainer) {
                     auth = container.authRepository,
                     onClose = { nav.popBackStack() },
                 )
+            }
+
+            composable("about") {
+                AboutScreen(onClose = { nav.popBackStack() })
             }
 
             composable(

@@ -296,6 +296,15 @@ object TzIcons {
     fun Clock(size: Dp = 15.dp, color: Color, weight: Float = 1.8f, modifier: Modifier = Modifier) =
         Icon(size, color, weight, modifier) { circle(12f, 12f, 8.5f); draw(path { u -> moveTo(12 * u, 7.5f * u); lineTo(12 * u, 12 * u); lineTo(15 * u, 14 * u) }) }
 
+    /** circled "i" — reference / About */
+    @Composable
+    fun Info(size: Dp = 17.dp, color: Color, weight: Float = 1.8f, modifier: Modifier = Modifier) =
+        Icon(size, color, weight, modifier) {
+            circle(12f, 12f, 8.5f)
+            circle(12f, 8f, 0.9f, filled = true)
+            line(12f, 11f, 12f, 17f)
+        }
+
     @Composable
     fun Coffee(size: Dp = 15.dp, color: Color, weight: Float = 1.7f, modifier: Modifier = Modifier) =
         Icon(size, color, weight, modifier) {

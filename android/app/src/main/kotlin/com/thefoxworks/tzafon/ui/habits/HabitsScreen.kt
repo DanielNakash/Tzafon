@@ -63,6 +63,7 @@ fun HabitsScreen(
     onOpenAllTasks: () -> Unit = {},
     onOpenBacklog: () -> Unit = {},
     onOpenSettings: () -> Unit = {},
+    onOpenAbout: () -> Unit = {},
 ) {
     val state by vm.uiState.collectAsStateWithLifecycle()
     var editing by remember { mutableStateOf<Habit?>(null) }   // non-null = editor open
@@ -160,6 +161,7 @@ fun HabitsScreen(
             onAllTasks = onOpenAllTasks,
             onBacklog = onOpenBacklog,
             onSettings = onOpenSettings,
+            onAbout = onOpenAbout,
         )
     }
 }
