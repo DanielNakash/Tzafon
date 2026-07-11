@@ -88,4 +88,27 @@ Add an "about" section:
     * The logo of "The Fox Works"
     * Under the logo, a link:
         * Display text: "Contact Us"
-        * URL for triggering an email to thefoxworksdotnet@gmail.com 
+        * URL for triggering an email to thefoxworksdotnet@gmail.com
+
+## FR-2026-07-11-a
+status: groomed
+target: 2.4.0
+Please consider the design of the contents of the "About" screen at least in the following aspects:
+* Chosen font(s) and how they're used for the text elements in this screen
+* Size of the logo - On a phone oriented in potrait, I would like it to be about half as wide as the screen, but if the phone is rotated, or the screen is wide (foldable's inner screen for example) this may become an issue. So, I would like the logo to be bigger, but I don't want it to accidentally be "overwhelmingly" big. As a rule of thumb, the entire content of the About screen has to be visible without any scrolling.
+* Consider whether centering the entire content of the About screen to the middle height of the screen would make sense from a visual design perspective.
+
+
+## FR-2026-07-11-b
+status: groomed
+target: 2.4.0
+Consistency of views look and behavior - There are several differences between how some Views look and behave, which IMHO do not reflect any meaning, and therefore should be made consistent.
+That said, if there is a View where is DOES make sense to have it womewhat different because it is different to others, please consider if and how it should look different.
+A few things I noticed that has to be ammended:
+* Header color is different between some of the views (see Today View and Habits View for example). I prefer keeping it as the darker color used in Today View for example.
+* Most Views has the hamburger (Today), but Setting View has an "x", and the About View has a "back" arrow. Aside from making this confusing to use, it also in some cases locks the user out of the main Views, forcing the user to shut down the app and restart it. For example, after entering the Backlog View, it's not possible to go back to Today View. Suggestion:
+    * All Tasks View and Backlog View get the same navigation bar at the bottom as in Today View.
+    * Settings View and About View gets an "x" which pressing it returns the user to the last View they were at.
+* The Size of the title text for some Views is different - Planning and Settings are smaller for example. Please check how this can also be made consistent. For example, for the Planning View we can:
+    * Put the date where the "WHAT'S ON THE TABLE" text is now, so that the date only appears once at the top, and the original text that was on the top is removed.
+    * This leaves more room for the title text "Planning" to be as big as in the other Views.
