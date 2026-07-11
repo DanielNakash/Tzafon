@@ -112,3 +112,23 @@ A few things I noticed that has to be ammended:
 * The Size of the title text for some Views is different - Planning and Settings are smaller for example. Please check how this can also be made consistent. For example, for the Planning View we can:
     * Put the date where the "WHAT'S ON THE TABLE" text is now, so that the date only appears once at the top, and the original text that was on the top is removed.
     * This leaves more room for the title text "Planning" to be as big as in the other Views.
+
+## FR-2026-07-11-c
+status: groomed
+target: 2.4.0
+When logging a habit directly in the Habits View I want to be able to log a date of my choosing. For example, if I forgot marking yesterday. Current "log" and "Mark today done" only allow marking for today. I think that the "log" button should allow picking a date, while keeping the "Mark today done" button as is.
+
+## FR-2026-07-11-d
+status: groomed
+target: 2.4.0
+For overdue tasks in the Planning View, please add an option to mark as done. I expected that pressing the unchecked checkbox of the task will do just that, but instead it takes me into editing the task. Please make the following changes:
+* Currently, there are four options for each overdue task: Today, Reschedule, Someday and Drop.
+    * Keep Today and Reschedule
+    * Remove Someday and Drop
+    * Add "Change Status"
+* Make the checkbox clickable so that clicking it marks the task as Done.
+
+## FR-2026-07-11-e
+status: groomed
+target: 2.4.0
+When a task is mark done by pressing its checkbox, make a nice positive short chime sound.
