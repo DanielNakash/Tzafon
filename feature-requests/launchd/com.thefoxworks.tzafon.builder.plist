@@ -11,13 +11,15 @@
     <string>/Users/danielnakash/LocalWorkshop/Tzafon/feature-requests/scripts/run-builder.sh</string>
   </array>
 
-  <!-- Run once a day at 03:00. -->
+  <!-- Run once a day at 03:30. Deliberately off the :00 slot: the groomer runs hourly at
+       :00, and the shared lock would make a 03:00 builder skip (lock-held) whenever the
+       groomer holds the lock. :30 never coincides with an hourly groomer run. -->
   <key>StartCalendarInterval</key>
   <dict>
     <key>Hour</key>
     <integer>3</integer>
     <key>Minute</key>
-    <integer>0</integer>
+    <integer>30</integer>
   </dict>
 
   <key>RunAtLoad</key>

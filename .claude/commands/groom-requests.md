@@ -56,7 +56,9 @@ Run from the repo root (`/Users/danielnakash/LocalWorkshop/Tzafon`).
    in `feature-requests/FEATURE_REQUESTS.md`. Do not touch `implemented:`.
 
 8. **Log + commit.** Append one `GROOM groomed <ids> → v<target>` line to `PIPELINE_LOG.md` (note
-   any rejected ids). `PIPELINE_LOG.md` is git-ignored — do not stage it. Stage **only the two
+   any rejected ids). Prefix the line with a **local-time** timestamp from
+   `date +%Y-%m-%dT%H:%M:%S%z` (not UTC), matching the shell-written lines.
+   `PIPELINE_LOG.md` is git-ignored — do not stage it. Stage **only the two
    tracked pipeline files** — never `git add -A`, so unrelated working-tree changes are never swept
    into the commit:
    `git add "v<target> Requirements.md" feature-requests/FEATURE_REQUESTS.md`

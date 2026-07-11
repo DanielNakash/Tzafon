@@ -12,7 +12,7 @@ LOG_DIR="$REPO/feature-requests/logs"
 LOCK="$REPO/feature-requests/.pipeline.lock"   # shared mutex with the groomer
 mkdir -p "$LOG_DIR"
 STAMP="$(date +%Y%m%d-%H%M%S)"
-ISO="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+ISO="$(date +%Y-%m-%dT%H:%M:%S%z)"   # local time with UTC offset
 export ANDROID_HOME="$SDK"
 export PATH="$SDK/platform-tools:$SDK/emulator:$SDK/cmdline-tools/latest/bin:$PATH"
 

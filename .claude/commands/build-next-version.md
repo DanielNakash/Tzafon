@@ -68,7 +68,8 @@ reviews and merges. Never mark requests implemented unless the tag was created.
     expected on this branch, so `git add -A` is acceptable here — you are on an isolated `release/*`
     branch; `PIPELINE_LOG.md` is git-ignored and won't be staged). Commit `release: v<target>
     (<ids>)`; then `git tag v<target>`. Append `BUILD shipped v<target> <ids> <sha>` to
-    `PIPELINE_LOG.md` (local ledger only — not committed). Stay on the `release/<target>` branch —
+    `PIPELINE_LOG.md` (local ledger only — not committed), prefixed with a **local-time**
+    timestamp from `date +%Y-%m-%dT%H:%M:%S%z` (not UTC), matching the shell-written lines. Stay on the `release/<target>` branch —
     do not merge. End commit messages with
     `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
 

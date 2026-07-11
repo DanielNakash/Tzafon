@@ -10,7 +10,7 @@ LOG_DIR="$REPO/feature-requests/logs"
 LOCK="$REPO/feature-requests/.pipeline.lock"   # a directory = atomic mutex (mkdir is atomic)
 mkdir -p "$LOG_DIR"
 STAMP="$(date +%Y%m%d-%H%M%S)"
-ISO="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+ISO="$(date +%Y-%m-%dT%H:%M:%S%z)"   # local time with UTC offset
 
 cd "$REPO"
 source "$REPO/feature-requests/scripts/_lib.sh"
