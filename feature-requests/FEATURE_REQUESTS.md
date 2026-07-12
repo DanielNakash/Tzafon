@@ -137,3 +137,8 @@ status: implemented
 target: 2.4.0
 implemented: 2.4.0 / fb95262
 When a task is mark done by pressing its checkbox, make a nice positive short chime sound.
+
+## FR-2026-07-12-a
+status: groomed
+target: 2.5.0
+Bug fix: In All Tasks View and in Backlog View the add button is partially hidden by the navigation bar. The button should be moved app similarly to the Today View.
