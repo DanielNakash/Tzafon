@@ -34,13 +34,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.thefoxworks.tzafon.domain.action.ActionLogic
 import com.thefoxworks.tzafon.domain.action.ActionLogic.RangePreset
 import com.thefoxworks.tzafon.domain.dates.Dates
-import com.thefoxworks.tzafon.domain.model.StateMachine
 import com.thefoxworks.tzafon.domain.model.Task
 import com.thefoxworks.tzafon.ui.capture.QuickAddSheet
 import com.thefoxworks.tzafon.ui.components.CalendarPicker
 import com.thefoxworks.tzafon.ui.components.DenSheet
 import com.thefoxworks.tzafon.ui.components.Fab
-import com.thefoxworks.tzafon.ui.components.HeaderMenuButton
 import com.thefoxworks.tzafon.ui.components.GroupHeader
 import com.thefoxworks.tzafon.ui.components.PillButton
 import com.thefoxworks.tzafon.ui.components.RustHeader
@@ -73,8 +71,8 @@ fun PlanningScreen(
     var menu by remember { mutableStateOf(false) }
     var rescheduleId by remember { mutableStateOf<String?>(null) }
     var customRange by remember { mutableStateOf(false) }
-    // FR-BACKLOG-2 — Someday on a recurring task opens the guard (offers Frozen)
-    var somedayGuardTask by remember { mutableStateOf<Task?>(null) }
+    // FR-PLAN-4 — the overdue action-row's third pill opens StateSheet
+    var changeStatusFor by remember { mutableStateOf<Task?>(null) }
     var amountTask by remember { mutableStateOf<Task?>(null) } // DM-HABIT-5 prompt
 
     fun requestToggle(t: Task) {
@@ -166,13 +164,10 @@ fun PlanningScreen(
                                     today = state.today,
                                     last = i == state.overdue.lastIndex,
                                     onOpen = { onOpenTask(t.id) },
+                                    onToggle = { requestToggle(t) },
                                     onToday = { vm.doToday(t.id) },
                                     onReschedule = { rescheduleId = t.id },
-                                    onSomeday = {
-                                        if (t.seriesId == null) vm.someday(t.id)
-                                        else somedayGuardTask = t
-                                    },
-                                    onDrop = { vm.drop(t.id) },
+                                    onChangeStatus = { changeStatusFor = t },
                                 )
                             }
                         }
@@ -279,13 +274,12 @@ fun PlanningScreen(
             )
         }
     }
-    somedayGuardTask?.let { t ->
+    changeStatusFor?.let { t ->
         StateSheet(
             current = t.state,
-            isRecurring = true,
+            isRecurring = t.seriesId != null,
             onPick = { target -> vm.toState(t.id, target) },
-            onClose = { somedayGuardTask = null },
-            initialGuard = StateMachine.Guard.RecurringCannotBacklog,
+            onClose = { changeStatusFor = null },
         )
     }
     amountTask?.let { t ->
@@ -300,17 +294,22 @@ fun PlanningScreen(
     }
 }
 
-/** An overdue row presented as a calm decision, not a debt (FR-PLAN-3). */
+/**
+ * An overdue row presented as a calm decision, not a debt (FR-PLAN-3).
+ * FR-PLAN-4 — the pill row is `Today · Reschedule · Change Status`; the
+ * checkbox is an isolated tap target that marks the task Done through the
+ * same `requestToggle` helper used by non-overdue rows (FR-PLAN-4.3).
+ */
 @Composable
 private fun DecideCard(
     task: Task,
     today: String,
     last: Boolean,
     onOpen: () -> Unit,
+    onToggle: () -> Unit,
     onToday: () -> Unit,
     onReschedule: () -> Unit,
-    onSomeday: (() -> Unit)?,
-    onDrop: () -> Unit,
+    onChangeStatus: () -> Unit,
 ) {
     Column(Modifier.fillMaxWidth().padding(vertical = 11.dp)) {
         Row(
@@ -318,7 +317,9 @@ private fun DecideCard(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(11.dp),
         ) {
-            TaskCheckbox(task.state)
+            // FR-PLAN-4.3 / FR-PLAN-4.3.1 — the checkbox's own pressable consumes
+            // the tap before the row's press area sees it (same pattern as TaskRow).
+            TaskCheckbox(task.state, onClick = onToggle)
             Column(Modifier.weight(1f)) {
                 Text(
                     task.title,
@@ -341,8 +342,7 @@ private fun DecideCard(
         ) {
             PillButton("Today", onClick = onToday)
             PillButton("Reschedule", onClick = onReschedule)
-            PillButton("Someday", onClick = { onSomeday?.invoke() }, enabled = onSomeday != null)
-            PillButton("Drop", onClick = onDrop)
+            PillButton("Change Status", onClick = onChangeStatus)
         }
         if (!last) {
             Box(
