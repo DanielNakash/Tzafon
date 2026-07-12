@@ -2,6 +2,7 @@ package com.thefoxworks.tzafon
 
 import android.app.Application
 import com.google.firebase.firestore.FirebaseFirestore
+import com.thefoxworks.tzafon.data.audio.ChimePlayer
 import com.thefoxworks.tzafon.data.auth.FirebaseAuthRepository
 import com.thefoxworks.tzafon.data.db.ContributionEntity
 import com.thefoxworks.tzafon.data.db.GoalEntity
@@ -54,6 +55,9 @@ class AppContainer(app: Application) {
         RoomTaskRepository(db.taskDao(), db.seriesDao(), habitRepository, goalRepository)
     }
     val settings by lazy { SettingsStore(app) }
+
+    /** FR-AUDIO-1 — application-scoped chime player; single SoundPool. */
+    val chimePlayer: ChimePlayer by lazy { ChimePlayer(app) }
 
     // ── M9b: Firebase auth + offline-first Firestore sync ──
     val authRepository: AuthRepository by lazy { FirebaseAuthRepository(app) }

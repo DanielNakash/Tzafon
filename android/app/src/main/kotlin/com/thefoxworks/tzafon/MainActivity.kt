@@ -71,13 +71,13 @@ class VmFactory(private val container: AppContainer) : ViewModelProvider.Factory
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T = when (modelClass) {
         AllTasksViewModel::class.java ->
-            AllTasksViewModel(container.taskRepository, container.sessionHorizonDays, container.habitRepository, container.goalRepository) as T
+            AllTasksViewModel(container.taskRepository, container.sessionHorizonDays, container.habitRepository, container.goalRepository, container.settings, container.chimePlayer) as T
         TodayViewModel::class.java ->
-            TodayViewModel(container.taskRepository, container.settings, container.habitRepository, container.goalRepository, container.reviewRepository) as T
+            TodayViewModel(container.taskRepository, container.settings, container.habitRepository, container.goalRepository, container.reviewRepository, container.chimePlayer) as T
         ReviewViewModel::class.java ->
             ReviewViewModel(container.reviewRepository, container.taskRepository, container.habitRepository, container.goalRepository, container.settings) as T
         PlanningViewModel::class.java ->
-            PlanningViewModel(container.taskRepository, container.settings, container.sessionHorizonDays, container.habitRepository, container.goalRepository) as T
+            PlanningViewModel(container.taskRepository, container.settings, container.sessionHorizonDays, container.habitRepository, container.goalRepository, container.chimePlayer) as T
         BacklogViewModel::class.java ->
             BacklogViewModel(container.taskRepository) as T
         HabitsViewModel::class.java ->

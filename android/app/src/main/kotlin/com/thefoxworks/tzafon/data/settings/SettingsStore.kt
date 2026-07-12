@@ -24,6 +24,7 @@ class SettingsStore(private val context: Context) {
         val slippageDismissed = stringPreferencesKey("slippage_dismissed_on") // ISO date
         val overloadDismissed = stringPreferencesKey("overload_dismissed_on") // ISO date
         val remindersEnabled = booleanPreferencesKey("reminders_enabled") // FR-NOTIF opt-in
+        val chimeEnabled = booleanPreferencesKey("chime_enabled")         // FR-AUDIO-1 completion chime
     }
 
     val welcomeSeen: Flow<Boolean> = context.dataStore.data.map { it[Keys.welcomeSeen] ?: false }
@@ -69,5 +70,13 @@ class SettingsStore(private val context: Context) {
 
     suspend fun setRemindersEnabled(on: Boolean) {
         context.dataStore.edit { it[Keys.remindersEnabled] = on }
+    }
+
+    // ── completion chime (FR-AUDIO-1.5 — default ON, user-toggleable) ─
+
+    val chimeEnabled: Flow<Boolean> = context.dataStore.data.map { it[Keys.chimeEnabled] ?: true }
+
+    suspend fun setChimeEnabled(on: Boolean) {
+        context.dataStore.edit { it[Keys.chimeEnabled] = on }
     }
 }

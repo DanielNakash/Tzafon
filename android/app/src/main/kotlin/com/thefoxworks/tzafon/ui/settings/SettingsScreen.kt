@@ -179,6 +179,39 @@ fun SettingsScreen(
                 )
             }
 
+            // ── sounds (FR-AUDIO-1.5 / FR-AUDIO-1.6 — default ON, calm copy) ──
+            val chimeOn by settings.chimeEnabled.collectAsStateWithLifecycle(initialValue = true)
+            SectionLabel("Sounds", modifier = Modifier.padding(top = 20.dp, bottom = 9.dp))
+            Row(
+                Modifier.fillMaxWidth()
+                    .clip(RoundedCornerShape(13.dp))
+                    .background(Den.card)
+                    .border(1.dp, Den.line, RoundedCornerShape(13.dp))
+                    .padding(horizontal = 14.dp, vertical = 13.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                TzIcons.Bell(17.dp, Den.rust)
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        "Completion chime",
+                        style = TextStyle(fontFamily = DenType.body, fontSize = 15.sp),
+                        color = Den.ink,
+                    )
+                    Text(
+                        "Plays a short sound when you check off a task.",
+                        style = TextStyle(fontFamily = DenType.body, fontSize = 12.5.sp),
+                        color = Den.muted,
+                        modifier = Modifier.padding(top = 1.dp),
+                    )
+                }
+                DenSwitch(
+                    on = chimeOn,
+                    contentDescription = "Completion chime",
+                    onToggle = { scope.launch { settings.setChimeEnabled(!chimeOn) } },
+                )
+            }
+
             Text(
                 "Tzafon · צפון — the fox works · don't panic",
                 style = TextStyle(fontFamily = DenType.mono, fontSize = 10.sp, letterSpacing = 0.6.sp),

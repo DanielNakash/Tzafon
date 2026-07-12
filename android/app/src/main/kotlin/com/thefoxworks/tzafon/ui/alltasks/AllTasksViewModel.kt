@@ -2,6 +2,8 @@ package com.thefoxworks.tzafon.ui.alltasks
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.thefoxworks.tzafon.data.audio.ChimePlayer
+import com.thefoxworks.tzafon.data.settings.SettingsStore
 import com.thefoxworks.tzafon.domain.action.ActionLogic
 import com.thefoxworks.tzafon.domain.dates.Dates
 import com.thefoxworks.tzafon.domain.model.Habit
@@ -15,6 +17,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -49,6 +52,8 @@ class AllTasksViewModel(
     private val sessionHorizonDays: MutableStateFlow<Long>,
     habitRepo: HabitRepository,
     goalRepo: com.thefoxworks.tzafon.domain.model.GoalRepository,
+    private val settings: SettingsStore? = null,
+    private val chimePlayer: ChimePlayer? = null,
 ) : ViewModel() {
 
     private val visible = MutableStateFlow(VisibleStates())
@@ -145,8 +150,18 @@ class AllTasksViewModel(
         }
     }
 
+    /**
+     * FR-AUDIO-1.2 — the checkbox tap path on All Tasks. Reads state before
+     * the write so we chime only on Open → Done; toggles back are silent.
+     */
     fun toggleDone(id: String, habitAmount: Double? = null) {
-        viewModelScope.launch { repo.toggleDone(id, habitAmount) }
+        viewModelScope.launch {
+            val wasOpen = repo.getTask(id)?.state == TaskState.OPEN
+            repo.toggleDone(id, habitAmount)
+            if (wasOpen && chimePlayer != null && settings?.chimeEnabled?.first() == true) {
+                chimePlayer.playDone()
+            }
+        }
     }
 
     fun setState(id: String, target: TaskState) {
