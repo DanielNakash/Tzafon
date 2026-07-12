@@ -6,6 +6,7 @@ import com.thefoxworks.tzafon.data.settings.SettingsStore
 import com.thefoxworks.tzafon.domain.dates.Dates
 import com.thefoxworks.tzafon.domain.habits.HabitMath
 import com.thefoxworks.tzafon.domain.model.Habit
+import com.thefoxworks.tzafon.domain.model.HabitLog
 import com.thefoxworks.tzafon.domain.model.HabitRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -29,6 +30,12 @@ data class HabitCardState(
      * data, and changing `kind` would reinterpret it in place.
      */
     val hasHistory: Boolean,
+    /**
+     * FR-HAB-8 — this habit's raw log rows, so the picked-date affordance can
+     * look up "is there a done log for `pickedDate`?" (frequency toggle) and
+     * the amount-sheet suggestion for a picked date (quantitative edit).
+     */
+    val logs: List<HabitLog>,
 )
 
 data class HabitsUiState(
@@ -61,7 +68,8 @@ class HabitsViewModel(
                 today = today,
                 weekStart = weekStart,
                 cards = habits.sortedBy { it.createdAt }.map { h ->
-                    val todayLog = logs.firstOrNull { it.habitId == h.id && it.date == today && it.done }
+                    val habitLogs = logs.filter { it.habitId == h.id }
+                    val todayLog = habitLogs.firstOrNull { it.date == today && it.done }
                     HabitCardState(
                         habit = h,
                         week = HabitMath.week(h, logs, today, weekStart),
@@ -70,7 +78,8 @@ class HabitsViewModel(
                         grid = HabitMath.historyGrid(h, logs, today, weekStart),
                         loggedToday = todayLog != null,
                         todayAmount = todayLog?.amount,
-                        hasHistory = logs.any { it.habitId == h.id },
+                        hasHistory = habitLogs.isNotEmpty(),
+                        logs = habitLogs,
                     )
                 },
                 goals = goals,
@@ -81,6 +90,16 @@ class HabitsViewModel(
     /** DM-HABIT-5 — the direct log path ("Mark today done" / amount sheet). */
     fun logToday(habitId: String, done: Boolean, amount: Double? = null) {
         viewModelScope.launch { repo.logDirect(habitId, today, done, amount) }
+    }
+
+    /**
+     * FR-HAB-8 — the direct log path, on an arbitrary picked date. Thin
+     * passthrough to [HabitRepository.logDirect]; the "any date" contract
+     * has been in `DM-HABIT-5` since v2.0.0 and only the UI affordance was
+     * missing before v2.4.0.
+     */
+    fun logForDate(habitId: String, date: String, done: Boolean, amount: Double? = null) {
+        viewModelScope.launch { repo.logDirect(habitId, date, done, amount) }
     }
 
     fun save(habit: Habit) {

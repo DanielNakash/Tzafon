@@ -82,13 +82,21 @@ fun DenSheet(title: String, onClose: () -> Unit, content: @Composable () -> Unit
     }
 }
 
-/** Month calendar + quick picks + clear (CalendarPicker.jsx). */
+/**
+ * Month calendar + quick picks + clear (CalendarPicker.jsx).
+ *
+ * `maxDate` (FR-HAB-8.2) — when set, dates strictly after it are disabled:
+ * quick picks past `maxDate` are omitted, grid cells past it render greyed
+ * and non-pressable. `null` (default) preserves the original open-ended
+ * behaviour used by Planning's reschedule and range pickers.
+ */
 @Composable
 fun CalendarPicker(
     value: String?,
     today: String,
     onPick: (String) -> Unit,
     onClear: (() -> Unit)? = null,
+    maxDate: String? = null,
 ) {
     val init = remember(value, today) { Dates.parse(value ?: today) }
     var viewYear by remember { mutableStateOf(init.year) }
@@ -102,7 +110,8 @@ fun CalendarPicker(
                 "Tomorrow" to Dates.addDays(today, 1),
                 "In a week" to Dates.addDays(today, 7),
                 "Next month" to Dates.addDays(today, 30),
-            ).forEach { (label, d) ->
+            ).filter { (_, d) -> maxDate == null || d <= maxDate }
+                .forEach { (label, d) ->
                 Box(
                     Modifier
                         .clip(RoundedCornerShape(999.dp))
@@ -165,6 +174,7 @@ fun CalendarPicker(
                     } else {
                         val isToday = c == today
                         val isSel = c == value
+                        val disabled = maxDate != null && c > maxDate
                         Box(
                             Modifier
                                 .weight(1f)
@@ -173,7 +183,7 @@ fun CalendarPicker(
                                 .clip(RoundedCornerShape(10.dp))
                                 .background(if (isSel) Den.rust else Color.Transparent)
                                 .then(if (isToday && !isSel) Modifier.border(1.5.dp, Den.rust.a(0.4f), RoundedCornerShape(10.dp)) else Modifier)
-                                .pressable { onPick(c) },
+                                .then(if (disabled) Modifier else Modifier.pressable { onPick(c) }),
                             contentAlignment = Alignment.Center,
                         ) {
                             Text(
@@ -182,7 +192,12 @@ fun CalendarPicker(
                                     fontFamily = DenType.body, fontSize = 14.5.sp,
                                     fontWeight = if (isToday || isSel) FontWeight.Bold else FontWeight.Normal,
                                 ),
-                                color = if (isSel) Color.White else if (isToday) Den.rust else Den.ink,
+                                color = when {
+                                    disabled -> Den.faint
+                                    isSel -> Color.White
+                                    isToday -> Den.rust
+                                    else -> Den.ink
+                                },
                             )
                         }
                     }

@@ -37,6 +37,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.thefoxworks.tzafon.domain.dates.Dates
 import com.thefoxworks.tzafon.domain.model.Habit
 import com.thefoxworks.tzafon.domain.model.HabitKind
 import com.thefoxworks.tzafon.ui.components.AmountSheet
@@ -71,6 +72,10 @@ fun HabitsScreen(
     var editing by remember { mutableStateOf<Habit?>(null) }   // non-null = editor open
     var creating by remember { mutableStateOf(false) }
     var amountFor by remember { mutableStateOf<HabitCardState?>(null) }
+    // FR-HAB-8 — picked-date flows: the "Log which day?" sheet and, for a
+    // quantitative habit, the follow-up AmountSheet keyed to that picked date.
+    var pickDateFor by remember { mutableStateOf<HabitCardState?>(null) }
+    var amountForDate by remember { mutableStateOf<Pair<HabitCardState, String>?>(null) }
     var menu by remember { mutableStateOf(false) }
 
     Box(Modifier.fillMaxSize().background(Den.bg)) {
@@ -107,6 +112,7 @@ fun HabitsScreen(
                                 vm.logToday(card.habit.id, done = !card.loggedToday)
                             }
                         },
+                        onLogDate = { pickDateFor = card },
                         onEdit = { editing = card.habit },
                     )
                 }
@@ -166,6 +172,41 @@ fun HabitsScreen(
         )
     }
 
+    // FR-HAB-8.2 — the "Log which day?" picker; future dates are disabled.
+    pickDateFor?.let { card ->
+        DenSheet(title = "Log which day?", onClose = { pickDateFor = null }) {
+            CalendarPicker(
+                value = null,
+                today = state.today,
+                maxDate = state.today,
+                onPick = { pickedDate ->
+                    pickDateFor = null
+                    val h = card.habit
+                    if (h.kind == HabitKind.QUANTITATIVE) {
+                        // FR-HAB-8.2.1 — quantitative branch defers to AmountSheet.
+                        amountForDate = card to pickedDate
+                    } else {
+                        // FR-HAB-8.3 — a second tap on an already-done day un-logs it.
+                        val existing = card.logs.firstOrNull { it.date == pickedDate && it.done }
+                        vm.logForDate(h.id, pickedDate, done = existing == null)
+                    }
+                },
+            )
+        }
+    }
+
+    // FR-HAB-8.2.1 — the quantitative-picked-date confirm sheet.
+    amountForDate?.let { (card, pickedDate) ->
+        val existing = card.logs.firstOrNull { it.date == pickedDate }
+        AmountSheet(
+            title = "Log ${Dates.fmtDate(pickedDate, state.today)} · ${card.habit.name}",
+            unit = card.habit.unit,
+            suggested = existing?.amount ?: card.habit.target,
+            onConfirm = { vm.logForDate(card.habit.id, pickedDate, done = true, amount = it) },
+            onClose = { amountForDate = null },
+        )
+    }
+
     if (menu) {
         AppMenuSheet(
             onClose = { menu = false },
@@ -178,7 +219,13 @@ fun HabitsScreen(
 }
 
 @Composable
-internal fun HabitCard(card: HabitCardState, servesGoal: String?, onLog: () -> Unit, onEdit: () -> Unit) {
+internal fun HabitCard(
+    card: HabitCardState,
+    servesGoal: String?,
+    onLog: () -> Unit,
+    onLogDate: () -> Unit,
+    onEdit: () -> Unit,
+) {
     val h = card.habit
     val accent = Den.green // per-theme accents arrive with M6
     val isQuant = h.kind == HabitKind.QUANTITATIVE
@@ -392,6 +439,28 @@ internal fun HabitCard(card: HabitCardState, servesGoal: String?, onLog: () -> U
                             else -> "Mark today done"
                         },
                         style = TextStyle(fontFamily = DenType.body, fontSize = 14.sp, fontWeight = FontWeight.SemiBold),
+                        color = accent,
+                        modifier = Modifier.padding(start = 8.dp),
+                    )
+                }
+
+                // ── FR-HAB-8 — Log a chosen date (expanded card only) ──
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp)
+                        .height(36.dp)
+                        .clip(RoundedCornerShape(11.dp))
+                        .border(1.dp, accent.a(0.4f), RoundedCornerShape(11.dp))
+                        .semantics { contentDescription = "Log a chosen date" }
+                        .pressable(label = "Log a chosen date", role = Role.Button, onClick = onLogDate),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center,
+                ) {
+                    TzIcons.Calendar(14.dp, accent)
+                    Text(
+                        "Log a date…",
+                        style = TextStyle(fontFamily = DenType.body, fontSize = 13.sp, fontWeight = FontWeight.SemiBold),
                         color = accent,
                         modifier = Modifier.padding(start = 8.dp),
                     )
