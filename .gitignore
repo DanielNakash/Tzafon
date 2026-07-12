@@ -23,6 +23,11 @@ android/.kotlin/
 .screenshots/
 .shots/
 
+# Pipeline / local build artifacts (not part of the source of record)
+PIPELINE_LOG.md
+scratch/
+android/gradle/gradle-daemon-jvm.properties
+
 # Secrets (Firebase config lands in M9b, never committed)
 android/app/google-services.json
 
