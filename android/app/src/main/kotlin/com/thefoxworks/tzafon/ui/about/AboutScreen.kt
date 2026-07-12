@@ -6,9 +6,12 @@ import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -42,9 +45,12 @@ import com.thefoxworks.tzafon.ui.theme.a
 const val ABOUT_CONTACT_MAILTO = "mailto:thefoxworksdotnet@gmail.com"
 
 /**
- * About (FR-ABOUT-1). Reference view — reachable only from AppMenuSheet
- * (FR-NAV-4). Displays producer / implementer / running version, the
- * FoxLogo identity mark, and a Contact Us mailto link.
+ * About (FR-ABOUT-1, refined by FR-ABOUT-2). Reference view — reachable
+ * only from AppMenuSheet (FR-NAV-4). Renders producer / implementer /
+ * running version, the FoxLogo identity mark, and a Contact Us mailto
+ * link. Body is vertically centered in the available area with a
+ * viewport-proportional FoxLogo; scroll fallback engages when a large
+ * font scale would otherwise clip content (FR-ABOUT-2.4.1).
  */
 @Composable
 fun AboutScreen(
@@ -67,76 +73,104 @@ fun AboutScreen(
             },
         )
 
-        Column(
-            Modifier
-                .weight(1f)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp)
-                .padding(top = 28.dp, bottom = 40.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(20.dp),
-        ) {
-            Column(
-                Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(6.dp),
-            ) {
-                Text(
-                    "Produced by The Fox Works",
-                    style = TextStyle(fontFamily = DenType.body, fontSize = 15.5.sp),
-                    color = Den.ink,
-                    textAlign = TextAlign.Center,
-                )
-                Text(
-                    "Implemented by Claude",
-                    style = TextStyle(fontFamily = DenType.body, fontSize = 15.5.sp),
-                    color = Den.ink,
-                    textAlign = TextAlign.Center,
-                )
-                Text(
-                    "Version $versionName",
-                    style = TextStyle(fontFamily = DenType.mono, fontSize = 13.sp, letterSpacing = 0.4.sp),
-                    color = Den.muted,
-                    textAlign = TextAlign.Center,
-                )
+        BoxWithConstraints(Modifier.fillMaxSize()) {
+            // FR-ABOUT-2.2 — clamp(min(0.50 × w, 0.45 × h), 96.dp, 240.dp).
+            // `maxWidth`/`maxHeight` are the *body* envelope inside BoxWithConstraints,
+            // so the ratios are taken against usable space, not the whole screen.
+            val logoSize = run {
+                val proposed = minOf(maxWidth * 0.50f, maxHeight * 0.45f)
+                proposed.coerceIn(96.dp, 240.dp)
             }
+            val scroll = rememberScrollState()
+            Column(
+                Modifier
+                    .fillMaxSize()
+                    .verticalScroll(scroll)
+                    .padding(horizontal = 24.dp)
+                    .padding(vertical = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+            ) {
+                // FR-ABOUT-2.3 — the top spacer + Arrangement.Center + a matching
+                // trailing spacer centers the block on default text scale. When
+                // the natural content exceeds the viewport, the verticalScroll
+                // takes over and the spacers collapse against the padding.
+                Spacer(Modifier.height(0.dp))
 
-            FoxLogo(size = 108.dp, ring = Den.ink.a(0.06f))
+                Column(
+                    Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    Text(
+                        "Produced by The Fox Works",
+                        style = TextStyle(
+                            fontFamily = DenType.serif,
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            letterSpacing = (-0.3).sp,
+                        ),
+                        color = Den.ink,
+                        textAlign = TextAlign.Center,
+                    )
+                    Text(
+                        "Implemented by Claude",
+                        style = TextStyle(fontFamily = DenType.body, fontSize = 15.5.sp),
+                        color = Den.ink,
+                        textAlign = TextAlign.Center,
+                    )
+                    Text(
+                        "Version $versionName",
+                        style = TextStyle(
+                            fontFamily = DenType.mono,
+                            fontSize = 12.5.sp,
+                            letterSpacing = 0.4.sp,
+                        ),
+                        color = Den.muted,
+                        textAlign = TextAlign.Center,
+                    )
+                }
 
-            val contactLabel = "Contact Us"
-            Text(
-                contactLabel,
-                style = TextStyle(
-                    fontFamily = DenType.body,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.SemiBold,
-                ),
-                color = Den.rust,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .semantics {
-                        contentDescription = "Contact Us — opens email to thefoxworksdotnet@gmail.com"
-                    }
-                    .pressable(contactLabel, Role.Button) {
-                        val intent = Intent(Intent.ACTION_SENDTO, Uri.parse(ABOUT_CONTACT_MAILTO))
-                        try {
-                            launcher(intent)
-                            noEmailHandler = false
-                        } catch (_: ActivityNotFoundException) {
-                            noEmailHandler = true
-                        }
-                    }
-                    .padding(horizontal = 20.dp, vertical = 12.dp),
-            )
+                Spacer(Modifier.height(28.dp))
+                FoxLogo(size = logoSize, ring = Den.ink.a(0.06f))
+                Spacer(Modifier.height(24.dp))
 
-            if (noEmailHandler) {
+                val contactLabel = "Contact Us"
                 Text(
-                    "No email app is available",
-                    style = TextStyle(fontFamily = DenType.body, fontSize = 13.sp, lineHeight = 18.sp),
-                    color = Den.muted,
+                    contactLabel,
+                    style = TextStyle(
+                        fontFamily = DenType.body,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    ),
+                    color = Den.rust,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .semantics {
+                            contentDescription = "Contact Us — opens email to thefoxworksdotnet@gmail.com"
+                        }
+                        .pressable(contactLabel, Role.Button) {
+                            val intent = Intent(Intent.ACTION_SENDTO, Uri.parse(ABOUT_CONTACT_MAILTO))
+                            try {
+                                launcher(intent)
+                                noEmailHandler = false
+                            } catch (_: ActivityNotFoundException) {
+                                noEmailHandler = true
+                            }
+                        }
+                        .padding(horizontal = 20.dp, vertical = 12.dp),
                 )
+
+                if (noEmailHandler) {
+                    Spacer(Modifier.height(10.dp))
+                    Text(
+                        "No email app is available",
+                        style = TextStyle(fontFamily = DenType.body, fontSize = 13.sp, lineHeight = 18.sp),
+                        color = Den.muted,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
             }
         }
     }
