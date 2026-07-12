@@ -91,8 +91,9 @@ Add an "about" section:
         * URL for triggering an email to thefoxworksdotnet@gmail.com
 
 ## FR-2026-07-11-a
-status: groomed
+status: implemented
 target: 2.4.0
+implemented: 2.4.0 / fb95262
 Please consider the design of the contents of the "About" screen at least in the following aspects:
 * Chosen font(s) and how they're used for the text elements in this screen
 * Size of the logo - On a phone oriented in potrait, I would like it to be about half as wide as the screen, but if the phone is rotated, or the screen is wide (foldable's inner screen for example) this may become an issue. So, I would like the logo to be bigger, but I don't want it to accidentally be "overwhelmingly" big. As a rule of thumb, the entire content of the About screen has to be visible without any scrolling.
@@ -100,8 +101,9 @@ Please consider the design of the contents of the "About" screen at least in the
 
 
 ## FR-2026-07-11-b
-status: groomed
+status: implemented
 target: 2.4.0
+implemented: 2.4.0 / fb95262
 Consistency of views look and behavior - There are several differences between how some Views look and behave, which IMHO do not reflect any meaning, and therefore should be made consistent.
 That said, if there is a View where is DOES make sense to have it womewhat different because it is different to others, please consider if and how it should look different.
 A few things I noticed that has to be ammended:
@@ -114,13 +116,15 @@ A few things I noticed that has to be ammended:
     * This leaves more room for the title text "Planning" to be as big as in the other Views.
 
 ## FR-2026-07-11-c
-status: groomed
+status: implemented
 target: 2.4.0
+implemented: 2.4.0 / fb95262
 When logging a habit directly in the Habits View I want to be able to log a date of my choosing. For example, if I forgot marking yesterday. Current "log" and "Mark today done" only allow marking for today. I think that the "log" button should allow picking a date, while keeping the "Mark today done" button as is.
 
 ## FR-2026-07-11-d
-status: groomed
+status: implemented
 target: 2.4.0
+implemented: 2.4.0 / fb95262
 For overdue tasks in the Planning View, please add an option to mark as done. I expected that pressing the unchecked checkbox of the task will do just that, but instead it takes me into editing the task. Please make the following changes:
 * Currently, there are four options for each overdue task: Today, Reschedule, Someday and Drop.
     * Keep Today and Reschedule
@@ -129,6 +133,7 @@ For overdue tasks in the Planning View, please add an option to mark as done. I 
 * Make the checkbox clickable so that clicking it marks the task as Done.
 
 ## FR-2026-07-11-e
-status: groomed
+status: implemented
 target: 2.4.0
+implemented: 2.4.0 / fb95262
 When a task is mark done by pressing its checkbox, make a nice positive short chime sound.

@@ -9,6 +9,48 @@ to the versioned requirements documents in the repo.
 
 ---
 
+## [2.4.0] — 2026-07-12
+
+### Added
+- **Log a habit for a chosen date** (`FR-HAB-8`) — expanded habit cards gain a *Log a date…*
+  affordance under *Mark today done* / *Log today*. A calendar sheet lets you pick any past
+  day (up to today; future dates are visibly disabled) and log it directly — frequency
+  habits toggle, quantitative habits open the amount sheet with any existing amount for
+  that date pre-filled. The rest of the habit surface (week rate, arc, fresh start,
+  history grid, direct-log path on today) is unchanged.
+- **Positive completion chime on Done** (`FR-AUDIO-1`) — a short, soft two-note chime
+  plays when a task moves *Open → Done* via a checkbox tap on Today, Planning (dated **and**
+  overdue), and All Tasks. Routed through `USAGE_ASSISTANCE_SONIFICATION`, so the device's
+  silent / Do Not Disturb profile is authoritative. A new **Sounds · Completion chime**
+  toggle in Settings (default **ON**, key `chime_enabled`) lets you turn it off; visible
+  completion feedback (checkbox fill, strike-through, Journey write) is unchanged either
+  way. The chime is not gamification — it does not fire on undo, on `StateSheet` transitions
+  to Done, on habit-log paths, or on Review/Journey scans (`DM-NOT`).
+
+### Changed
+- **Uniform chrome palette across the five tabs** (`FR-NAV-5`) — Habits, Directions and
+  Journey now wear the same rust `RustHeader` as Today, Planning, All Tasks and Backlog,
+  so switching tabs no longer swaps between rust and cream chrome. The Habits fresh-start
+  banner and Directions accent stay green — the change is only the top-of-screen header.
+- **Consistent nav affordance on All Tasks and Backlog** (`FR-NAV-6`) — the bottom tab bar
+  (Today · Planning · Habits · Directions · Journey) and the hamburger menu are now present
+  on All Tasks and Backlog, matching the primary five tabs. The **X close** returns you to
+  wherever you came from (menu → the tab you were on; Planning "undated" chip → Planning).
+- **Uniform title size across headers** (`FR-NAV-7`) — the "compact" (smaller) title styling
+  is removed; every `RustHeader` now uses the same title size for a calmer, non-hierarchical
+  read of the tabs. On Planning, the header is restructured so the kicker line carries the
+  current date ("SUNDAY · JUL 12") and the title stays "Planning".
+- **About visual design refresh** (`FR-ABOUT-2`) — the About screen uses three distinct
+  type roles (serif "Produced by The Fox Works" · body "Implemented by Claude" · mono
+  "Version 2.4.0"), a viewport-proportional Fox Works roundel that scales with screen
+  size while staying inside a legible 96–240 dp band, and vertical centering that falls back
+  to scrolling on very large font scales.
+- **Overdue action-set + tappable checkbox in Planning** (`FR-PLAN-4`) — the overdue-row
+  action-set now offers *Do Today · Reschedule · Change Status* (instead of the previous
+  *Do Today · Reschedule · Someday · Drop*), and the overdue row's checkbox is directly
+  tappable to mark the task Done in place — no editor round-trip. Change Status opens the
+  full state sheet.
+
 ## [2.3.0] — 2026-07-11
 
 ### Added
@@ -85,6 +127,7 @@ the new name **Tzafon**. Local-first persistence (Room) behind repository interf
 - **Cloud sync (behind the seam)** — Firebase Auth (Google sign-in) and offline-first
   Firestore sync, kept behind the repository interfaces (`M9b`).
 
+[2.4.0]: https://github.com/DanielNakash/Tzafon/releases/tag/v2.4.0
 [2.3.0]: https://github.com/DanielNakash/Tzafon/releases/tag/v2.3.0
 [2.2.0]: https://github.com/DanielNakash/Tzafon/releases/tag/v2.2.0
 [2.1.0]: https://github.com/DanielNakash/Tzafon/releases/tag/v2.1.0
