@@ -53,9 +53,14 @@ private fun TabIcon(tab: Tab, size: Dp, color: Color, weight: Float) {
     }
 }
 
-/** The Den bottom bar (tz-ui BottomNav): 84dp, hairline, rust pill on active. */
+/**
+ * The Den bottom bar (tz-ui BottomNav): 84dp, hairline, rust pill on active.
+ * `active = null` renders every tab inactive — used on reference views (All
+ * Tasks / Backlog) so the bar serves as a wayfinder without pretending any
+ * primary tab is the current destination (FR-NAV-6.1).
+ */
 @Composable
-fun DenBottomNav(active: Tab, onSelect: (Tab) -> Unit, modifier: Modifier = Modifier) {
+fun DenBottomNav(active: Tab?, onSelect: (Tab) -> Unit, modifier: Modifier = Modifier) {
     Column(modifier.fillMaxWidth().background(Den.surface.a(0.97f))) {
         Box(Modifier.fillMaxWidth().height(1.dp).background(Den.line))
         Row(Modifier.fillMaxWidth().padding(top = 8.dp)) {

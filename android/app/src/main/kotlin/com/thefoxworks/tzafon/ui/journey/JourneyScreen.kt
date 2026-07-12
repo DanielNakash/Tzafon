@@ -43,7 +43,7 @@ import com.thefoxworks.tzafon.ui.components.Compass
 import com.thefoxworks.tzafon.ui.components.Dot
 import com.thefoxworks.tzafon.ui.components.GroupHeader
 import com.thefoxworks.tzafon.ui.components.Kicker
-import com.thefoxworks.tzafon.ui.components.LayerHeader
+import com.thefoxworks.tzafon.ui.components.RustHeader
 import com.thefoxworks.tzafon.ui.nav.AppMenuSheet
 import com.thefoxworks.tzafon.ui.components.Serves
 import com.thefoxworks.tzafon.ui.components.TzIcons
@@ -72,12 +72,10 @@ fun JourneyScreen(
     var menu by remember { mutableStateOf(false) }
 
     Column(Modifier.fillMaxSize().background(Den.surface)) {
-        LayerHeader(
-            kicker = "JOURNEY · THE MIRROR",
+        RustHeader(
             title = "How far you've come",
-            accent = Den.rust,
+            kicker = "JOURNEY · THE MIRROR",
             compass = true,
-            sub = "Not a trophy case — a mirror. Who you're becoming, in your own past and your own words.",
             onMenu = { menu = true },
         )
 
@@ -88,6 +86,17 @@ fun JourneyScreen(
             if (state.isEmpty) {
                 item(key = "empty") { EmptyMirror() }
                 return@LazyColumn
+            }
+
+            // FR-NAV-5 — the migrated LayerHeader `sub` line lives as a body
+            // intro paragraph after the palette collapse.
+            item(key = "intro") {
+                Text(
+                    "Not a trophy case — a mirror. Who you're becoming, in your own past and your own words.",
+                    style = TextStyle(fontFamily = DenType.body, fontSize = 13.5.sp, lineHeight = 20.sp),
+                    color = Den.muted,
+                    modifier = Modifier.padding(bottom = 6.dp),
+                )
             }
 
             // ── the honest aggregate (only once there is something to reflect) ──

@@ -55,8 +55,8 @@ import com.thefoxworks.tzafon.ui.components.Compass
 import com.thefoxworks.tzafon.ui.components.DenSheet
 import com.thefoxworks.tzafon.ui.components.Fab
 import com.thefoxworks.tzafon.ui.components.GroupHeader
-import com.thefoxworks.tzafon.ui.components.LayerHeader
 import com.thefoxworks.tzafon.ui.components.Nudge
+import com.thefoxworks.tzafon.ui.components.RustHeader
 import com.thefoxworks.tzafon.ui.components.PillButton
 import com.thefoxworks.tzafon.ui.components.SectionLabel
 import com.thefoxworks.tzafon.ui.components.TzIcons
@@ -107,11 +107,9 @@ fun DirectionsScreen(
 
     Box(Modifier.fillMaxSize().background(Den.surface)) {
         Column(Modifier.fillMaxSize()) {
-            LayerHeader(
-                kicker = "DIRECTIONS",
+            RustHeader(
                 title = "Your bearings",
-                accent = Den.rust,
-                sub = "The few directions everything serves — three at most. Tap a bearing to open it.",
+                kicker = "DIRECTIONS",
                 onMenu = { menu = true },
             )
 
@@ -119,6 +117,16 @@ fun DirectionsScreen(
                 Modifier.weight(1f).fillMaxWidth(),
                 contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 14.dp, bottom = 200.dp),
             ) {
+                // FR-NAV-5 — the migrated LayerHeader `sub` line lives as a
+                // body intro paragraph after the palette collapse.
+                item(key = "intro") {
+                    Text(
+                        "The few directions everything serves — three at most. Tap a bearing to open it.",
+                        style = TextStyle(fontFamily = DenType.body, fontSize = 13.5.sp, lineHeight = 20.sp),
+                        color = Den.muted,
+                        modifier = Modifier.padding(bottom = 4.dp),
+                    )
+                }
                 item(key = "scope") {
                     ThemeScope(
                         active = scope,

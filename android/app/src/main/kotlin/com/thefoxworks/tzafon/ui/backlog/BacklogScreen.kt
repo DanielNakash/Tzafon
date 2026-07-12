@@ -41,6 +41,7 @@ import com.thefoxworks.tzafon.ui.components.StateSheet
 import com.thefoxworks.tzafon.ui.components.TaskCheckbox
 import com.thefoxworks.tzafon.ui.components.TzIcons
 import com.thefoxworks.tzafon.ui.components.pressable
+import com.thefoxworks.tzafon.ui.nav.AppMenuSheet
 import com.thefoxworks.tzafon.ui.theme.Den
 import com.thefoxworks.tzafon.ui.theme.DenType
 import com.thefoxworks.tzafon.ui.theme.a
@@ -55,12 +56,16 @@ fun BacklogScreen(
     vm: BacklogViewModel,
     onOpenTask: (String) -> Unit,
     onExpandAdd: (String) -> Unit,
+    onOpenAllTasks: (() -> Unit)? = null,
+    onOpenSettings: (() -> Unit)? = null,
+    onOpenAbout: (() -> Unit)? = null,
 ) {
     val state by vm.uiState.collectAsStateWithLifecycle()
     var pullTask by remember { mutableStateOf<Task?>(null) }
     var pullPickDate by remember { mutableStateOf(false) }
     var sheetTask by remember { mutableStateOf<Task?>(null) }
     var quickAdd by remember { mutableStateOf(false) }
+    var menu by remember { mutableStateOf(false) }
 
     Box(Modifier.fillMaxSize().background(Den.bg)) {
         Column(Modifier.fillMaxSize()) {
@@ -70,7 +75,7 @@ fun BacklogScreen(
                 compact = true,
                 metaLeft = "Parked — not scheduled",
                 metaRight = "${state.items.size} item${if (state.items.size == 1) "" else "s"}",
-                right = { TzIcons.Moon(19.dp, Den.cream) },
+                onMenu = { menu = true },
             )
 
             LazyColumn(
@@ -193,6 +198,15 @@ fun BacklogScreen(
             onSave = { vm.quickAdd(it) },
             onExpand = { title -> quickAdd = false; onExpandAdd(title) },
             onClose = { quickAdd = false },
+        )
+    }
+
+    if (menu) {
+        AppMenuSheet(
+            onClose = { menu = false },
+            onAllTasks = onOpenAllTasks ?: {},
+            onSettings = onOpenSettings,
+            onAbout = onOpenAbout,
         )
     }
 }

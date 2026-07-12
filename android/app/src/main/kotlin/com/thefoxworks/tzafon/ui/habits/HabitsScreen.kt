@@ -40,8 +40,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.thefoxworks.tzafon.domain.model.Habit
 import com.thefoxworks.tzafon.domain.model.HabitKind
 import com.thefoxworks.tzafon.ui.components.AmountSheet
+import com.thefoxworks.tzafon.ui.components.CalendarPicker
+import com.thefoxworks.tzafon.ui.components.DenSheet
 import com.thefoxworks.tzafon.ui.components.Fab
-import com.thefoxworks.tzafon.ui.components.LayerHeader
+import com.thefoxworks.tzafon.ui.components.RustHeader
 import com.thefoxworks.tzafon.ui.nav.AppMenuSheet
 import com.thefoxworks.tzafon.ui.components.TzIcons
 import com.thefoxworks.tzafon.ui.components.pressable
@@ -73,11 +75,9 @@ fun HabitsScreen(
 
     Box(Modifier.fillMaxSize().background(Den.bg)) {
         Column(Modifier.fillMaxSize()) {
-            LayerHeader(
-                kicker = "HABITS · RHYTHM",
+            RustHeader(
                 title = "Habits",
-                accent = Den.green,
-                sub = "Aim for the rate, not perfection. Miss one — that's normal. It's the long arc that counts.",
+                kicker = "HABITS · RHYTHM",
                 onMenu = { menu = true },
             )
 
@@ -85,6 +85,17 @@ fun HabitsScreen(
                 Modifier.weight(1f).fillMaxWidth(),
                 contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 14.dp, bottom = 200.dp),
             ) {
+                // FR-NAV-5 — the migrated LayerHeader `sub` line moves into a
+                // body intro paragraph so the copy is not lost after the header
+                // palette collapses to a single rust chrome.
+                item(key = "intro") {
+                    Text(
+                        "Aim for the rate, not perfection. Miss one — that's normal. It's the long arc that counts.",
+                        style = TextStyle(fontFamily = DenType.body, fontSize = 13.5.sp, lineHeight = 20.sp),
+                        color = Den.muted,
+                        modifier = Modifier.padding(bottom = 12.dp),
+                    )
+                }
                 items(state.cards, key = { it.habit.id }) { card ->
                     HabitCard(
                         card = card,

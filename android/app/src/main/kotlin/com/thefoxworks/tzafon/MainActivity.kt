@@ -124,6 +124,10 @@ fun TzafonNavHost(container: AppContainer) {
 
     val currentRoute = nav.currentBackStackEntryAsState().value?.destination?.route
     val activeTab = Tab.entries.firstOrNull { it.route == currentRoute }
+    // FR-NAV-6.1 — reference views (All Tasks, Backlog) show the bar as a
+    // wayfinder with no tab active, so the primary destinations stay one tap
+    // away without pretending the reference view is a primary tab.
+    val showBottomNav = activeTab != null || currentRoute == "alltasks" || currentRoute == "backlog"
 
     Box(Modifier.fillMaxSize()) {
         NavHost(
@@ -216,6 +220,9 @@ fun TzafonNavHost(container: AppContainer) {
                     vm = vm,
                     onOpenTask = { id -> openEditor(taskId = id) },
                     onExpandAdd = { title -> openEditor(title = title) },
+                    onOpenAllTasks = { nav.navigate("alltasks") },
+                    onOpenSettings = { nav.navigate("settings") },
+                    onOpenAbout = { nav.navigate("about") },
                 )
             }
 
@@ -306,7 +313,7 @@ fun TzafonNavHost(container: AppContainer) {
             }
         }
 
-        if (activeTab != null) {
+        if (showBottomNav) {
             DenBottomNav(
                 active = activeTab,
                 onSelect = { goTab(it) },

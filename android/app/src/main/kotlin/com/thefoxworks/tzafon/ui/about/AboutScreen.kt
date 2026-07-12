@@ -5,6 +5,7 @@ import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -31,6 +32,7 @@ import androidx.compose.ui.unit.sp
 import com.thefoxworks.tzafon.BuildConfig
 import com.thefoxworks.tzafon.ui.components.FoxLogo
 import com.thefoxworks.tzafon.ui.components.RustHeader
+import com.thefoxworks.tzafon.ui.components.TzIcons
 import com.thefoxworks.tzafon.ui.components.pressable
 import com.thefoxworks.tzafon.ui.theme.Den
 import com.thefoxworks.tzafon.ui.theme.DenType
@@ -61,7 +63,9 @@ fun AboutScreen(
             title = "About",
             kicker = "TZAFON",
             compact = true,
-            onBack = onClose,
+            right = {
+                Box(Modifier.pressable("Close", Role.Button, onClose).padding(4.dp)) { TzIcons.X(20.dp, Den.cream) }
+            },
         )
 
         Column(
