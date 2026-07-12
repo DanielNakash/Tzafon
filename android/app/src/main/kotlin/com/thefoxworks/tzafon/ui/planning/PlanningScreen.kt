@@ -92,9 +92,9 @@ fun PlanningScreen(
         Column(Modifier.fillMaxSize()) {
             RustHeader(
                 title = "Planning",
-                kicker = "WHAT'S ON THE TABLE",
-                compact = true,
-                metaLeft = Dates.fmtDate(state.today, state.today),
+                // FR-NAV-7 — kicker becomes the current date; the old
+                // "WHAT'S ON THE TABLE" reads as chrome once the title lives at h1.
+                kicker = Dates.fmtDate(state.today, state.today),
                 metaRight = "${state.undatedCount} undated",
                 onMenu = { menu = true },
                 bottomContent = {

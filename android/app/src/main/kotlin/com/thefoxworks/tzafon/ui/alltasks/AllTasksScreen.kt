@@ -166,7 +166,6 @@ fun AllTasksScreen(
             RustHeader(
                 title = "All Tasks",
                 kicker = "COMPLETE INDEX",
-                compact = true,
                 right = { HeaderMenuButton(onClick = { menu = true }) },
                 bottomContent = {
                     Column {

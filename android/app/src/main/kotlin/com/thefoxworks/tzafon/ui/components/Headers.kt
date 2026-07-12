@@ -36,13 +36,14 @@ fun RustHeader(
     metaLeft: String? = null,
     metaRight: String? = null,
     progress: Float? = null,
-    compact: Boolean = false,
     compass: Boolean = false,
     right: (@Composable () -> Unit)? = null,
     onMenu: (() -> Unit)? = null,
     onBack: (() -> Unit)? = null,
     bottomContent: (@Composable () -> Unit)? = null,
 ) {
+    // FR-NAV-7 — every rust header renders `title` at the h1 (37.sp) size so
+    // the daily-path silhouette is uniform; there is no compact variant.
     Box(Modifier.fillMaxWidth().background(Den.rust).clipToBounds()) {
         if (compass) {
             Box(Modifier.align(Alignment.TopEnd).offset(x = 20.dp, y = 38.dp).alpha(0.13f)) {
@@ -53,7 +54,7 @@ fun RustHeader(
             Modifier
                 .fillMaxWidth()
                 .statusBarsPadding()
-                .padding(start = 20.dp, end = 20.dp, top = if (compact) 4.dp else 8.dp, bottom = if (bottomContent != null) 0.dp else if (compact) 14.dp else 18.dp)
+                .padding(start = 20.dp, end = 20.dp, top = 8.dp, bottom = if (bottomContent != null) 0.dp else 18.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (onBack != null) {
@@ -81,9 +82,9 @@ fun RustHeader(
             }
             Text(
                 title,
-                style = if (compact) DenType.h1Compact else DenType.h1,
+                style = DenType.h1,
                 color = Den.cream,
-                modifier = Modifier.padding(top = if (compact) 4.dp else 7.dp),
+                modifier = Modifier.padding(top = 7.dp),
             )
             if (metaLeft != null || metaRight != null) {
                 Row(

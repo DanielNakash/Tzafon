@@ -72,7 +72,6 @@ fun BacklogScreen(
             RustHeader(
                 title = "Backlog",
                 kicker = "SOMEDAY / MAYBE",
-                compact = true,
                 metaLeft = "Parked — not scheduled",
                 metaRight = "${state.items.size} item${if (state.items.size == 1) "" else "s"}",
                 onMenu = { menu = true },

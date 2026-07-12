@@ -73,7 +73,6 @@ fun SettingsScreen(
         RustHeader(
             title = "Settings",
             kicker = "TZAFON",
-            compact = true,
             right = {
                 Box(Modifier.pressable("Close", Role.Button, onClose).padding(4.dp)) { TzIcons.X(20.dp, Den.cream) }
             },
