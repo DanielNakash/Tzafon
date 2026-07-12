@@ -156,10 +156,14 @@ target: 2.5.0
 When creating a new Task when in the Backlog View, it shall default to the backlog/someday state, regardless of whether this is a quick add or a full form add.
 
 ## FR-2026-07-12-d
-status: 
+status: groomed
+target: 2.5.0
 Bug Fix: When navigating from a view to the Backlog, the navigation button for the view the user came from refers to backlog instead of the view it is supposed to.
 Example:
-* The user is in the Today View and navigates to the Backlog View, and then 
+* The user is in the Today View and navigates to the Backlog View, and then continues to Habits View.
+* The user taps "Today" in the navigation bar, but that takes him back to the Backlog View.
+* This state remains until the user presses the Android back button while on the Today-hidden-by-Backlog View.
+This may happen to multiple Views following the same procedure.
 
 
 
