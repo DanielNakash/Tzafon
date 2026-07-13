@@ -20,6 +20,7 @@ status: new
 target: (auto)
 requested: 2026-07-08
 implemented: (auto)
+requirements: (auto)
 
 <one or more sentences describing the feature in your own words>
 ```

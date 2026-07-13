@@ -70,7 +70,9 @@ Unload: `launchctl unload ~/Library/LaunchAgents/com.thefoxworks.tzafon.<job>.pl
 - **Emulator courtesy:** the builder only boots/kills an emulator it started itself — it won't kill
   a dev session you already have running.
 - **Audit trail:** the permanent record is git history (groom commits list request ids; releases
-  are tagged) plus the `status:`/`implemented:` fields in the inbox. `PIPELINE_LOG.md` is a
+  are tagged) plus the `status:`/`implemented:`/`requirements:` fields in the inbox. On shipping,
+  the builder records `requirements:` — the groomed requirement code(s) (`FR-<AREA>-n` / `DM-*`)
+  that delivered each request — next to it. `PIPELINE_LOG.md` is a
   git-ignored *local* live tail (so branch/main appends never conflict at merge); full per-run
   transcripts land in `logs/`.
 - **Stale-lock recovery:** if a run crashes holding the lock, the next run reclaims it after 6h

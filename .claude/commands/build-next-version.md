@@ -61,8 +61,14 @@ reviews and merges. Never mark requests implemented unless the tag was created.
 8. **Release build.** `cd android && ./gradlew assembleRelease` (signs with the owner keystore).
    Verify the APK exists and is signed. Copy it to `feature-requests/releases/Tzafon-<target>.apk`.
 
-9. **Mark shipped.** For each request built into this version, set `status: implemented` and
-   `implemented: <target> / <short-sha>` in `FEATURE_REQUESTS.md`.
+9. **Mark shipped.** For each request built into this version, set `status: implemented`,
+   `implemented: <target> / <short-sha>`, and `requirements: <codes>` in `FEATURE_REQUESTS.md`.
+   Derive `<codes>` from `v<target> Requirements.md`: it is the comma-separated list of the
+   top-level requirement code(s) (`FR-<AREA>-n` / `DM-*`) whose section header cites this request
+   as its `*Source: `<request-id>`*` (e.g. `FR-2026-07-10-a` → `FR-TODAY-…`; a request that sourced
+   more than one section lists every such code in document order). This records, next to each
+   shipped request, exactly which groomed requirement(s) delivered it. Add the `requirements:` line
+   directly under the `implemented:` line of the request's block.
 
 10. **Commit + tag.** Stage the implementation plus the tracked pipeline files (code changes are
     expected on this branch, so `git add -A` is acceptable here — you are on an isolated `release/*`
