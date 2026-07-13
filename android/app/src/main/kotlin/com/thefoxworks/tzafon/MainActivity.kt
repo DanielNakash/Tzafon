@@ -112,11 +112,19 @@ fun TzafonNavHost(container: AppContainer) {
 
     // presetToday: FR-TODAY-7 — a NEW task added from the Today view defaults its
     // toDoDate to today, whether via inline quick-add or the full editor (expand).
-    fun openEditor(taskId: String? = null, title: String? = null, presetToday: Boolean = false) {
+    // presetBacklog: FR-BACKLOG-5.2 — expand-to-full-form from the Backlog view
+    // opens the editor with state = BACKLOG and toDoDate = null.
+    fun openEditor(
+        taskId: String? = null,
+        title: String? = null,
+        presetToday: Boolean = false,
+        presetBacklog: Boolean = false,
+    ) {
         val params = buildList {
             if (taskId != null) add("taskId=$taskId")
             if (!title.isNullOrBlank()) add("title=${Uri.encode(title)}")
             if (presetToday) add("presetToday=true")
+            if (presetBacklog) add("presetBacklog=true")
         }
         val route = if (params.isEmpty()) "editor" else "editor?" + params.joinToString("&")
         nav.navigate(route)
@@ -219,7 +227,9 @@ fun TzafonNavHost(container: AppContainer) {
                 BacklogScreen(
                     vm = vm,
                     onOpenTask = { id -> openEditor(taskId = id) },
-                    onExpandAdd = { title -> openEditor(title = title) },
+                    // FR-BACKLOG-5.2 — the expand-to-full-form route from Backlog
+                    // opens the editor pre-set to Backlog state / undated.
+                    onExpandAdd = { title -> openEditor(title = title, presetBacklog = true) },
                     onOpenAllTasks = { nav.navigate("alltasks") },
                     onOpenSettings = { nav.navigate("settings") },
                     onOpenAbout = { nav.navigate("about") },
@@ -244,16 +254,18 @@ fun TzafonNavHost(container: AppContainer) {
             }
 
             composable(
-                route = "editor?taskId={taskId}&title={title}&presetToday={presetToday}",
+                route = "editor?taskId={taskId}&title={title}&presetToday={presetToday}&presetBacklog={presetBacklog}",
                 arguments = listOf(
                     navArgument("taskId") { type = NavType.StringType; nullable = true; defaultValue = null },
                     navArgument("title") { type = NavType.StringType; nullable = true; defaultValue = null },
                     navArgument("presetToday") { type = NavType.BoolType; defaultValue = false },
+                    navArgument("presetBacklog") { type = NavType.BoolType; defaultValue = false },
                 ),
             ) { backStack ->
                 val taskId = backStack.arguments?.getString("taskId")
                 val presetTitle = backStack.arguments?.getString("title")
                 val presetToday = backStack.arguments?.getBoolean("presetToday") == true
+                val presetBacklog = backStack.arguments?.getBoolean("presetBacklog") == true
                 val repo = container.taskRepository
                 // hydrate the draft synchronously off the DB (small row; simple M0 path)
                 val initial: TaskDraft? = taskId?.let {
@@ -281,9 +293,18 @@ fun TzafonNavHost(container: AppContainer) {
                     }
                 } ?: run {
                     // New task. From Today (presetToday) it defaults toDoDate = today so it
-                    // lands in the Today list; elsewhere it stays undated (FR-CAPTURE-2).
-                    if (presetTitle != null || presetToday) {
-                        TaskDraft(id = null, title = presetTitle ?: "", toDoDate = if (presetToday) today else null)
+                    // lands in the Today list; from Backlog (presetBacklog, FR-BACKLOG-5.2)
+                    // it lands in Backlog state / undated; elsewhere it stays OPEN/undated
+                    // (FR-CAPTURE-2).
+                    if (presetTitle != null || presetToday || presetBacklog) {
+                        TaskDraft(
+                            id = null,
+                            title = presetTitle ?: "",
+                            state = if (presetBacklog)
+                                com.thefoxworks.tzafon.domain.model.TaskState.BACKLOG
+                            else com.thefoxworks.tzafon.domain.model.TaskState.OPEN,
+                            toDoDate = if (presetToday) today else null,
+                        )
                     } else null
                 }
                 val habits by container.habitRepository.observeHabits()

@@ -55,6 +55,31 @@ import com.thefoxworks.tzafon.ui.theme.a
 import com.thefoxworks.tzafon.ui.theme.contentDir
 
 /**
+ * FR-BACKLOG-5.3 — toggling recurrence on the editor draft. Adding recurrence to a
+ * Backlog-defaulted draft auto-promotes it to Open with today's To Do date, because
+ * Backlog and recurrence are model-incompatible (FR-BACKLOG-4); the user's latest
+ * explicit signal (adding recurrence) wins. Turning recurrence off clears the rule and
+ * leaves the state untouched.
+ */
+internal fun toggleRecurrence(draft: TaskDraft, today: String): TaskDraft =
+    if (draft.recurrence != null) {
+        draft.copy(recurrence = null)
+    } else {
+        val promotingFromBacklog =
+            draft.state == com.thefoxworks.tzafon.domain.model.TaskState.BACKLOG
+        draft.copy(
+            recurrence = RecurrenceDraft(
+                rule = Recurrence.defaultRule(),
+                dueMode = if (draft.dueDate != null) DueMode.SINGULAR else DueMode.NONE,
+            ),
+            state = if (promotingFromBacklog)
+                com.thefoxworks.tzafon.domain.model.TaskState.OPEN
+            else draft.state,
+            toDoDate = if (promotingFromBacklog) today else draft.toDoDate,
+        )
+    }
+
+/**
  * Full-screen task editor (v1.1.0 TaskEditor.jsx parity): title, description,
  * To Do / Due dates with calendar sheets, recurrence + due modes + end date,
  * recurring edit scopes, delete with scope sheet.
@@ -367,15 +392,7 @@ fun TaskEditorScreen(
                     .clip(RoundedCornerShape(13.dp))
                     .background(Den.card)
                     .border(1.dp, Den.line, RoundedCornerShape(13.dp))
-                    .pressable {
-                        draft = if (repeat) draft.copy(recurrence = null)
-                        else draft.copy(
-                            recurrence = RecurrenceDraft(
-                                rule = Recurrence.defaultRule(),
-                                dueMode = if (draft.dueDate != null) DueMode.SINGULAR else DueMode.NONE,
-                            )
-                        )
-                    }
+                    .pressable { draft = toggleRecurrence(draft, today) }
                     .padding(14.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -392,6 +409,17 @@ fun TaskEditorScreen(
                             .align(if (repeat) Alignment.CenterEnd else Alignment.CenterStart),
                     )
                 }
+            }
+            // FR-BACKLOG-5.3 — one-line hint whenever a task has recurrence:
+            // Backlog is not selectable for a series. Mirrors the reverse-direction
+            // guard the StateSheet already shows (FR-BACKLOG-2).
+            if (repeat) {
+                Text(
+                    "Backlog is for non-recurring tasks — a recurring series can't be “someday”.",
+                    style = TextStyle(fontFamily = DenType.body, fontSize = 12.sp, lineHeight = 16.sp),
+                    color = Den.faint,
+                    modifier = Modifier.padding(top = 6.dp),
+                )
             }
 
             if (repeat) {

@@ -110,7 +110,16 @@ class RoomTaskRepository(
                 deleteSeriesAndOccurrences(existing.seriesId)
             }
             val keepId = existing != null && !(existing.seriesId != null && scope == EditScope.ALL)
-            val base = if (keepId) existing!! else Task(id = UUID.randomUUID().toString(), title = "", createdAt = now(), stateChangedAt = now())
+            // FR-BACKLOG-5: honor draft.state when creating a new task, so quick-adds
+            // from Backlog land as BACKLOG (not OPEN). Existing tasks keep their state
+            // — setState() is the sanctioned way to move between states.
+            val base = if (keepId) existing!! else Task(
+                id = UUID.randomUUID().toString(),
+                title = "",
+                state = draft.state,
+                createdAt = now(),
+                stateChangedAt = now(),
+            )
             taskDao.upsert(
                 base.copy(
                     title = draft.title.trim(),

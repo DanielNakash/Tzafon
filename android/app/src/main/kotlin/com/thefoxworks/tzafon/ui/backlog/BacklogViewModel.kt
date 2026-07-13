@@ -54,13 +54,35 @@ class BacklogViewModel(
         viewModelScope.launch { repo.setState(id, target, today) }
     }
 
+    /**
+     * FR-BACKLOG-5.1 — quick-adds from the Backlog view default to
+     * `state = BACKLOG` and `toDoDate = null`. The Backlog surface is
+     * state-scoped: what you put here stays here until you pull it. Adds
+     * from Today/Planning/All Tasks still default to OPEN.
+     */
     fun quickAdd(title: String) {
         viewModelScope.launch {
             repo.saveDraft(
-                com.thefoxworks.tzafon.domain.model.TaskDraft(id = null, title = title),
+                quickAddDraft(title),
                 com.thefoxworks.tzafon.domain.model.EditScope.ONE,
                 today,
             )
         }
+    }
+
+    companion object {
+        /**
+         * FR-BACKLOG-5.1 — quick-adds from the Backlog view default to
+         * `state = BACKLOG` and `toDoDate = null`. The Backlog surface is
+         * state-scoped: what you put here stays here until you pull it. Adds
+         * from Today/Planning/All Tasks still default to OPEN (FR-BACKLOG-5.5).
+         */
+        fun quickAddDraft(title: String): com.thefoxworks.tzafon.domain.model.TaskDraft =
+            com.thefoxworks.tzafon.domain.model.TaskDraft(
+                id = null,
+                title = title,
+                state = TaskState.BACKLOG,
+                toDoDate = null,
+            )
     }
 }
