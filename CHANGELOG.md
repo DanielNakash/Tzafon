@@ -9,6 +9,35 @@ to the versioned requirements documents in the repo.
 
 ---
 
+## [2.5.0] — 2026-07-13
+
+### Added
+- **Connect an existing goal to a theme, from either side** (`FR-DIR-8`) — the goal editor
+  now exposes the full theme relation in **both create and edit** modes: a **primary theme**
+  selector (including *No theme · orphan*) plus an **Also serves** multi-select, so a goal can
+  serve any number of themes (`DM-GOAL-6`). The expanded body of an active theme gains a
+  **Connect an existing goal** row alongside *Add a goal to this theme*; its picker lists
+  connectable goals (orphans first, then goals owned by other themes), and connecting an orphan
+  asks once whether this theme should become its primary. Shared goals in a theme's cluster gain
+  an **unlink** affordance. The link lives only on the goal (`primaryThemeId` + `themeIds`); no
+  schema change, no gamification copy.
+
+### Changed
+- **Backlog is now a state-scoped surface** (`FR-BACKLOG-5`) — a task created *from* the Backlog
+  view (quick-add or the expand-to-full-form route) defaults to **Backlog** state and stays
+  undated, so it lands in the someday pool instead of silently dropping into Today's Open list.
+  Adds from Today, Planning and All Tasks are unchanged. Adding recurrence to a Backlog-defaulted
+  task auto-promotes it to Open with today's date, since a recurring series can't be "someday"
+  (`FR-BACKLOG-4`), with a one-line hint.
+
+### Fixed
+- **Add-button no longer overlaps the bottom nav** (`FR-NAV-8`) — the floating **+** on All Tasks
+  and Backlog now clears the bottom tab bar, matching Today and Planning.
+- **Bottom-nav taps never strand you on a reference view** (`FR-NAV-9`) — opening All Tasks or
+  Backlog and then tapping a tab (e.g. Today → Backlog → Habits → Today) could leave the reference
+  view stuck on top of the tab you selected. Tapping a tab now always lands on that tab, while
+  ordinary within-tab state (scroll position, expanded rows) is preserved.
+
 ## [2.4.0] — 2026-07-12
 
 ### Added
@@ -127,6 +156,7 @@ the new name **Tzafon**. Local-first persistence (Room) behind repository interf
 - **Cloud sync (behind the seam)** — Firebase Auth (Google sign-in) and offline-first
   Firestore sync, kept behind the repository interfaces (`M9b`).
 
+[2.5.0]: https://github.com/DanielNakash/Tzafon/releases/tag/v2.5.0
 [2.4.0]: https://github.com/DanielNakash/Tzafon/releases/tag/v2.4.0
 [2.3.0]: https://github.com/DanielNakash/Tzafon/releases/tag/v2.3.0
 [2.2.0]: https://github.com/DanielNakash/Tzafon/releases/tag/v2.2.0

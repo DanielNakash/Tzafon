@@ -139,24 +139,28 @@ implemented: 2.4.0 / fb95262
 When a task is mark done by pressing its checkbox, make a nice positive short chime sound.
 
 ## FR-2026-07-12-a
-status: groomed
+status: implemented
+implemented: 2.5.0 / efedbef
 target: 2.5.0
 Bug fix: In All Tasks View and in Backlog View the add button is partially hidden by the navigation bar. The button should be moved app similarly to the Today View.
 
 ## FR-2026-07-12-b
-status: groomed
+status: implemented
+implemented: 2.5.0 / 8058b39
 target: 2.5.0
 Currently there's no way to link between an existing goal and a theme. This new feature shall add that capability in two places:
 * From a theme's details the user shall be able to connect to an existing goal.
 * From a goal's details the user shall be able to connect to an existing theme.
 
 ## FR-2026-07-12-c
-status: groomed
+status: implemented
+implemented: 2.5.0 / 7a569a6
 target: 2.5.0
 When creating a new Task when in the Backlog View, it shall default to the backlog/someday state, regardless of whether this is a quick add or a full form add.
 
 ## FR-2026-07-12-d
-status: groomed
+status: implemented
+implemented: 2.5.0 / 174507f
 target: 2.5.0
 Bug Fix: When navigating from a view to the Backlog, the navigation button for the view the user came from refers to backlog instead of the view it is supposed to.
 Example:
