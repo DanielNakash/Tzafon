@@ -170,15 +170,27 @@ Example:
 * This state remains until the user presses the Android back button while on the Today-hidden-by-Backlog View.
 This may happen to multiple Views following the same procedure.
 
+## FR-2026-07-13-a
+status: groomed
+target: 2.6.0
+For overdue recurring tasks, if the next recurrence is today, hide the slipped task from the Planning View.
+For example, a task "clean desk" is set to recur once every 2 days, today is Tuesday, and the task from Sunday was left open. The expectation of this feature request is that the Sunday instance of "clean desk" shall be hidden in the Planning View.
 
+## FR-2026-07-13-b
+status: groomed
+target: 2.6.0
+Allow to undo-logged habit. For example, I logged today by mistake while I meant to log yesterday. Currently, once a day is logged, it cannot be unlogged.
 
+## FR-2026-07-13-c
+status: groomed
+target: 2.6.0
+Add a capability to choose from a different color palette. This option shall be available from the Settings View.
+The default shall be the current palette. There shall also be a few additional palettes based on blue, green, magenta and teal (each is a base for a different palette). Verify that all the relevant items are affected by the change in theme - background, text color, objects, buttons etc.
 
-
-
-
-
-
-
+## FR-2026-07-13-d
+status: groomed
+target: 2.6.0
+Please add RTL support also to the tasks in the Backlog View.
 
 
 
