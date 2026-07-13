@@ -19,7 +19,8 @@ autonomously, milestone by milestone, without approval gates.
 
 ## Shell command style (important — reduces permission prompts)
 Only these command prefixes run without a permission prompt (see `.claude/settings.json`):
-`adb`, `emulator`, `./gradlew`, `sdkmanager`, `avdmanager`, `keytool -list`, `cd`, `sleep`, `grep`.
+`adb`, `emulator`, `./gradlew`, `sdkmanager`, `avdmanager`, `keytool -list`, `cd`, `sleep`, `grep`,
+`git`, `cp`, `mkdir`, `sips` (used to downscale screenshots — see the build/verify loop).
 
 - `adb`, `emulator`, and `./gradlew` are already on PATH (`env.PATH` in settings.json). Call them
   as **bare commands** — NEVER prepend `export PATH=...`.
@@ -59,9 +60,22 @@ Only these command prefixes run without a permission prompt (see `.claude/settin
 1. `cd android && ./gradlew assembleDebug`
 2. `adb install -r app/build/outputs/apk/debug/app-debug.apk`
 3. `adb shell am start -n com.thefoxworks.tzafon/.MainActivity`
-4. `adb exec-out screencap -p > /tmp/tz.png` → view, compare vs design/screenshots
-5. `adb shell input tap X Y` to exercise interactions, then re-screenshot
+4. `adb exec-out screencap -p > /tmp/tz.png` — then **downscale before viewing**:
+   `sips -Z 1600 /tmp/tz.png` (separate Bash call). The Pixel_8 renders at 1080×2400;
+   the raw 2400px height trips the API's many-image 2000px-per-edge cap and silently
+   kills a headless run (this is what crashed the 2026-07-13 build). `sips -Z 1600`
+   shrinks the long edge in place, faithfully — real Pixel-8 layout, just fewer pixels.
+   Then view `/tmp/tz.png` and compare vs design/screenshots.
+5. `adb shell input tap X Y` to exercise interactions, then re-screenshot (step 4, downscale again).
 6. `adb logcat -d | grep -iE 'AndroidRuntime|FATAL'` → catch crashes
+
+**Screenshot soft cap (per milestone).** The many-image 2000px cap only *activates* past
+~20 images in the conversation, so also stay lean: aim for **≤ 8 screenshots per milestone**.
+Downscaling (step 4) removes the per-image edge; the cap keeps you clear of the count edge
+too. Prefer text-based verification where it's authoritative — `gradlew testDebugUnitTest`,
+`adb logcat`, and (for nav/back-stack questions) a temporary `Log.d` read back via
+`adb logcat -d -s <TAG>` — over another screenshot. Screenshot to confirm visual/layout
+outcomes against the design; don't screenshot what a log line already proves.
 
 ## Testing (`NFR-TEST-1`)
 - JUnit domain tests: recurrence oracle-parity suite (port `recurrence.test.js`) + state-machine

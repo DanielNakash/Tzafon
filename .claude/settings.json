@@ -16,7 +16,8 @@
       "Bash(grep *)",
       "Bash(git *)",
       "Bash(cp *)",
-      "Bash(mkdir *)"
+      "Bash(mkdir *)",
+      "Bash(sips *)"
     ]
   }
 }
