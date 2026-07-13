@@ -90,6 +90,12 @@ class VmFactory(private val container: AppContainer) : ViewModelProvider.Factory
     }
 }
 
+/** FR-NAV-6.1 / FR-NAV-9 — routes that are reference views (open on top of a tab), not tabs. */
+internal val REFERENCE_ROUTES = setOf("alltasks", "backlog")
+
+/** FR-NAV-9 — is the current top a reference view (opened on top of a tab)? */
+internal fun isReferenceView(currentRoute: String?): Boolean = currentRoute in REFERENCE_ROUTES
+
 @Composable
 fun TzafonNavHost(container: AppContainer) {
     val nav = rememberNavController()
@@ -103,11 +109,27 @@ fun TzafonNavHost(container: AppContainer) {
     val start = remember { if (welcomeSeen == true) Tab.TODAY.route else "welcome" }
 
     fun goTab(tab: Tab) {
+        // FR-NAV-9 — a reference view (All Tasks / Backlog) opened on top of a tab must be
+        // dropped from the stack BEFORE the tab switch. Otherwise the standard
+        // popUpTo(TODAY){saveState} + restoreState machinery stashes it under a tab's key
+        // and restores it on the next tab tap — the "reference-view leak" (FR-2026-07-12-d).
+        // Popping it first returns to a clean tab base; the normal save/restore switch then
+        // preserves genuine within-tab state (scroll, expanded rows — FR-NAV-9.2).
+        if (isReferenceView(nav.currentBackStackEntry?.destination?.route)) {
+            nav.popBackStack()
+        }
         nav.navigate(tab.route) {
             popUpTo(Tab.TODAY.route) { saveState = true }
             launchSingleTop = true
             restoreState = true
         }
+    }
+
+    // FR-NAV-9.6 — one call shape for opening a reference view from anywhere.
+    // launchSingleTop avoids stacking a second copy of the same reference view
+    // (e.g. All Tasks → Backlog → All Tasks lateral hops, FR-NAV-9.7).
+    fun goRef(route: String) {
+        nav.navigate(route) { launchSingleTop = true }
     }
 
     // presetToday: FR-TODAY-7 — a NEW task added from the Today view defaults its
@@ -135,7 +157,7 @@ fun TzafonNavHost(container: AppContainer) {
     // FR-NAV-6.1 — reference views (All Tasks, Backlog) show the bar as a
     // wayfinder with no tab active, so the primary destinations stay one tap
     // away without pretending the reference view is a primary tab.
-    val showBottomNav = activeTab != null || currentRoute == "alltasks" || currentRoute == "backlog"
+    val showBottomNav = activeTab != null || currentRoute in REFERENCE_ROUTES
 
     Box(Modifier.fillMaxSize()) {
         NavHost(
@@ -158,8 +180,8 @@ fun TzafonNavHost(container: AppContainer) {
                     onOpenTask = { id -> openEditor(taskId = id) },
                     onExpandAdd = { title -> openEditor(title = title, presetToday = true) },
                     onOpenPlanning = { goTab(Tab.PLANNING) },
-                    onOpenAllTasks = { nav.navigate("alltasks") },
-                    onOpenBacklog = { nav.navigate("backlog") },
+                    onOpenAllTasks = { goRef("alltasks") },
+                    onOpenBacklog = { goRef("backlog") },
                     onOpenSettings = { nav.navigate("settings") },
                     onOpenAbout = { nav.navigate("about") },
                     onOpenReview = { nav.navigate("review") },
@@ -172,8 +194,8 @@ fun TzafonNavHost(container: AppContainer) {
                     vm = vm,
                     onOpenTask = { id -> openEditor(taskId = id) },
                     onExpandAdd = { title -> openEditor(title = title) },
-                    onOpenAllTasks = { nav.navigate("alltasks") },
-                    onOpenBacklog = { nav.navigate("backlog") },
+                    onOpenAllTasks = { goRef("alltasks") },
+                    onOpenBacklog = { goRef("backlog") },
                     onOpenSettings = { nav.navigate("settings") },
                     onOpenAbout = { nav.navigate("about") },
                 )
@@ -183,8 +205,8 @@ fun TzafonNavHost(container: AppContainer) {
                 val vm: HabitsViewModel = viewModel(factory = VmFactory(container))
                 HabitsScreen(
                     vm = vm,
-                    onOpenAllTasks = { nav.navigate("alltasks") },
-                    onOpenBacklog = { nav.navigate("backlog") },
+                    onOpenAllTasks = { goRef("alltasks") },
+                    onOpenBacklog = { goRef("backlog") },
                     onOpenSettings = { nav.navigate("settings") },
                     onOpenAbout = { nav.navigate("about") },
                 )
@@ -193,8 +215,8 @@ fun TzafonNavHost(container: AppContainer) {
                 val vm: DirectionsViewModel = viewModel(factory = VmFactory(container))
                 DirectionsScreen(
                     vm = vm,
-                    onOpenAllTasks = { nav.navigate("alltasks") },
-                    onOpenBacklog = { nav.navigate("backlog") },
+                    onOpenAllTasks = { goRef("alltasks") },
+                    onOpenBacklog = { goRef("backlog") },
                     onOpenSettings = { nav.navigate("settings") },
                     onOpenAbout = { nav.navigate("about") },
                 )
@@ -203,8 +225,8 @@ fun TzafonNavHost(container: AppContainer) {
                 val vm: JourneyViewModel = viewModel(factory = VmFactory(container))
                 JourneyScreen(
                     vm = vm,
-                    onOpenAllTasks = { nav.navigate("alltasks") },
-                    onOpenBacklog = { nav.navigate("backlog") },
+                    onOpenAllTasks = { goRef("alltasks") },
+                    onOpenBacklog = { goRef("backlog") },
                     onOpenSettings = { nav.navigate("settings") },
                     onOpenAbout = { nav.navigate("about") },
                 )
@@ -217,7 +239,7 @@ fun TzafonNavHost(container: AppContainer) {
                     vm = vm,
                     onOpenTask = { id -> openEditor(taskId = id) },
                     onAdd = { openEditor() },
-                    onOpenBacklog = { nav.navigate("backlog") { launchSingleTop = true } },
+                    onOpenBacklog = { goRef("backlog") },
                     onOpenAbout = { nav.navigate("about") },
                 )
             }
@@ -230,7 +252,7 @@ fun TzafonNavHost(container: AppContainer) {
                     // FR-BACKLOG-5.2 — the expand-to-full-form route from Backlog
                     // opens the editor pre-set to Backlog state / undated.
                     onExpandAdd = { title -> openEditor(title = title, presetBacklog = true) },
-                    onOpenAllTasks = { nav.navigate("alltasks") },
+                    onOpenAllTasks = { goRef("alltasks") },
                     onOpenSettings = { nav.navigate("settings") },
                     onOpenAbout = { nav.navigate("about") },
                 )
