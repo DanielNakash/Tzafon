@@ -60,6 +60,7 @@ if ! adb devices | grep -q "emulator-"; then
 fi
 
 # --- (5) Run the builder headless. ---
+LOG_LINES_BEFORE="$(wc -l < "$LOG")"
 echo "$ISO  BUILD  start   groomed-work-found" >> "$LOG"
 "$HOME/.local/bin/claude" -p "/build-next-version" \
   --permission-mode acceptEdits \
@@ -69,6 +70,19 @@ BUILD_RC=$?
 # --- (6) Only shut down an emulator WE started. ---
 if [ "$STARTED_EMU" -eq 1 ]; then
   adb emu kill 2>/dev/null || true
+fi
+
+# --- (7) Guarantee a terminal ledger line. On a clean run the builder AGENT
+#     appends its own "BUILD shipped …" / "BUILD failed …" line (skill step 10).
+#     If the agent's Claude session died mid-run — e.g. the image/context limit
+#     that silently killed the 2026-07-13 run — no such line exists and the
+#     ledger shows only "start" with no outcome. Detect that gap and record an
+#     explicit "BUILD crashed" line, surfacing the build log's last line (usually
+#     the crash reason) so the failure is legible without opening the log.
+END_ISO="$(date +%Y-%m-%dT%H:%M:%S%z)"
+if ! tail -n +"$((LOG_LINES_BEFORE + 1))" "$LOG" | grep -qE 'BUILD[[:space:]]+(shipped|failed)'; then
+  REASON="$(grep -v '^[[:space:]]*$' "$LOG_DIR/build-$STAMP.log" 2>/dev/null | tail -n1 | cut -c1-200)"
+  echo "$END_ISO  BUILD  crashed  rc=$BUILD_RC no-outcome — logs/build-$STAMP.log: ${REASON:-<empty log>}" >> "$LOG"
 fi
 
 exit $BUILD_RC
