@@ -104,6 +104,10 @@ fun DirectionsScreen(
     var updateFor by remember { mutableStateOf<Goal?>(null) }
     var celebrate by remember { mutableStateOf<Goal?>(null) }
     var menu by remember { mutableStateOf(false) }
+    // FR-DIR-8.3 — "Connect an existing goal" picker (themeId in scope).
+    var connectFor by remember { mutableStateOf<Theme?>(null) }
+    // FR-DIR-8.3 — orphan → primary vs. serves-also prompt.
+    var orphanConnect by remember { mutableStateOf<Pair<Goal, Theme>?>(null) }
 
     Box(Modifier.fillMaxSize().background(Den.surface)) {
         Column(Modifier.fillMaxSize()) {
@@ -161,12 +165,14 @@ fun DirectionsScreen(
                                     onEdit = { editingTheme = entry.theme },
                                     onArchive = { archiveFor = entry.theme },
                                     onAddGoal = { goalEditor = null to entry.theme.id },
+                                    onConnectGoal = { connectFor = entry.theme },
                                     onAddHabit = { habitEditor = null to entry.theme.id },
                                     onOpenGoal = { goalEditor = it to entry.theme.id },
                                     onToggleStep = { g, i -> vm.toggleStep(g, i) },
                                     onUpdate = { updateFor = it },
                                     onComplete = { celebrate = it },
                                     onFreeze = { vm.setGoalState(it, GoalState.FROZEN) },
+                                    onUnlinkShared = { g -> vm.unlinkGoalFromTheme(g, entry.theme.id) },
                                     onEditHabit = { habitEditor = it to entry.theme.id },
                                 )
                             } else {
@@ -254,12 +260,12 @@ fun DirectionsScreen(
     if (creatingHubGoal) {
         GoalEditorSheet(
             initial = null,
-            onSave = { vm.saveGoal(it, null) },
+            onSave = { vm.saveGoal(it) },
             onDelete = { vm.deleteGoal(it) },
             onComplete = { celebrate = it },
             onClose = { creatingHubGoal = false },
-            showThemePicker = true,
             activeThemes = state.active.map { it.theme },
+            allThemes = state.themesById.values.toList(),
         )
     }
 
@@ -295,10 +301,15 @@ fun DirectionsScreen(
     goalEditor?.let { (goal, themeId) ->
         GoalEditorSheet(
             initial = goal,
-            onSave = { vm.saveGoal(it, themeId) },
+            onSave = { vm.saveGoal(it) },
             onDelete = { vm.deleteGoal(it) },
             onComplete = { celebrate = it },
             onClose = { goalEditor = null },
+            activeThemes = state.active.map { it.theme },
+            allThemes = state.themesById.values.toList(),
+            // FR-DIR-8.5 — the "Add a goal to this theme" route prefills
+            // the theme as primary and collapses serves-also.
+            nestedThemeId = if (goal == null) themeId else null,
         )
     }
 
@@ -327,6 +338,33 @@ fun DirectionsScreen(
             onEnjoy = { vm.completeGoal(g); celebrate = null },
             onFollowOn = { vm.completeGoal(g); celebrate = null; goalEditor = null to g.primaryThemeId },
             onMakeHabit = { vm.completeGoal(g); celebrate = null; habitEditor = null to g.primaryThemeId },
+        )
+    }
+
+    connectFor?.let { theme ->
+        ConnectGoalSheet(
+            theme = theme,
+            candidates = state.allOngoingGoals.filter { theme.id !in it.themeIds },
+            themesById = state.themesById,
+            onPick = { goal ->
+                if (goal.primaryThemeId == null) {
+                    orphanConnect = goal to theme
+                } else {
+                    vm.linkGoalAsShared(goal, theme.id)
+                }
+                connectFor = null
+            },
+            onClose = { connectFor = null },
+        )
+    }
+
+    orphanConnect?.let { (goal, theme) ->
+        OrphanConnectPrompt(
+            goal = goal,
+            theme = theme,
+            onMakePrimary = { vm.linkGoalAsPrimary(goal, theme.id); orphanConnect = null },
+            onServesAlso = { vm.linkGoalAsShared(goal, theme.id); orphanConnect = null },
+            onClose = { orphanConnect = null },
         )
     }
 
@@ -502,12 +540,14 @@ private fun ExpandedTheme(
     onEdit: () -> Unit,
     onArchive: () -> Unit,
     onAddGoal: () -> Unit,
+    onConnectGoal: () -> Unit,
     onAddHabit: () -> Unit,
     onOpenGoal: (Goal) -> Unit,
     onToggleStep: (Goal, Int) -> Unit,
     onUpdate: (Goal) -> Unit,
     onComplete: (Goal) -> Unit,
     onFreeze: (Goal) -> Unit,
+    onUnlinkShared: (Goal) -> Unit,
     onEditHabit: (Habit) -> Unit,
 ) {
     val accent = accentFor(entry.theme)
@@ -597,12 +637,17 @@ private fun ExpandedTheme(
                 )
             }
             AddRow("Add a goal to this theme", accent, onAddGoal)
+            AddRow("Connect an existing goal", accent, onConnectGoal)
             if (entry.sharedGoals.isNotEmpty()) {
-                Text(
-                    "+ shared goals (${entry.sharedGoals.size}) · ${entry.sharedGoals.joinToString { it.title }}",
-                    style = TextStyle(fontFamily = DenType.mono, fontSize = 10.sp),
-                    color = Den.faint,
-                )
+                SectionLabel("Also served here", color = accent, modifier = Modifier.padding(top = 6.dp))
+                entry.sharedGoals.forEach { g ->
+                    SharedGoalRow(
+                        goal = g,
+                        accent = accent,
+                        onOpen = { onOpenGoal(g) },
+                        onUnlink = { onUnlinkShared(g) },
+                    )
+                }
             }
 
             SectionLabel("Habits", color = accent, modifier = Modifier.padding(top = 4.dp))
@@ -651,6 +696,54 @@ private fun HabitChip(h: Habit, accent: Color, onOpen: () -> Unit) {
             style = TextStyle(fontFamily = DenType.mono, fontSize = 10.sp),
             color = Den.muted,
         )
+    }
+}
+
+/**
+ * FR-DIR-8.2/8.7 — a shared-served goal appears as a compact card with an
+ * unlink affordance. The unlink X removes only *this* theme from the goal's
+ * themeIds; the goal keeps its primary and its other shares.
+ */
+@Composable
+private fun SharedGoalRow(
+    goal: Goal,
+    accent: Color,
+    onOpen: () -> Unit,
+    onUnlink: () -> Unit,
+) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(10.dp))
+            .background(Den.card)
+            .border(1.dp, Den.line, RoundedCornerShape(10.dp))
+            .padding(horizontal = 12.dp, vertical = 9.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(9.dp),
+    ) {
+        TzIcons.Target(14.dp, accent)
+        Column(Modifier.weight(1f).pressable(onOpen)) {
+            Text(
+                goal.title,
+                style = TextStyle(fontFamily = DenType.body, fontSize = 13.5.sp, fontWeight = FontWeight.Medium).contentDir(),
+                color = Den.ink,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                "SHARED · ${goal.pct()}%",
+                style = TextStyle(fontFamily = DenType.mono, fontSize = 9.5.sp),
+                color = Den.faint,
+                modifier = Modifier.padding(top = 2.dp),
+            )
+        }
+        Box(
+            Modifier
+                .clip(RoundedCornerShape(999.dp))
+                .pressable(onUnlink)
+                .semantics { contentDescription = "Unlink from theme" }
+                .padding(6.dp),
+        ) { TzIcons.X(12.dp, Den.faint) }
     }
 }
 
@@ -849,6 +942,127 @@ private fun Modifier.semanticsCd(cd: String): Modifier =
             this.contentDescription = cd
         },
     )
+
+/**
+ * FR-DIR-8.3 — pick an existing goal to link to this theme. Orphans sort
+ * first (empty state resolved with a single tap); themed goals list next
+ * with a compact "primary: X" line so the user knows what they're linking to.
+ * Goals already serving this theme are pre-filtered out by the caller.
+ */
+@Composable
+internal fun ConnectGoalSheet(
+    theme: Theme,
+    candidates: List<Goal>,
+    themesById: Map<String, Theme>,
+    onPick: (Goal) -> Unit,
+    onClose: () -> Unit,
+) {
+    val (orphans, themed) = candidates.partition { it.primaryThemeId == null }
+    DenSheet(title = "Connect an existing goal", onClose = onClose) {
+        Column {
+            Text(
+                "Add a goal to “${theme.name}” without leaving the board.",
+                style = TextStyle(fontFamily = DenType.body, fontSize = 13.sp, lineHeight = 18.5.sp),
+                color = Den.muted,
+                modifier = Modifier.padding(bottom = 10.dp),
+            )
+            if (orphans.isEmpty() && themed.isEmpty()) {
+                Text(
+                    "No other ongoing goals to connect. Add one from this theme instead.",
+                    style = TextStyle(fontFamily = DenType.body, fontSize = 13.sp),
+                    color = Den.faint,
+                    modifier = Modifier.padding(vertical = 20.dp),
+                )
+            } else {
+                if (orphans.isNotEmpty()) {
+                    SectionLabel("Without a theme")
+                    Column(Modifier.padding(top = 6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        orphans.forEach { g ->
+                            ConnectCandidateRow(goal = g, sub = "ORPHAN", onClick = { onPick(g) })
+                        }
+                    }
+                }
+                if (themed.isNotEmpty()) {
+                    SectionLabel("From another theme", modifier = Modifier.padding(top = if (orphans.isEmpty()) 0.dp else 14.dp))
+                    Column(Modifier.padding(top = 6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        themed.forEach { g ->
+                            val primaryName = themesById[g.primaryThemeId]?.name?.uppercase() ?: "—"
+                            ConnectCandidateRow(goal = g, sub = "PRIMARY · $primaryName", onClick = { onPick(g) })
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ConnectCandidateRow(goal: Goal, sub: String, onClick: () -> Unit) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(11.dp))
+            .background(Den.card)
+            .border(1.dp, Den.line, RoundedCornerShape(11.dp))
+            .pressable(onClick)
+            .padding(horizontal = 13.dp, vertical = 11.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(11.dp),
+    ) {
+        TzIcons.Target(15.dp, Den.rust)
+        Column(Modifier.weight(1f)) {
+            Text(
+                goal.title,
+                style = TextStyle(fontFamily = DenType.body, fontSize = 14.sp, fontWeight = FontWeight.Medium).contentDir(),
+                color = Den.ink,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                sub,
+                style = TextStyle(fontFamily = DenType.mono, fontSize = 9.5.sp, letterSpacing = 0.3.sp),
+                color = Den.faint,
+                modifier = Modifier.padding(top = 2.dp),
+            )
+        }
+        TzIcons.Chevron(15.dp, Den.faint, dir = TzIcons.Dir.RIGHT)
+    }
+}
+
+/**
+ * FR-DIR-8.3 — when the picked goal has no primary theme, ask whether this
+ * theme should *become* its primary or just be a serves-also. Two choices,
+ * no default: the difference between them (attribution vs. shared credit)
+ * matters enough to be explicit.
+ */
+@Composable
+internal fun OrphanConnectPrompt(
+    goal: Goal,
+    theme: Theme,
+    onMakePrimary: () -> Unit,
+    onServesAlso: () -> Unit,
+    onClose: () -> Unit,
+) {
+    DenSheet(title = "How should it belong?", onClose = onClose) {
+        Column {
+            Text(
+                "“${goal.title}” has no primary theme yet. Give it one now, or just add “${theme.name}” to the list of themes it serves.",
+                style = TextStyle(fontFamily = DenType.body, fontSize = 13.5.sp, lineHeight = 19.sp),
+                color = Den.muted,
+                modifier = Modifier.padding(bottom = 14.dp),
+            )
+            com.thefoxworks.tzafon.ui.components.SheetPrimaryButton(
+                label = "Make “${theme.name}” its primary",
+                onClick = onMakePrimary,
+            )
+            com.thefoxworks.tzafon.ui.components.SheetGhostButton(
+                label = "Just serves also",
+                modifier = Modifier.padding(top = 9.dp),
+                onClick = onServesAlso,
+            )
+        }
+    }
+}
 
 private fun fmt(v: Double): String =
     if (v % 1.0 == 0.0) "%,d".format(v.toLong()) else v.toString()

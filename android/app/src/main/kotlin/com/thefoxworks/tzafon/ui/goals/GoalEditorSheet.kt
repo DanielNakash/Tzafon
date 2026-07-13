@@ -24,6 +24,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -34,6 +36,8 @@ import com.thefoxworks.tzafon.domain.model.Goal
 import com.thefoxworks.tzafon.domain.model.GoalStep
 import com.thefoxworks.tzafon.domain.model.GoalType
 import com.thefoxworks.tzafon.domain.model.Theme
+import com.thefoxworks.tzafon.domain.model.ThemeState
+import com.thefoxworks.tzafon.domain.themes.GoalLinkLogic
 import com.thefoxworks.tzafon.ui.components.DenSheet
 import com.thefoxworks.tzafon.ui.components.SectionLabel
 import com.thefoxworks.tzafon.ui.components.SheetGhostButton
@@ -58,13 +62,25 @@ fun GoalEditorSheet(
     onComplete: (Goal) -> Unit,
     onClose: () -> Unit,
     /**
-     * FR-DIR-7.3 — the hub-level "Add a goal" route is not scoped to a single
-     * theme (unlike the nested "Add a goal to this theme" route). When true,
-     * the sheet renders a theme picker so the user chooses a primaryThemeId at
-     * save time (including a "no theme (orphan)" option).
+     * FR-DIR-8.4 — active themes are the only ones selectable in the picker
+     * (both primary and serves-also). Upcoming/archived themes never appear
+     * as picker options, but if the goal already serves one (from before the
+     * theme's state changed), it renders as a read-only annotated chip.
      */
-    showThemePicker: Boolean = false,
     activeThemes: List<Theme> = emptyList(),
+    /**
+     * All themes (any state). Used to render read-only annotated chips
+     * for goals already serving an upcoming/archived theme.
+     */
+    allThemes: List<Theme> = emptyList(),
+    /**
+     * FR-DIR-8.5 — when the sheet is opened via the nested "Add a goal to
+     * this theme" route, the theme is prefilled as primary and the
+     * serves-also multi-select starts collapsed (expandable). Everywhere
+     * else — hub-level create and edit-mode — the serves-also section is
+     * visible by default.
+     */
+    nestedThemeId: String? = null,
 ) {
     var title by remember { mutableStateOf(initial?.title ?: "") }
     var type by remember { mutableStateOf(initial?.type ?: GoalType.STEPPED) }
@@ -76,7 +92,15 @@ fun GoalEditorSheet(
     var currentText by remember { mutableStateOf(initial?.currentQty?.takeIf { it > 0 }?.let(::fmtNum) ?: "") }
     var unit by remember { mutableStateOf(initial?.unit ?: "") }
     var commitment by remember { mutableStateOf(initial?.commitment ?: "") }
-    var pickedThemeId by remember { mutableStateOf<String?>(initial?.primaryThemeId) }
+    // FR-DIR-8.4 — primary + serves-also selection state, driven by GoalLinkLogic
+    // so promotion semantics stay testable.
+    val initialPrimary = initial?.primaryThemeId ?: nestedThemeId
+    var linkSel by remember {
+        mutableStateOf(GoalLinkLogic.fromGoal(initialPrimary, initial?.themeIds ?: emptyList()))
+    }
+    // FR-DIR-8.5 — nested create route collapses serves-also by default; edit
+    // and hub-create show it expanded.
+    var extraExpanded by remember { mutableStateOf(!(nestedThemeId != null && initial == null)) }
     var confirmDelete by remember { mutableStateOf(false) }
 
     DenSheet(
@@ -232,16 +256,86 @@ fun GoalEditorSheet(
                 }
             }
 
-            if (showThemePicker) {
-                SectionLabel("Theme", modifier = Modifier.padding(top = 14.dp))
-                FlowRow(
-                    Modifier.padding(top = 6.dp),
-                    horizontalArrangement = Arrangement.spacedBy(7.dp),
-                    verticalArrangement = Arrangement.spacedBy(7.dp),
-                ) {
-                    TypeChip("No theme", pickedThemeId == null) { pickedThemeId = null }
-                    activeThemes.forEach { t ->
-                        TypeChip(t.name, pickedThemeId == t.id) { pickedThemeId = t.id }
+            // FR-DIR-8.4 — the theme picker is always visible now, in every
+            // route (create, edit, nested-from-theme). Primary theme is a
+            // single-select radio row (plus "No theme (orphan)"); serves-also
+            // is a multi-select underneath.
+            SectionLabel(
+                "Primary theme",
+                modifier = Modifier.padding(top = 14.dp),
+            )
+            FlowRow(
+                Modifier
+                    .padding(top = 6.dp)
+                    .semantics { contentDescription = "Primary theme" },
+                horizontalArrangement = Arrangement.spacedBy(7.dp),
+                verticalArrangement = Arrangement.spacedBy(7.dp),
+            ) {
+                TypeChip("No theme", linkSel.primaryId == null) {
+                    linkSel = GoalLinkLogic.tapOrphan(linkSel)
+                }
+                activeThemes.forEach { t ->
+                    TypeChip(t.name, linkSel.primaryId == t.id) {
+                        linkSel = GoalLinkLogic.tapPrimary(linkSel, t.id)
+                    }
+                }
+            }
+
+            // Serves also (multi-select). Only active themes are togglable;
+            // goals already serving an upcoming/archived theme show that
+            // theme as a read-only annotated chip (FR-DIR-8 [DECISION]).
+            val servesLabel = if (extraExpanded) "Also serves" else "Also serves…"
+            Row(
+                Modifier
+                    .padding(top = 14.dp)
+                    .pressable { extraExpanded = !extraExpanded },
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                SectionLabel(servesLabel)
+                Text(
+                    if (extraExpanded) "▾" else "▸",
+                    style = TextStyle(fontFamily = DenType.mono, fontSize = 11.sp),
+                    color = Den.muted,
+                )
+            }
+            if (extraExpanded) {
+                val eligibleActive = activeThemes.filter { it.id != linkSel.primaryId }
+                val nonActiveServed = (initial?.themeIds ?: emptyList())
+                    .filter { id ->
+                        id != linkSel.primaryId &&
+                            allThemes.any { it.id == id && it.state != ThemeState.ACTIVE }
+                    }
+                    .distinct()
+                if (eligibleActive.isEmpty() && nonActiveServed.isEmpty()) {
+                    Text(
+                        "No other active themes to serve.",
+                        style = TextStyle(fontFamily = DenType.body, fontSize = 12.5.sp),
+                        color = Den.faint,
+                        modifier = Modifier.padding(top = 6.dp),
+                    )
+                } else {
+                    FlowRow(
+                        Modifier
+                            .padding(top = 6.dp)
+                            .semantics { contentDescription = "Also serves" },
+                        horizontalArrangement = Arrangement.spacedBy(7.dp),
+                        verticalArrangement = Arrangement.spacedBy(7.dp),
+                    ) {
+                        eligibleActive.forEach { t ->
+                            TypeChip(t.name, t.id in linkSel.extraServes) {
+                                linkSel = GoalLinkLogic.toggleExtra(linkSel, t.id)
+                            }
+                        }
+                        nonActiveServed.forEach { id ->
+                            val t = allThemes.first { it.id == id }
+                            val stateLabel = when (t.state) {
+                                ThemeState.UPCOMING -> "upcoming"
+                                ThemeState.ARCHIVED -> "archived"
+                                ThemeState.ACTIVE -> "active"
+                            }
+                            ReadOnlyChip("${t.name} · $stateLabel")
+                        }
                     }
                 }
             }
@@ -258,6 +352,10 @@ fun GoalEditorSheet(
                 enabled = title.isNotBlank(),
                 modifier = Modifier.padding(top = 18.dp),
             ) {
+                // FR-DIR-8.4/8.6/8.10 — write primaryThemeId and themeIds
+                // authoritatively. Non-active themes the goal was already
+                // serving are preserved: they were seeded into extraServes
+                // via GoalLinkLogic.fromGoal at open time.
                 onSave(
                     Goal(
                         id = initial?.id ?: "",
@@ -271,7 +369,8 @@ fun GoalEditorSheet(
                         state = initial?.state ?: com.thefoxworks.tzafon.domain.model.GoalState.ONGOING,
                         deadline = initial?.deadline,
                         commitment = commitment.trim().takeIf { it.isNotBlank() },
-                        primaryThemeId = if (showThemePicker) pickedThemeId else initial?.primaryThemeId,
+                        primaryThemeId = linkSel.primaryId,
+                        themeIds = linkSel.themeIds(),
                         lastActivityAt = initial?.lastActivityAt ?: 0,
                         completedAt = initial?.completedAt,
                         createdAt = initial?.createdAt ?: 0,
@@ -325,6 +424,29 @@ fun CompletionSheet(
             SheetGhostButton(label = "Set a follow-on goal", modifier = Modifier.padding(top = 9.dp)) { onFollowOn() }
             SheetGhostButton(label = "Just enjoy it", modifier = Modifier.padding(top = 9.dp)) { onEnjoy() }
         }
+    }
+}
+
+/**
+ * FR-DIR-8 [DECISION] — non-active themes a goal already serves render as
+ * read-only annotated chips. Not tappable; they exist as a signal, not a
+ * control. Editing a goal off an archived/upcoming theme happens by
+ * re-activating that theme or unlinking from the theme side.
+ */
+@Composable
+private fun ReadOnlyChip(label: String) {
+    Box(
+        Modifier
+            .clip(RoundedCornerShape(999.dp))
+            .background(Den.line.a(0.30f))
+            .border(1.dp, Den.line, RoundedCornerShape(999.dp))
+            .padding(horizontal = 11.dp, vertical = 6.dp),
+    ) {
+        Text(
+            label,
+            style = TextStyle(fontFamily = DenType.mono, fontSize = 10.sp, letterSpacing = 0.3.sp),
+            color = Den.faint,
+        )
     }
 }
 

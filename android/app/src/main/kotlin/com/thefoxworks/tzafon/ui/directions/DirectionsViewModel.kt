@@ -45,6 +45,8 @@ data class DirectionsUiState(
     val upcoming: List<Theme> = emptyList(),
     val archived: List<Theme> = emptyList(),
     val orphanGoals: List<Goal> = emptyList(),
+    /** FR-DIR-8.3 — full ongoing-goal pool for the "Connect an existing goal" picker. */
+    val allOngoingGoals: List<Goal> = emptyList(),
     val enginesByGoal: Map<String, List<Habit>> = emptyMap(),
     val themesById: Map<String, Theme> = emptyMap(),
     /** FR-DIR-6 — an arrived upcoming theme needs a slot and none is free */
@@ -171,6 +173,7 @@ class DirectionsViewModel(
                 it.state == GoalState.ONGOING &&
                     (it.primaryThemeId == null || it.primaryThemeId !in activeThemeIds)
             },
+            allOngoingGoals = goals.filter { it.state == GoalState.ONGOING },
             enginesByGoal = goals.associate { g -> g.id to habits.filter { it.goalId == g.id } },
             themesById = themes.associateBy { it.id },
             arrivalPrompt = arrivals,
@@ -235,7 +238,12 @@ class DirectionsViewModel(
 
     // ── goal / habit adds from the board (the auto-bridge) ────
 
-    fun saveGoal(goal: Goal, themeId: String?) {
+    /**
+     * Persist a goal. The editor writes `primaryThemeId` and `themeIds`
+     * authoritatively (FR-DIR-8.4); this method preserves that shape and
+     * only handles id/step endowment for new goals.
+     */
+    fun saveGoal(goal: Goal) {
         viewModelScope.launch {
             val now = System.currentTimeMillis()
             val toSave = if (goal.id.isBlank()) {
@@ -250,13 +258,46 @@ class DirectionsViewModel(
                     createdAt = now,
                 )
             } else goal
+            goalRepo.upsert(toSave)
+        }
+    }
+
+    /**
+     * FR-DIR-8.3 (orphan → primary) — take an orphan goal and make this
+     * theme its primary. Also adds the theme to `themeIds` per DM-GOAL-6.
+     */
+    fun linkGoalAsPrimary(goal: Goal, themeId: String) {
+        viewModelScope.launch {
             goalRepo.upsert(
-                if (themeId != null) {
-                    toSave.copy(
-                        primaryThemeId = toSave.primaryThemeId ?: themeId,
-                        themeIds = (toSave.themeIds + themeId).distinct(),
-                    )
-                } else toSave,
+                goal.copy(
+                    primaryThemeId = themeId,
+                    themeIds = (goal.themeIds + themeId).distinct(),
+                ),
+            )
+        }
+    }
+
+    /**
+     * FR-DIR-8.2/8.3 — add this theme to the goal's serves set without
+     * touching primaryThemeId. Idempotent.
+     */
+    fun linkGoalAsShared(goal: Goal, themeId: String) {
+        viewModelScope.launch {
+            goalRepo.upsert(
+                goal.copy(themeIds = (goal.themeIds + themeId).distinct()),
+            )
+        }
+    }
+
+    /**
+     * FR-DIR-8.7 — remove a theme from the goal's serves set. Called only
+     * from the theme's shared-cluster affordance, so it never targets the
+     * goal's primary theme (the caller filters that case).
+     */
+    fun unlinkGoalFromTheme(goal: Goal, themeId: String) {
+        viewModelScope.launch {
+            goalRepo.upsert(
+                goal.copy(themeIds = goal.themeIds.filter { it != themeId }),
             )
         }
     }
