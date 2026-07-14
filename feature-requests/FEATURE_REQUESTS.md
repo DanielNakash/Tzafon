@@ -171,24 +171,32 @@ Example:
 This may happen to multiple Views following the same procedure.
 
 ## FR-2026-07-13-a
-status: groomed
+status: implemented
+implemented: 2.6.0 / 7584a43
+requirements: FR-PLAN-5
 target: 2.6.0
 For overdue recurring tasks, if the next recurrence is today, hide the slipped task from the Planning View.
 For example, a task "clean desk" is set to recur once every 2 days, today is Tuesday, and the task from Sunday was left open. The expectation of this feature request is that the Sunday instance of "clean desk" shall be hidden in the Planning View.
 
 ## FR-2026-07-13-b
-status: groomed
+status: implemented
+implemented: 2.6.0 / a24082f
+requirements: FR-HAB-9
 target: 2.6.0
 Allow to undo-logged habit. For example, I logged today by mistake while I meant to log yesterday. Currently, once a day is logged, it cannot be unlogged.
 
 ## FR-2026-07-13-c
-status: groomed
+status: implemented
+implemented: 2.6.0 / 69354bc
+requirements: FR-DESIGN-4, DM-PREF-1, FR-SET-4
 target: 2.6.0
 Add a capability to choose from a different color palette. This option shall be available from the Settings View.
 The default shall be the current palette. There shall also be a few additional palettes based on blue, green, magenta and teal (each is a base for a different palette). Verify that all the relevant items are affected by the change in theme - background, text color, objects, buttons etc.
 
 ## FR-2026-07-13-d
-status: groomed
+status: implemented
+implemented: 2.6.0 / 24fe8d3
+requirements: FR-DESIGN-3.5
 target: 2.6.0
 Please add RTL support also to the tasks in the Backlog View.
 

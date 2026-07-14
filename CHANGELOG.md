@@ -9,6 +9,32 @@ to the versioned requirements documents in the repo.
 
 ---
 
+## [2.6.0] — 2026-07-14
+
+### Added
+- **Choose your colour palette** (`FR-DESIGN-4`, `FR-SET-4`, `DM-PREF-1`) — Settings gains an
+  **Appearance → Palette** row with five hand-tuned palettes: **Den** (the Fox Works original and
+  default), **Blue**, **Green**, **Magenta**, **Teal**. Pick one and the whole app re-colours
+  instantly — no restart. Each palette is a *translated* Den, not a random hue swap: warm-paper
+  ancestry in the text tones, a distinct completion-green, a distinct overdue colour, and three
+  still-separable theme accents in Directions. The choice is saved on the device (not synced) and
+  survives a restart. Contrast on every text pair meets WCAG AA.
+- **Explicit un-log on every habit surface** (`FR-HAB-9`) — a logged day can now be cleared from
+  anywhere it was logged. The today pill re-labels **“Mark today done” ⇄ “Un-mark today”** on both
+  the collapsed and expanded habit rows (frequency and quantitative). The amount sheet, reopened on
+  an already-logged date, shows a **“Clear this log”** row. The *Log a date…* calendar marks logged
+  days and announces **“Tap to un-log …”** on them. No confirmation dialog, no streak-guilt copy —
+  a mis-log is one tap to undo.
+
+### Changed
+- **Overdue no longer nags about a recurring task whose next turn is already today** (`FR-PLAN-5`) —
+  when a repeating task slipped but the series’ next occurrence is dated today, Planning hides the
+  slipped one from *Overdue* (it’s not a decision — the next one is already on your desk). One-off
+  overdue tasks are unaffected, and the hidden occurrence is still findable in All Tasks.
+- **Right-to-left titles render correctly on the Backlog list** (`FR-DESIGN-3.5`) — a Backlog task
+  titled in Hebrew or Arabic now lays out right-to-left, matching every other task surface. Chrome
+  and TalkBack order are unchanged.
+
 ## [2.5.0] — 2026-07-13
 
 ### Added
@@ -156,6 +182,7 @@ the new name **Tzafon**. Local-first persistence (Room) behind repository interf
 - **Cloud sync (behind the seam)** — Firebase Auth (Google sign-in) and offline-first
   Firestore sync, kept behind the repository interfaces (`M9b`).
 
+[2.6.0]: https://github.com/DanielNakash/Tzafon/releases/tag/v2.6.0
 [2.5.0]: https://github.com/DanielNakash/Tzafon/releases/tag/v2.5.0
 [2.4.0]: https://github.com/DanielNakash/Tzafon/releases/tag/v2.4.0
 [2.3.0]: https://github.com/DanielNakash/Tzafon/releases/tag/v2.3.0
