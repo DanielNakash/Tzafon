@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.thefoxworks.tzafon.domain.model.StateMachine
 import com.thefoxworks.tzafon.domain.model.TaskState
-import com.thefoxworks.tzafon.ui.theme.Den
+import com.thefoxworks.tzafon.ui.theme.Tz
 import com.thefoxworks.tzafon.ui.theme.DenType
 import com.thefoxworks.tzafon.ui.theme.a
 
@@ -51,7 +51,7 @@ fun StateSheet(
             Text(
                 "Every state is reversible. Nothing here is a failure.",
                 style = TextStyle(fontFamily = DenType.body, fontSize = 13.sp),
-                color = Den.muted,
+                color = Tz.colors.muted,
                 modifier = Modifier.padding(top = 3.dp, bottom = 8.dp),
             )
 
@@ -66,21 +66,21 @@ fun StateSheet(
                 }
 
                 StateMachine.Guard.ConfirmFreezeSeries -> GuardPane(
-                    icon = { TzIcons.Frozen(18.dp, Den.frozen) },
+                    icon = { TzIcons.Frozen(18.dp, Tz.colors.frozen) },
                     title = "Freeze the whole series?",
                     body = "This task repeats. Freezing puts the series on ice — no new occurrences until you thaw it. This one stays right here, waiting.",
                     confirmLabel = "Freeze the series",
-                    confirmColor = Den.frozen,
+                    confirmColor = Tz.colors.frozen,
                     onConfirm = { onPick(TaskState.FROZEN); onClose() },
                     onBack = { guard = null },
                 )
 
                 StateMachine.Guard.RecurringCannotBacklog -> GuardPane(
-                    icon = { TzIcons.Moon(18.dp, Den.backlog) },
+                    icon = { TzIcons.Moon(18.dp, Tz.colors.backlog) },
                     title = "A repeating task can't be someday",
                     body = "A live series keeps its rhythm. To park it, freeze it instead — same shelf, easy to thaw.",
                     confirmLabel = "Freeze it instead",
-                    confirmColor = Den.frozen,
+                    confirmColor = Tz.colors.frozen,
                     onConfirm = {
                         val needed = StateMachine.guardFor(current, TaskState.FROZEN, isRecurring)
                         if (needed == null) { onPick(TaskState.FROZEN); onClose() } else guard = needed
@@ -115,17 +115,17 @@ private fun StateList(current: TaskState, isRecurring: Boolean, onSelect: (TaskS
                             Text(
                                 name,
                                 style = TextStyle(fontFamily = DenType.body, fontSize = 15.5.sp, fontWeight = FontWeight.SemiBold),
-                                color = Den.ink,
+                                color = Tz.colors.ink,
                             )
                             if (state == current) {
                                 Box(
-                                    Modifier.border(1.dp, Den.rust.a(0.4f), RoundedCornerShape(4.dp))
+                                    Modifier.border(1.dp, Tz.colors.rust.a(0.4f), RoundedCornerShape(4.dp))
                                         .padding(horizontal = 6.dp, vertical = 1.dp),
                                 ) {
                                     Text(
                                         "CURRENT",
                                         style = TextStyle(fontFamily = DenType.mono, fontSize = 9.5.sp),
-                                        color = Den.rust,
+                                        color = Tz.colors.rust,
                                     )
                                 }
                             }
@@ -133,12 +133,12 @@ private fun StateList(current: TaskState, isRecurring: Boolean, onSelect: (TaskS
                         Text(
                             desc,
                             style = TextStyle(fontFamily = DenType.body, fontSize = 12.5.sp, lineHeight = 17.sp),
-                            color = Den.muted,
+                            color = Tz.colors.muted,
                             modifier = Modifier.padding(top = 2.dp),
                         )
                     }
                 }
-                if (i < states.lastIndex) Box(Modifier.fillMaxWidth().height(1.dp).background(Den.line2))
+                if (i < states.lastIndex) Box(Modifier.fillMaxWidth().height(1.dp).background(Tz.colors.line2))
             }
         }
     }
@@ -160,13 +160,13 @@ private fun GuardPane(
             Text(
                 title,
                 style = TextStyle(fontFamily = DenType.serif, fontSize = 19.sp, fontWeight = FontWeight.SemiBold),
-                color = Den.ink,
+                color = Tz.colors.ink,
             )
         }
         Text(
             body,
             style = TextStyle(fontFamily = DenType.body, fontSize = 14.sp, lineHeight = 21.sp),
-            color = Den.muted,
+            color = Tz.colors.muted,
             modifier = Modifier.padding(top = 8.dp, bottom = 16.dp),
         )
         Row(
@@ -186,7 +186,7 @@ private fun GuardPane(
         Row(
             Modifier.fillMaxWidth().padding(top = 10.dp).height(46.dp)
                 .clip(RoundedCornerShape(13.dp))
-                .border(1.dp, Den.line, RoundedCornerShape(13.dp))
+                .border(1.dp, Tz.colors.line, RoundedCornerShape(13.dp))
                 .pressable(onBack),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
@@ -194,7 +194,7 @@ private fun GuardPane(
             Text(
                 "Back",
                 style = TextStyle(fontFamily = DenType.body, fontSize = 15.sp, fontWeight = FontWeight.SemiBold),
-                color = Den.muted,
+                color = Tz.colors.muted,
             )
         }
     }

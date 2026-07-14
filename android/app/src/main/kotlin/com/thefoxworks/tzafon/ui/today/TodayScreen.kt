@@ -60,7 +60,7 @@ import com.thefoxworks.tzafon.ui.components.TaskRow
 import com.thefoxworks.tzafon.ui.components.TzIcons
 import com.thefoxworks.tzafon.ui.components.pressable
 import com.thefoxworks.tzafon.ui.nav.AppMenuSheet
-import com.thefoxworks.tzafon.ui.theme.Den
+import com.thefoxworks.tzafon.ui.theme.Tz
 import com.thefoxworks.tzafon.ui.theme.DenType
 import com.thefoxworks.tzafon.ui.theme.a
 import com.thefoxworks.tzafon.ui.theme.contentDir
@@ -106,7 +106,7 @@ fun TodayScreen(
     val kicker = "${Dates.WD_FULL[Dates.dayOfWeek(d)]} · ${Dates.MO[d.monthValue - 1]} ${d.dayOfMonth}"
     val pct = if (state.totalCount > 0) state.doneCount * 100f / state.totalCount else 0f
 
-    Box(Modifier.fillMaxSize().background(Den.bg)) {
+    Box(Modifier.fillMaxSize().background(Tz.colors.bg)) {
         Column(Modifier.fillMaxSize()) {
             RustHeader(
                 title = "Today",
@@ -132,28 +132,28 @@ fun TodayScreen(
                             .fillMaxWidth()
                             .padding(top = 14.dp)
                             .clip(RoundedCornerShape(13.dp))
-                            .background(Den.surface)
-                            .border(1.dp, Den.rust.a(0.3f), RoundedCornerShape(13.dp))
+                            .background(Tz.colors.surface)
+                            .border(1.dp, Tz.colors.rust.a(0.3f), RoundedCornerShape(13.dp))
                             .pressable(onOpenReview)
                             .padding(horizontal = 14.dp, vertical = 12.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(11.dp),
                     ) {
-                        Compass(size = 22.dp, ring = Den.rust, needleN = Den.rust, needleS = Den.faint, stroke = 2f)
+                        Compass(size = 22.dp, ring = Tz.colors.rust, needleN = Tz.colors.rust, needleS = Tz.colors.faint, stroke = 2f)
                         Column(Modifier.weight(1f)) {
                             Text(
                                 state.reviewInvite!!,
                                 style = TextStyle(fontFamily = DenType.mono, fontSize = 9.5.sp, letterSpacing = 0.5.sp),
-                                color = Den.rust,
+                                color = Tz.colors.rust,
                             )
                             Text(
                                 "Your week, reflected — then a fresh start.",
                                 style = TextStyle(fontFamily = DenType.serif, fontSize = 15.5.sp, fontWeight = FontWeight.SemiBold),
-                                color = Den.ink,
+                                color = Tz.colors.ink,
                                 modifier = Modifier.padding(top = 2.dp),
                             )
                         }
-                        TzIcons.Chevron(17.dp, Den.rust)
+                        TzIcons.Chevron(17.dp, Tz.colors.rust)
                     }
                 }
 
@@ -175,7 +175,7 @@ fun TodayScreen(
                         text = "That's a full plate today. Want to move a couple to tomorrow? No rush — the list serves you, not the other way round.",
                         modifier = Modifier.padding(top = 12.dp),
                         actions = {
-                            PillButton("REVIEW IN PLANNING", onClick = onOpenPlanning, color = Den.rust)
+                            PillButton("REVIEW IN PLANNING", onClick = onOpenPlanning, color = Tz.colors.rust)
                             PillButton("IT'S FINE", onClick = { vm.dismissOverload() })
                         },
                     )
@@ -188,16 +188,16 @@ fun TodayScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        Compass(size = 17.dp, ring = Den.rust, needleN = Den.rust, needleS = Den.faint, stroke = 2f)
-                        SectionLabel("Today's focus · ${state.focus.size}", color = Den.rust)
-                        Box(Modifier.weight(1f).height(1.dp).background(Den.line))
+                        Compass(size = 17.dp, ring = Tz.colors.rust, needleN = Tz.colors.rust, needleS = Tz.colors.faint, stroke = 2f)
+                        SectionLabel("Today's focus · ${state.focus.size}", color = Tz.colors.rust)
+                        Box(Modifier.weight(1f).height(1.dp).background(Tz.colors.line))
                     }
                     Column(
                         Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(15.dp))
-                            .background(Den.surface)
-                            .border(1.dp, Den.rust.a(0.18f), RoundedCornerShape(15.dp))
+                            .background(Tz.colors.surface)
+                            .border(1.dp, Tz.colors.rust.a(0.18f), RoundedCornerShape(15.dp))
                             .padding(horizontal = 15.dp, vertical = 2.dp),
                     ) {
                         state.focus.forEachIndexed { i, t ->
@@ -233,9 +233,9 @@ fun TodayScreen(
                                 Text(
                                     if (alsoCollapsed) "SHOW" else "COLLAPSE",
                                     style = TextStyle(fontFamily = DenType.mono, fontSize = 10.sp, letterSpacing = 0.4.sp),
-                                    color = Den.faint,
+                                    color = Tz.colors.faint,
                                 )
-                                TzIcons.Chevron(14.dp, Den.faint, modifier = Modifier.rotate(if (alsoCollapsed) 90f else -90f))
+                                TzIcons.Chevron(14.dp, Tz.colors.faint, modifier = Modifier.rotate(if (alsoCollapsed) 90f else -90f))
                             }
                         },
                     )
@@ -260,7 +260,7 @@ fun TodayScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         SectionLabel("This week's priorities · ${state.weekPriorities.size}")
-                        Box(Modifier.weight(1f).height(1.dp).background(Den.line2))
+                        Box(Modifier.weight(1f).height(1.dp).background(Tz.colors.line2))
                     }
                     state.weekPriorities.forEachIndexed { i, t ->
                         TaskRow(
@@ -280,17 +280,17 @@ fun TodayScreen(
                         Modifier.fillMaxWidth().padding(top = 90.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
-                        Compass(size = 44.dp, ring = Den.faint, needleN = Den.rust, needleS = Den.faint, stroke = 1.6f)
+                        Compass(size = 44.dp, ring = Tz.colors.faint, needleN = Tz.colors.rust, needleS = Tz.colors.faint, stroke = 1.6f)
                         Text(
                             "A clear day",
                             style = TextStyle(fontFamily = DenType.serif, fontSize = 21.sp, fontWeight = FontWeight.SemiBold),
-                            color = Den.ink,
+                            color = Tz.colors.ink,
                             modifier = Modifier.padding(top = 14.dp),
                         )
                         Text(
                             "Nothing on the plate. Add one small thing —\nor enjoy the quiet. Both count.",
                             style = TextStyle(fontFamily = DenType.body, fontSize = 13.5.sp, lineHeight = 19.sp),
-                            color = Den.muted,
+                            color = Tz.colors.muted,
                             modifier = Modifier.padding(top = 6.dp),
                             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                         )
@@ -304,14 +304,14 @@ fun TodayScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        TzIcons.Check(14.dp, Den.green, 2.6f)
+                        TzIcons.Check(14.dp, Tz.colors.green, 2.6f)
                         Text(
                             "${state.doneCount} DONE TODAY",
                             style = TextStyle(fontFamily = DenType.mono, fontSize = 11.5.sp, letterSpacing = 0.4.sp),
-                            color = Den.faint,
+                            color = Tz.colors.faint,
                         )
-                        Box(Modifier.weight(1f).height(1.dp).background(Den.line2))
-                        TzIcons.Chevron(16.dp, Den.faint, modifier = Modifier.rotate(if (doneOpen) -90f else 90f))
+                        Box(Modifier.weight(1f).height(1.dp).background(Tz.colors.line2))
+                        TzIcons.Chevron(16.dp, Tz.colors.faint, modifier = Modifier.rotate(if (doneOpen) -90f else 90f))
                     }
                     if (doneOpen) {
                         state.doneToday.forEachIndexed { i, t ->
@@ -381,7 +381,7 @@ private fun FocusItem(
                 Text(
                     t.title,
                     style = TextStyle(fontFamily = DenType.body, fontSize = 16.5.sp, fontWeight = FontWeight.SemiBold, lineHeight = 21.5.sp).contentDir(),
-                    color = Den.ink,
+                    color = Tz.colors.ink,
                 )
                 if (t.cue != null) {
                     Row(Modifier.padding(top = 6.dp)) { CueChip(t.cue.label) }
@@ -389,11 +389,11 @@ private fun FocusItem(
             }
             if (onUnfocus != null) {
                 Box(Modifier.pressable(onUnfocus).padding(top = 2.dp)) {
-                    Compass(size = 20.dp, ring = Den.rust, needleN = Den.rust, needleS = Den.rust.a(0.5f), stroke = 2f)
+                    Compass(size = 20.dp, ring = Tz.colors.rust, needleN = Tz.colors.rust, needleS = Tz.colors.rust.a(0.5f), stroke = 2f)
                 }
             }
         }
-        if (!last) Box(Modifier.fillMaxWidth().height(1.dp).background(Den.line))
+        if (!last) Box(Modifier.fillMaxWidth().height(1.dp).background(Tz.colors.line))
     }
 }
 
@@ -436,7 +436,7 @@ internal fun ReorderableTaskList(
                         if (isDragged) it
                             .offset { IntOffset(0, dragDelta.roundToInt()) }
                             .shadow(6.dp, RoundedCornerShape(10.dp))
-                            .background(Den.surface)
+                            .background(Tz.colors.surface)
                         else it
                     }
                     .onSizeChanged { heights[task.id] = it.height }

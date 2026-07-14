@@ -49,7 +49,7 @@ import com.thefoxworks.tzafon.ui.components.SectionLabel
 import com.thefoxworks.tzafon.ui.components.Serves
 import com.thefoxworks.tzafon.ui.components.TzIcons
 import com.thefoxworks.tzafon.ui.components.pressable
-import com.thefoxworks.tzafon.ui.theme.Den
+import com.thefoxworks.tzafon.ui.theme.Tz
 import com.thefoxworks.tzafon.ui.theme.DenType
 import com.thefoxworks.tzafon.ui.theme.a
 import com.thefoxworks.tzafon.ui.theme.contentDir
@@ -73,7 +73,7 @@ fun ReviewScreen(
         onClose()
     }
 
-    Column(Modifier.fillMaxSize().background(Den.surface)) {
+    Column(Modifier.fillMaxSize().background(Tz.colors.surface)) {
         // ── header (design: ReviewHeader) ──
         Column(
             Modifier
@@ -83,29 +83,29 @@ fun ReviewScreen(
         ) {
             Row(verticalAlignment = Alignment.Top) {
                 Column(Modifier.weight(1f)) {
-                    Kicker(state.kicker, color = Den.rust)
+                    Kicker(state.kicker, color = Tz.colors.rust)
                     Text(
                         if (step == 1) "Your week, reflected" else "Plan the week",
                         style = DenType.h1Compact,
-                        color = Den.ink,
+                        color = Tz.colors.ink,
                         modifier = Modifier.padding(top = 6.dp),
                     )
                 }
                 Box(
                     Modifier.size(34.dp).clip(CircleShape)
-                        .background(Den.card)
-                        .border(1.dp, Den.line, CircleShape)
+                        .background(Tz.colors.card)
+                        .border(1.dp, Tz.colors.line, CircleShape)
                         .pressable { leave() },
                     contentAlignment = Alignment.Center,
-                ) { TzIcons.X(15.dp, Den.muted) }
+                ) { TzIcons.X(15.dp, Tz.colors.muted) }
             }
             Row(Modifier.padding(top = 14.dp), verticalAlignment = Alignment.CenterVertically) {
                 StepDot(1, "REFLECT", step)
-                Box(Modifier.weight(1f).height(1.dp).background(Den.line).padding(horizontal = 7.dp))
+                Box(Modifier.weight(1f).height(1.dp).background(Tz.colors.line).padding(horizontal = 7.dp))
                 StepDot(2, "PLAN", step)
             }
         }
-        Box(Modifier.fillMaxWidth().height(1.dp).background(Den.line))
+        Box(Modifier.fillMaxWidth().height(1.dp).background(Tz.colors.line))
 
         Column(
             Modifier
@@ -126,7 +126,7 @@ fun ReviewScreen(
         Row(
             Modifier
                 .fillMaxWidth()
-                .background(Den.surface.a(0.96f))
+                .background(Tz.colors.surface.a(0.96f))
                 .padding(horizontal = 20.dp, vertical = 12.dp)
                 .navigationBarsPadding(),
             horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -135,7 +135,7 @@ fun ReviewScreen(
                 Box(
                     Modifier.height(48.dp)
                         .clip(RoundedCornerShape(13.dp))
-                        .border(1.dp, Den.line, RoundedCornerShape(13.dp))
+                        .border(1.dp, Tz.colors.line, RoundedCornerShape(13.dp))
                         .pressable { leave() }
                         .padding(horizontal = 18.dp),
                     contentAlignment = Alignment.Center,
@@ -143,13 +143,13 @@ fun ReviewScreen(
                     Text(
                         "Later",
                         style = TextStyle(fontFamily = DenType.body, fontSize = 15.sp, fontWeight = FontWeight.SemiBold),
-                        color = Den.muted,
+                        color = Tz.colors.muted,
                     )
                 }
                 Row(
                     Modifier.weight(1f).height(48.dp)
                         .clip(RoundedCornerShape(13.dp))
-                        .background(Den.rust)
+                        .background(Tz.colors.rust)
                         .pressable { step = 2 },
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center,
@@ -165,7 +165,7 @@ fun ReviewScreen(
                 Row(
                     Modifier.weight(1f).height(48.dp)
                         .clip(RoundedCornerShape(13.dp))
-                        .background(Den.rust)
+                        .background(Tz.colors.rust)
                         .pressable { vm.complete(note); onClose() },
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center,
@@ -186,14 +186,14 @@ private fun StepDot(n: Int, label: String, current: Int) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(7.dp)) {
         Box(
             Modifier.size(20.dp).clip(CircleShape)
-                .background(if (n <= current) Den.rust else Den.surfaceAlt)
-                .border(1.dp, if (n <= current) Color.Transparent else Den.line, CircleShape),
+                .background(if (n <= current) Tz.colors.rust else Tz.colors.surfaceAlt)
+                .border(1.dp, if (n <= current) Color.Transparent else Tz.colors.line, CircleShape),
             contentAlignment = Alignment.Center,
         ) {
             Text(
                 "$n",
                 style = TextStyle(fontFamily = DenType.mono, fontSize = 10.sp, fontWeight = FontWeight.Bold),
-                color = if (n <= current) Color.White else Den.faint,
+                color = if (n <= current) Color.White else Tz.colors.faint,
             )
         }
         Text(
@@ -202,7 +202,7 @@ private fun StepDot(n: Int, label: String, current: Int) {
                 fontFamily = DenType.mono, fontSize = 11.sp, letterSpacing = 0.4.sp,
                 fontWeight = if (n == current) FontWeight.Bold else FontWeight.Medium,
             ),
-            color = if (n == current) Den.ink else Den.faint,
+            color = if (n == current) Tz.colors.ink else Tz.colors.faint,
         )
     }
 }
@@ -214,11 +214,11 @@ private fun ReflectStep(state: ReviewUiState, note: String, onNote: (String) -> 
             append("You finished ")
             withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append("${state.doneCount} thing${if (state.doneCount == 1) "" else "s"}") }
             append(" this week. ")
-            withStyle(SpanStyle(color = Den.rust)) { append("${state.alignedCount} of them") }
+            withStyle(SpanStyle(color = Tz.colors.rust)) { append("${state.alignedCount} of them") }
             append(" served a direction you chose.")
         },
         style = TextStyle(fontFamily = DenType.serif, fontSize = 19.sp, fontWeight = FontWeight.Medium, lineHeight = 25.5.sp),
-        color = Den.ink,
+        color = Tz.colors.ink,
         modifier = Modifier.padding(top = 16.dp),
     )
 
@@ -229,32 +229,32 @@ private fun ReflectStep(state: ReviewUiState, note: String, onNote: (String) -> 
                 Column(
                     Modifier.fillMaxWidth()
                         .clip(RoundedCornerShape(12.dp))
-                        .background(Den.card)
-                        .border(1.dp, Den.line, RoundedCornerShape(12.dp))
+                        .background(Tz.colors.card)
+                        .border(1.dp, Tz.colors.line, RoundedCornerShape(12.dp))
                         .padding(horizontal = 13.dp, vertical = 11.dp),
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Dot(Den.green, 8.dp)
+                        Dot(Tz.colors.green, 8.dp)
                         Text(
                             r.name,
                             style = TextStyle(fontFamily = DenType.body, fontSize = 14.5.sp, fontWeight = FontWeight.Medium).contentDir(),
-                            color = Den.ink,
+                            color = Tz.colors.ink,
                             modifier = Modifier.weight(1f),
                         )
                         Text(
                             r.quantLine ?: "${r.done} of ${r.target}",
                             style = TextStyle(fontFamily = DenType.mono, fontSize = 12.sp, fontWeight = FontWeight.Bold),
-                            color = Den.green,
+                            color = Tz.colors.green,
                         )
                     }
-                    Box(Modifier.padding(top = 8.dp)) { Bar(pct = r.pct.toFloat(), fill = Den.green, height = 6.dp) }
+                    Box(Modifier.padding(top = 8.dp)) { Bar(pct = r.pct.toFloat(), fill = Tz.colors.green, height = 6.dp) }
                 }
             }
         }
         Text(
             "Missed a few? Normal. The rate has slack built in — that's the point.",
             style = TextStyle(fontFamily = DenType.body, fontSize = 13.sp, lineHeight = 18.5.sp),
-            color = Den.muted,
+            color = Tz.colors.muted,
             modifier = Modifier.padding(top = 10.dp),
         )
     }
@@ -264,17 +264,17 @@ private fun ReflectStep(state: ReviewUiState, note: String, onNote: (String) -> 
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             state.goalDeltas.forEach { d ->
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    TzIcons.Target(16.dp, Den.rust)
+                    TzIcons.Target(16.dp, Tz.colors.rust)
                     Text(
                         d.title,
                         style = TextStyle(fontFamily = DenType.body, fontSize = 14.5.sp, fontWeight = FontWeight.Medium).contentDir(),
-                        color = Den.ink,
+                        color = Tz.colors.ink,
                         modifier = Modifier.weight(1f),
                     )
                     Text(
                         d.delta,
                         style = TextStyle(fontFamily = DenType.mono, fontSize = 11.5.sp),
-                        color = Den.rust,
+                        color = Tz.colors.rust,
                     )
                 }
             }
@@ -285,23 +285,23 @@ private fun ReflectStep(state: ReviewUiState, note: String, onNote: (String) -> 
         Modifier.fillMaxWidth()
             .padding(top = 18.dp)
             .clip(RoundedCornerShape(12.dp))
-            .background(Den.card)
-            .border(1.dp, Den.line, RoundedCornerShape(12.dp))
+            .background(Tz.colors.card)
+            .border(1.dp, Tz.colors.line, RoundedCornerShape(12.dp))
             .padding(horizontal = 14.dp, vertical = 12.dp),
     ) {
         SectionLabel("A line for yourself · optional")
         BasicTextField(
             value = note,
             onValueChange = onNote,
-            textStyle = TextStyle(fontFamily = DenType.serif, fontSize = 15.sp, fontStyle = FontStyle.Italic, color = Den.ink).contentDir(),
-            cursorBrush = SolidColor(Den.rust),
+            textStyle = TextStyle(fontFamily = DenType.serif, fontSize = 15.sp, fontStyle = FontStyle.Italic, color = Tz.colors.ink).contentDir(),
+            cursorBrush = SolidColor(Tz.colors.rust),
             decorationBox = { inner ->
                 Box(Modifier.padding(top = 6.dp)) {
                     if (note.isEmpty()) {
                         Text(
                             "What mattered this week…",
                             style = TextStyle(fontFamily = DenType.serif, fontSize = 15.sp, fontStyle = FontStyle.Italic),
-                            color = Den.faint,
+                            color = Tz.colors.faint,
                         )
                     }
                     inner()
@@ -317,7 +317,7 @@ private fun PlanStep(state: ReviewUiState, onTogglePick: (String) -> Unit, onFre
     Text(
         "Clean slate. Pick a few things worth pointing at this week.",
         style = TextStyle(fontFamily = DenType.serif, fontSize = 18.sp, fontWeight = FontWeight.Medium, lineHeight = 24.5.sp),
-        color = Den.ink,
+        color = Tz.colors.ink,
         modifier = Modifier.padding(top = 16.dp),
     )
 
@@ -326,9 +326,9 @@ private fun PlanStep(state: ReviewUiState, onTogglePick: (String) -> Unit, onFre
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Compass(size = 16.dp, ring = Den.rust, needleN = Den.rust, needleS = Den.faint, stroke = 2f)
-        SectionLabel("This week's priorities", color = Den.rust)
-        Box(Modifier.weight(1f).height(1.dp).background(Den.line))
+        Compass(size = 16.dp, ring = Tz.colors.rust, needleN = Tz.colors.rust, needleS = Tz.colors.faint, stroke = 2f)
+        SectionLabel("This week's priorities", color = Tz.colors.rust)
+        Box(Modifier.weight(1f).height(1.dp).background(Tz.colors.line))
         val n = state.picked.size
         Text(
             when {
@@ -336,7 +336,7 @@ private fun PlanStep(state: ReviewUiState, onTogglePick: (String) -> Unit, onFre
                 else -> "$n PICKED · STILL YOUR CALL"
             },
             style = TextStyle(fontFamily = DenType.mono, fontSize = 10.5.sp),
-            color = if (n <= 3) Den.green else Den.amber, // DM-FOCUS-2 soft, never a block
+            color = if (n <= 3) Tz.colors.green else Tz.colors.amber, // DM-FOCUS-2 soft, never a block
         )
     }
 
@@ -346,8 +346,8 @@ private fun PlanStep(state: ReviewUiState, onTogglePick: (String) -> Unit, onFre
             Row(
                 Modifier.fillMaxWidth()
                     .clip(RoundedCornerShape(12.dp))
-                    .background(if (on) Den.card else Color.Transparent)
-                    .border(1.dp, if (on) Den.rust.a(0.3f) else Den.line, RoundedCornerShape(12.dp))
+                    .background(if (on) Tz.colors.card else Color.Transparent)
+                    .border(1.dp, if (on) Tz.colors.rust.a(0.3f) else Tz.colors.line, RoundedCornerShape(12.dp))
                     .pressable { onTogglePick(t.id) }
                     .padding(horizontal = 13.dp, vertical = 11.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -355,8 +355,8 @@ private fun PlanStep(state: ReviewUiState, onTogglePick: (String) -> Unit, onFre
             ) {
                 Box(
                     Modifier.size(24.dp).clip(RoundedCornerShape(7.dp)).let {
-                        if (on) it.background(Den.rust)
-                        else it.border(2.dp, Den.ink.a(0.25f), RoundedCornerShape(7.dp))
+                        if (on) it.background(Tz.colors.rust)
+                        else it.border(2.dp, Tz.colors.ink.a(0.25f), RoundedCornerShape(7.dp))
                     },
                     contentAlignment = Alignment.Center,
                 ) {
@@ -371,10 +371,10 @@ private fun PlanStep(state: ReviewUiState, onTogglePick: (String) -> Unit, onFre
                             fontFamily = DenType.body, fontSize = 14.5.sp,
                             fontWeight = if (on) FontWeight.SemiBold else FontWeight.Normal,
                         ).contentDir(),
-                        color = if (on) Den.ink else Den.muted,
+                        color = if (on) Tz.colors.ink else Tz.colors.muted,
                     )
                     state.servesByTask[t.id]?.let { serves ->
-                        Box(Modifier.padding(top = 3.dp)) { Serves(serves, Den.rust) }
+                        Box(Modifier.padding(top = 3.dp)) { Serves(serves, Tz.colors.rust) }
                     }
                 }
             }
@@ -383,7 +383,7 @@ private fun PlanStep(state: ReviewUiState, onTogglePick: (String) -> Unit, onFre
             Text(
                 "Nothing on the slate yet — capture a task or two first, then point the week at them.",
                 style = TextStyle(fontFamily = DenType.body, fontSize = 13.5.sp, lineHeight = 19.sp),
-                color = Den.muted,
+                color = Tz.colors.muted,
             )
         }
     }
@@ -393,7 +393,7 @@ private fun PlanStep(state: ReviewUiState, onTogglePick: (String) -> Unit, onFre
             Nudge(
                 text = "“${g.title}” hasn't moved in a while. Freeze it for now? You can thaw it any time — no harm done.",
                 actions = {
-                    PillButton("FREEZE IT", onClick = { onFreeze(g) }, color = Den.frozen)
+                    PillButton("FREEZE IT", onClick = { onFreeze(g) }, color = Tz.colors.frozen)
                 },
             )
         }

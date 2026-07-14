@@ -8,6 +8,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -46,6 +47,8 @@ import com.thefoxworks.tzafon.ui.planning.PlanningViewModel
 import com.thefoxworks.tzafon.ui.review.ReviewScreen
 import com.thefoxworks.tzafon.ui.review.ReviewViewModel
 import com.thefoxworks.tzafon.ui.settings.SettingsScreen
+import com.thefoxworks.tzafon.ui.theme.LocalPalette
+import com.thefoxworks.tzafon.ui.theme.paletteFor
 import com.thefoxworks.tzafon.ui.theme.TzafonTheme
 import com.thefoxworks.tzafon.ui.today.TodayScreen
 import com.thefoxworks.tzafon.ui.today.TodayViewModel
@@ -59,8 +62,15 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         val container = (application as TzafonApp).container
         setContent {
-            TzafonTheme {
-                TzafonNavHost(container)
+            // FR-DESIGN-4.4 — resolve the persisted palette at the composition root
+            // and provide it via LocalPalette; a change recomposes the whole tree
+            // on the next frame (no restart). Defaults to Den before first emission.
+            val paletteName by container.settings.palette.collectAsStateWithLifecycle(initialValue = "den")
+            val palette = paletteFor(paletteName)
+            CompositionLocalProvider(LocalPalette provides palette) {
+                TzafonTheme(palette = palette) {
+                    TzafonNavHost(container)
+                }
             }
         }
     }

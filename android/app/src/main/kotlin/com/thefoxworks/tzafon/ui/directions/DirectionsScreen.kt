@@ -66,14 +66,16 @@ import com.thefoxworks.tzafon.ui.goals.GoalCard
 import com.thefoxworks.tzafon.ui.goals.GoalEditorSheet
 import com.thefoxworks.tzafon.ui.nav.AppMenuSheet
 import com.thefoxworks.tzafon.ui.habits.HabitEditorSheet
-import com.thefoxworks.tzafon.ui.theme.Den
+import com.thefoxworks.tzafon.ui.theme.Tz
 import com.thefoxworks.tzafon.ui.theme.DenType
 import com.thefoxworks.tzafon.ui.theme.a
 import com.thefoxworks.tzafon.ui.theme.contentDir
 import kotlin.math.cos
 import kotlin.math.sin
 
-private fun accentFor(theme: Theme): Color = Den.themeAccents[theme.accentSlot % 3]
+@Composable
+@androidx.compose.runtime.ReadOnlyComposable
+private fun accentFor(theme: Theme): Color = Tz.colors.themeAccents[theme.accentSlot % 3]
 
 /**
  * The Directions hub (FR-DIR, design: DirectionsBoard) — Tzafon's namesake.
@@ -109,7 +111,7 @@ fun DirectionsScreen(
     // FR-DIR-8.3 — orphan → primary vs. serves-also prompt.
     var orphanConnect by remember { mutableStateOf<Pair<Goal, Theme>?>(null) }
 
-    Box(Modifier.fillMaxSize().background(Den.surface)) {
+    Box(Modifier.fillMaxSize().background(Tz.colors.surface)) {
         Column(Modifier.fillMaxSize()) {
             RustHeader(
                 title = "Your bearings",
@@ -127,7 +129,7 @@ fun DirectionsScreen(
                     Text(
                         "The few directions everything serves — three at most. Tap a bearing to open it.",
                         style = TextStyle(fontFamily = DenType.body, fontSize = 13.5.sp, lineHeight = 20.sp),
-                        color = Den.muted,
+                        color = Tz.colors.muted,
                         modifier = Modifier.padding(bottom = 4.dp),
                     )
                 }
@@ -190,14 +192,14 @@ fun DirectionsScreen(
 
                         if (state.orphanGoals.isNotEmpty()) {
                             item(key = "h_orphans") {
-                                GroupHeader("Goals without a theme", state.orphanGoals.size, accent = Den.muted)
+                                GroupHeader("Goals without a theme", state.orphanGoals.size, accent = Tz.colors.muted)
                             }
                             items(state.orphanGoals, key = { "o_${it.id}" }) { g ->
                                 Box(Modifier.padding(bottom = 10.dp)) {
                                     GoalCard(
                                         goal = g,
                                         engines = state.enginesByGoal[g.id] ?: emptyList(),
-                                        accent = Den.rust,
+                                        accent = Tz.colors.rust,
                                         servesLabel = null,
                                         onOpen = { goalEditor = g to null },
                                         onToggleStep = { i -> vm.toggleStep(g, i) },
@@ -208,7 +210,7 @@ fun DirectionsScreen(
                                 }
                             }
                             item(key = "addorphan") {
-                                AddRow("Add a goal", Den.muted) { goalEditor = null to null }
+                                AddRow("Add a goal", Tz.colors.muted) { goalEditor = null to null }
                             }
                         }
                     }
@@ -384,12 +386,14 @@ fun DirectionsScreen(
 /** Circular progress ring (design: Ring). */
 @Composable
 fun Ring(pct: Int, size: Dp, color: Color, stroke: Dp = 5.dp, label: Boolean = true) {
+    // FR-DESIGN-4.9 — the faint track resolves through the active palette's ink.
+    val trackColor = Tz.colors.ink.a(0.12f)
     Box(Modifier.size(size), contentAlignment = Alignment.Center) {
         Canvas(Modifier.fillMaxSize()) {
             val sw = stroke.toPx()
             val inset = sw / 2
             drawArc(
-                color = Color(0xFF241A12).copy(alpha = 0.12f),
+                color = trackColor,
                 startAngle = 0f, sweepAngle = 360f, useCenter = false,
                 topLeft = Offset(inset, inset),
                 size = androidx.compose.ui.geometry.Size(this.size.width - sw, this.size.height - sw),
@@ -419,9 +423,9 @@ private fun BearingRose(entries: List<ThemeBoardEntry>, size: Dp = 128.dp) {
     Box(Modifier.size(size)) {
         Compass(
             size = size,
-            ring = Den.rust.a(0.55f),
-            needleN = Den.rust,
-            needleS = Den.faint,
+            ring = Tz.colors.rust.a(0.55f),
+            needleN = Tz.colors.rust,
+            needleS = Tz.colors.faint,
             stroke = 1.2f,
             ticks = true,
         )
@@ -436,7 +440,7 @@ private fun BearingRose(entries: List<ThemeBoardEntry>, size: Dp = 128.dp) {
                     .size(16.dp)
                     .clip(CircleShape)
                     .background(accentFor(entry.theme))
-                    .border(2.5.dp, Den.surface, CircleShape),
+                    .border(2.5.dp, Tz.colors.surface, CircleShape),
             )
         }
     }
@@ -454,8 +458,8 @@ private fun ThemeScope(active: String, counts: Triple<Int, Int, Int>, onSelect: 
         Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(999.dp))
-            .background(Den.surfaceAlt)
-            .border(1.dp, Den.line, RoundedCornerShape(999.dp))
+            .background(Tz.colors.surfaceAlt)
+            .border(1.dp, Tz.colors.line, RoundedCornerShape(999.dp))
             .padding(3.dp),
     ) {
         opts.forEach { (key, label) ->
@@ -464,7 +468,7 @@ private fun ThemeScope(active: String, counts: Triple<Int, Int, Int>, onSelect: 
                 Modifier
                     .weight(1f)
                     .clip(RoundedCornerShape(999.dp))
-                    .background(if (on) Den.rust else Color.Transparent)
+                    .background(if (on) Tz.colors.rust else Color.Transparent)
                     .pressable { onSelect(key) }
                     .padding(vertical = 6.dp),
                 contentAlignment = Alignment.Center,
@@ -475,7 +479,7 @@ private fun ThemeScope(active: String, counts: Triple<Int, Int, Int>, onSelect: 
                         fontFamily = DenType.mono, fontSize = 10.5.sp, letterSpacing = 0.2.sp,
                         fontWeight = if (on) FontWeight.Bold else FontWeight.Medium,
                     ),
-                    color = if (on) Color.White else Den.muted,
+                    color = if (on) Color.White else Tz.colors.muted,
                 )
             }
         }
@@ -490,8 +494,8 @@ private fun ThemeRow(entry: ThemeBoardEntry, modifier: Modifier = Modifier, onOp
         modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(13.dp))
-            .background(Den.card)
-            .border(1.dp, Den.line, RoundedCornerShape(13.dp))
+            .background(Tz.colors.card)
+            .border(1.dp, Tz.colors.line, RoundedCornerShape(13.dp))
             .pressable(onOpen),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -506,12 +510,12 @@ private fun ThemeRow(entry: ThemeBoardEntry, modifier: Modifier = Modifier, onOp
                 Text(
                     entry.theme.name,
                     style = TextStyle(fontFamily = DenType.serif, fontSize = 16.5.sp, fontWeight = FontWeight.SemiBold, lineHeight = 18.sp).contentDir(),
-                    color = Den.ink,
+                    color = Tz.colors.ink,
                 )
                 Text(
                     "“${entry.theme.why}”",
                     style = TextStyle(fontFamily = DenType.serif, fontSize = 12.5.sp, fontStyle = FontStyle.Italic).contentDir(),
-                    color = Den.muted,
+                    color = Tz.colors.muted,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.padding(top = 2.dp),
@@ -519,13 +523,13 @@ private fun ThemeRow(entry: ThemeBoardEntry, modifier: Modifier = Modifier, onOp
                 Text(
                     "${entry.windowLabel} · ${entry.goals.size} GOAL${if (entry.goals.size == 1) "" else "S"} · ${entry.habits.size} HABIT${if (entry.habits.size == 1) "" else "S"}",
                     style = TextStyle(fontFamily = DenType.mono, fontSize = 9.5.sp),
-                    color = Den.faint,
+                    color = Tz.colors.faint,
                     modifier = Modifier.padding(top = 5.dp),
                 )
             }
             Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                TzIcons.Chevron(18.dp, Den.ink.a(0.3f))
-                Text("OPEN", style = TextStyle(fontFamily = DenType.mono, fontSize = 8.sp), color = Den.faint)
+                TzIcons.Chevron(18.dp, Tz.colors.ink.a(0.3f))
+                Text("OPEN", style = TextStyle(fontFamily = DenType.mono, fontSize = 8.sp), color = Tz.colors.faint)
             }
         }
     }
@@ -568,12 +572,12 @@ private fun ExpandedTheme(
                 Text(
                     entry.theme.name,
                     style = TextStyle(fontFamily = DenType.serif, fontSize = 19.sp, fontWeight = FontWeight.SemiBold, lineHeight = 20.sp).contentDir(),
-                    color = Den.ink,
+                    color = Tz.colors.ink,
                 )
                 Text(
                     "“${entry.theme.why}”",
                     style = TextStyle(fontFamily = DenType.serif, fontSize = 13.sp, fontStyle = FontStyle.Italic).contentDir(),
-                    color = Den.muted,
+                    color = Tz.colors.muted,
                     modifier = Modifier.padding(top = 3.dp),
                 )
             }
@@ -591,7 +595,7 @@ private fun ExpandedTheme(
             Text(
                 "${entry.windowLabel} · ${entry.mirror}",
                 style = TextStyle(fontFamily = DenType.mono, fontSize = 10.sp),
-                color = Den.muted,
+                color = Tz.colors.muted,
             )
         }
         if (entry.windowEnded) {
@@ -603,7 +607,7 @@ private fun ExpandedTheme(
         Column(
             Modifier
                 .fillMaxWidth()
-                .background(Den.surface)
+                .background(Tz.colors.surface)
                 .padding(horizontal = 15.dp, vertical = 13.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
@@ -617,7 +621,7 @@ private fun ExpandedTheme(
                 Text(
                     "What would this look like this week?",
                     style = TextStyle(fontFamily = DenType.serif, fontSize = 13.5.sp, fontStyle = FontStyle.Italic),
-                    color = Den.muted,
+                    color = Tz.colors.muted,
                 )
             }
 
@@ -658,12 +662,12 @@ private fun ExpandedTheme(
                 Text(
                     "${entry.taskCount} OPEN TASK${if (entry.taskCount == 1) "" else "S"} POINT HERE",
                     style = TextStyle(fontFamily = DenType.mono, fontSize = 9.5.sp, letterSpacing = 0.4.sp),
-                    color = Den.faint,
+                    color = Tz.colors.faint,
                 )
             }
             Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
                 PillButton("EDIT", onClick = onEdit)
-                PillButton("ARCHIVE…", onClick = onArchive, color = Den.muted)
+                PillButton("ARCHIVE…", onClick = onArchive, color = Tz.colors.muted)
             }
         }
     }
@@ -676,8 +680,8 @@ private fun HabitChip(h: Habit, accent: Color, onOpen: () -> Unit) {
         Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(10.dp))
-            .background(Den.card)
-            .border(1.dp, Den.line, RoundedCornerShape(10.dp))
+            .background(Tz.colors.card)
+            .border(1.dp, Tz.colors.line, RoundedCornerShape(10.dp))
             .pressable(onOpen)
             .padding(horizontal = 12.dp, vertical = 9.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -687,14 +691,14 @@ private fun HabitChip(h: Habit, accent: Color, onOpen: () -> Unit) {
         Text(
             h.name,
             style = TextStyle(fontFamily = DenType.body, fontSize = 13.5.sp, fontWeight = FontWeight.Medium),
-            color = Den.ink,
+            color = Tz.colors.ink,
             modifier = Modifier.weight(1f),
         )
         Text(
             if (h.kind == HabitKind.QUANTITATIVE) "${fmt(h.target)} ${h.unit ?: ""}/day"
             else "${h.target.toInt()}× / week",
             style = TextStyle(fontFamily = DenType.mono, fontSize = 10.sp),
-            color = Den.muted,
+            color = Tz.colors.muted,
         )
     }
 }
@@ -715,8 +719,8 @@ private fun SharedGoalRow(
         Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(10.dp))
-            .background(Den.card)
-            .border(1.dp, Den.line, RoundedCornerShape(10.dp))
+            .background(Tz.colors.card)
+            .border(1.dp, Tz.colors.line, RoundedCornerShape(10.dp))
             .padding(horizontal = 12.dp, vertical = 9.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(9.dp),
@@ -726,14 +730,14 @@ private fun SharedGoalRow(
             Text(
                 goal.title,
                 style = TextStyle(fontFamily = DenType.body, fontSize = 13.5.sp, fontWeight = FontWeight.Medium).contentDir(),
-                color = Den.ink,
+                color = Tz.colors.ink,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
                 "SHARED · ${goal.pct()}%",
                 style = TextStyle(fontFamily = DenType.mono, fontSize = 9.5.sp),
-                color = Den.faint,
+                color = Tz.colors.faint,
                 modifier = Modifier.padding(top = 2.dp),
             )
         }
@@ -743,7 +747,7 @@ private fun SharedGoalRow(
                 .pressable(onUnlink)
                 .semantics { contentDescription = "Unlink from theme" }
                 .padding(6.dp),
-        ) { TzIcons.X(12.dp, Den.faint) }
+        ) { TzIcons.X(12.dp, Tz.colors.faint) }
     }
 }
 
@@ -776,8 +780,8 @@ private fun UpcomingRow(theme: Theme, modifier: Modifier = Modifier, onOpen: () 
         modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(13.dp))
-            .background(Den.card)
-            .border(1.dp, Den.line, RoundedCornerShape(13.dp))
+            .background(Tz.colors.card)
+            .border(1.dp, Tz.colors.line, RoundedCornerShape(13.dp))
             .pressable(onOpen)
             .padding(horizontal = 14.dp, vertical = 13.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -788,12 +792,12 @@ private fun UpcomingRow(theme: Theme, modifier: Modifier = Modifier, onOpen: () 
             Text(
                 theme.name,
                 style = TextStyle(fontFamily = DenType.serif, fontSize = 16.sp, fontWeight = FontWeight.SemiBold).contentDir(),
-                color = Den.ink,
+                color = Tz.colors.ink,
             )
             Text(
                 "STARTS ${com.thefoxworks.tzafon.domain.dates.Dates.fmtDate(theme.windowStart).uppercase()}",
                 style = TextStyle(fontFamily = DenType.mono, fontSize = 9.5.sp),
-                color = Den.faint,
+                color = Tz.colors.faint,
                 modifier = Modifier.padding(top = 3.dp),
             )
         }
@@ -811,18 +815,18 @@ private fun ArchivedRow(theme: Theme, modifier: Modifier = Modifier, onOpen: () 
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(11.dp),
     ) {
-        Compass(size = 16.dp, ring = Den.faint, needleN = Den.faint, needleS = Den.faint, stroke = 1.4f)
+        Compass(size = 16.dp, ring = Tz.colors.faint, needleN = Tz.colors.faint, needleS = Tz.colors.faint, stroke = 1.4f)
         Column(Modifier.weight(1f)) {
             Text(
                 theme.name,
                 style = TextStyle(fontFamily = DenType.body, fontSize = 15.sp).contentDir(),
-                color = Den.muted,
+                color = Tz.colors.muted,
             )
             Text(
                 (theme.archivedOutcome?.name ?: "ARCHIVED") + " · " +
                     com.thefoxworks.tzafon.domain.dates.Dates.fmtDate(theme.windowEnd),
                 style = TextStyle(fontFamily = DenType.mono, fontSize = 9.5.sp),
-                color = Den.faint,
+                color = Tz.colors.faint,
                 modifier = Modifier.padding(top = 2.dp),
             )
         }
@@ -838,12 +842,12 @@ private fun EmptyBearings() {
         Text(
             "No bearings held yet",
             style = TextStyle(fontFamily = DenType.serif, fontSize = 21.sp, fontWeight = FontWeight.SemiBold),
-            color = Den.ink,
+            color = Tz.colors.ink,
         )
         Text(
             "A theme is a direction with a why — “more of what I want”, held for a season. Three at most, so each one matters.",
             style = TextStyle(fontFamily = DenType.body, fontSize = 13.5.sp, lineHeight = 19.5.sp),
-            color = Den.muted,
+            color = Tz.colors.muted,
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(top = 6.dp),
         )
@@ -855,7 +859,7 @@ private fun QuietNote(text: String) {
     Text(
         text,
         style = TextStyle(fontFamily = DenType.body, fontSize = 13.sp, lineHeight = 18.5.sp),
-        color = Den.muted,
+        color = Tz.colors.muted,
         textAlign = TextAlign.Center,
         modifier = Modifier.fillMaxWidth().padding(top = 40.dp, start = 30.dp, end = 30.dp),
     )
@@ -876,14 +880,14 @@ internal fun HubCreateChooser(
     DenSheet(title = "What are you adding?", onClose = onClose) {
         Column {
             ChooserRow(
-                icon = { TzIcons.Target(18.dp, Den.rust) },
+                icon = { TzIcons.Target(18.dp, Tz.colors.rust) },
                 label = "Add a goal",
                 sub = "A finish line — stepped, an amount, or a direction.",
                 onClick = onAddGoal,
                 contentDescription = "Add a goal",
             )
             ChooserRow(
-                icon = { Compass(size = 18.dp, ring = Den.rust, needleN = Den.rust, needleS = Den.rust.a(0.4f), stroke = 1.8f) },
+                icon = { Compass(size = 18.dp, ring = Tz.colors.rust, needleN = Tz.colors.rust, needleS = Tz.colors.rust.a(0.4f), stroke = 1.8f) },
                 label = "Add a theme",
                 sub = "A direction with a why — a season's bearing.",
                 onClick = onAddTheme,
@@ -907,8 +911,8 @@ private fun ChooserRow(
         modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(13.dp))
-            .background(Den.card)
-            .border(1.dp, Den.line, RoundedCornerShape(13.dp))
+            .background(Tz.colors.card)
+            .border(1.dp, Tz.colors.line, RoundedCornerShape(13.dp))
             .semanticsCd(contentDescription)
             .pressable(label = contentDescription, role = androidx.compose.ui.semantics.Role.Button, onClick = onClick)
             .padding(horizontal = 14.dp, vertical = 13.dp),
@@ -916,23 +920,23 @@ private fun ChooserRow(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Box(
-            Modifier.size(38.dp).clip(RoundedCornerShape(999.dp)).background(Den.rust.a(0.1f)),
+            Modifier.size(38.dp).clip(RoundedCornerShape(999.dp)).background(Tz.colors.rust.a(0.1f)),
             contentAlignment = Alignment.Center,
         ) { icon() }
         Column(Modifier.weight(1f)) {
             Text(
                 label,
                 style = TextStyle(fontFamily = DenType.serif, fontSize = 16.sp, fontWeight = FontWeight.SemiBold),
-                color = Den.ink,
+                color = Tz.colors.ink,
             )
             Text(
                 sub,
                 style = TextStyle(fontFamily = DenType.body, fontSize = 12.5.sp, lineHeight = 17.sp),
-                color = Den.muted,
+                color = Tz.colors.muted,
                 modifier = Modifier.padding(top = 2.dp),
             )
         }
-        TzIcons.Chevron(16.dp, Den.faint, dir = TzIcons.Dir.RIGHT)
+        TzIcons.Chevron(16.dp, Tz.colors.faint, dir = TzIcons.Dir.RIGHT)
     }
 }
 
@@ -963,14 +967,14 @@ internal fun ConnectGoalSheet(
             Text(
                 "Add a goal to “${theme.name}” without leaving the board.",
                 style = TextStyle(fontFamily = DenType.body, fontSize = 13.sp, lineHeight = 18.5.sp),
-                color = Den.muted,
+                color = Tz.colors.muted,
                 modifier = Modifier.padding(bottom = 10.dp),
             )
             if (orphans.isEmpty() && themed.isEmpty()) {
                 Text(
                     "No other ongoing goals to connect. Add one from this theme instead.",
                     style = TextStyle(fontFamily = DenType.body, fontSize = 13.sp),
-                    color = Den.faint,
+                    color = Tz.colors.faint,
                     modifier = Modifier.padding(vertical = 20.dp),
                 )
             } else {
@@ -1002,30 +1006,30 @@ private fun ConnectCandidateRow(goal: Goal, sub: String, onClick: () -> Unit) {
         Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(11.dp))
-            .background(Den.card)
-            .border(1.dp, Den.line, RoundedCornerShape(11.dp))
+            .background(Tz.colors.card)
+            .border(1.dp, Tz.colors.line, RoundedCornerShape(11.dp))
             .pressable(onClick)
             .padding(horizontal = 13.dp, vertical = 11.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(11.dp),
     ) {
-        TzIcons.Target(15.dp, Den.rust)
+        TzIcons.Target(15.dp, Tz.colors.rust)
         Column(Modifier.weight(1f)) {
             Text(
                 goal.title,
                 style = TextStyle(fontFamily = DenType.body, fontSize = 14.sp, fontWeight = FontWeight.Medium).contentDir(),
-                color = Den.ink,
+                color = Tz.colors.ink,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
                 sub,
                 style = TextStyle(fontFamily = DenType.mono, fontSize = 9.5.sp, letterSpacing = 0.3.sp),
-                color = Den.faint,
+                color = Tz.colors.faint,
                 modifier = Modifier.padding(top = 2.dp),
             )
         }
-        TzIcons.Chevron(15.dp, Den.faint, dir = TzIcons.Dir.RIGHT)
+        TzIcons.Chevron(15.dp, Tz.colors.faint, dir = TzIcons.Dir.RIGHT)
     }
 }
 
@@ -1048,7 +1052,7 @@ internal fun OrphanConnectPrompt(
             Text(
                 "“${goal.title}” has no primary theme yet. Give it one now, or just add “${theme.name}” to the list of themes it serves.",
                 style = TextStyle(fontFamily = DenType.body, fontSize = 13.5.sp, lineHeight = 19.sp),
-                color = Den.muted,
+                color = Tz.colors.muted,
                 modifier = Modifier.padding(bottom = 14.dp),
             )
             com.thefoxworks.tzafon.ui.components.SheetPrimaryButton(

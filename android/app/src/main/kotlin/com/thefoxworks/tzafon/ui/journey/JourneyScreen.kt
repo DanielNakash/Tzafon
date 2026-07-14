@@ -47,13 +47,15 @@ import com.thefoxworks.tzafon.ui.components.RustHeader
 import com.thefoxworks.tzafon.ui.nav.AppMenuSheet
 import com.thefoxworks.tzafon.ui.components.Serves
 import com.thefoxworks.tzafon.ui.components.TzIcons
-import com.thefoxworks.tzafon.ui.theme.Den
+import com.thefoxworks.tzafon.ui.theme.Tz
 import com.thefoxworks.tzafon.ui.theme.DenType
 import com.thefoxworks.tzafon.ui.theme.a
 import com.thefoxworks.tzafon.ui.theme.contentDir
 
+@Composable
+@androidx.compose.runtime.ReadOnlyComposable
 private fun accentFor(theme: Theme?): Color =
-    theme?.let { Den.themeAccents[it.accentSlot % 3] } ?: Den.rust
+    theme?.let { Tz.colors.themeAccents[it.accentSlot % 3] } ?: Tz.colors.rust
 
 /**
  * Journey (FR-JOURNEY, design: JourneyScreen) — the identity mirror.
@@ -71,7 +73,7 @@ fun JourneyScreen(
     val state by vm.uiState.collectAsStateWithLifecycle()
     var menu by remember { mutableStateOf(false) }
 
-    Column(Modifier.fillMaxSize().background(Den.surface)) {
+    Column(Modifier.fillMaxSize().background(Tz.colors.surface)) {
         RustHeader(
             title = "How far you've come",
             kicker = "JOURNEY · THE MIRROR",
@@ -94,7 +96,7 @@ fun JourneyScreen(
                 Text(
                     "Not a trophy case — a mirror. Who you're becoming, in your own past and your own words.",
                     style = TextStyle(fontFamily = DenType.body, fontSize = 13.5.sp, lineHeight = 20.sp),
-                    color = Den.muted,
+                    color = Tz.colors.muted,
                     modifier = Modifier.padding(bottom = 6.dp),
                 )
             }
@@ -106,7 +108,7 @@ fun JourneyScreen(
 
             if (state.milestones.isNotEmpty()) {
                 item(key = "milestones-h") {
-                    GroupHeader("Milestones", count = state.milestones.size, accent = Den.rust)
+                    GroupHeader("Milestones", count = state.milestones.size, accent = Tz.colors.rust)
                 }
                 items(count = state.milestones.size, key = { "m-" + state.milestones[it].goal.id }) { i ->
                     MilestoneRow(state.milestones[i], topPad = if (i == 0) 0.dp else 10.dp)
@@ -114,21 +116,21 @@ fun JourneyScreen(
             }
 
             if (state.arcs.isNotEmpty()) {
-                item(key = "arcs-h") { GroupHeader("Who you're becoming", accent = Den.rust) }
+                item(key = "arcs-h") { GroupHeader("Who you're becoming", accent = Tz.colors.rust) }
                 items(count = state.arcs.size, key = { "a-" + state.arcs[it].habit.id }) { i ->
                     ArcRow(state.arcs[i], topPad = if (i == 0) 0.dp else 9.dp)
                 }
             }
 
             if (state.transitions.isNotEmpty()) {
-                item(key = "dir-h") { GroupHeader("Directions over time", accent = Den.rust) }
+                item(key = "dir-h") { GroupHeader("Directions over time", accent = Tz.colors.rust) }
                 items(count = state.transitions.size, key = { "t-" + state.transitions[it].theme.id }) { i ->
                     TransitionRow(state.transitions[i], last = i == state.transitions.size - 1)
                 }
             }
 
             if (state.reviewRows.isNotEmpty()) {
-                item(key = "rev-h") { GroupHeader("Weeks, reflected", count = state.reviewRows.size, accent = Den.rust) }
+                item(key = "rev-h") { GroupHeader("Weeks, reflected", count = state.reviewRows.size, accent = Tz.colors.rust) }
                 items(count = state.reviewRows.size, key = { "r-" + state.reviewRows[it].kicker + it }) { i ->
                     ReviewTimelineRow(state.reviewRows[i], last = i == state.reviewRows.size - 1)
                 }
@@ -153,26 +155,26 @@ private fun AggregateCard(aligned: Int) {
     Box(
         Modifier.fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(Den.rust),
+            .background(Tz.colors.rust),
     ) {
         Box(Modifier.align(Alignment.BottomEnd).offset(x = 24.dp, y = 24.dp).alpha(0.16f)) {
-            Compass(size = 120.dp, ring = Den.cream, needleN = Den.cream, needleS = Den.cream, stroke = 1.2f)
+            Compass(size = 120.dp, ring = Tz.colors.cream, needleN = Tz.colors.cream, needleS = Tz.colors.cream, stroke = 1.2f)
         }
         Column(Modifier.padding(18.dp)) {
-            Kicker("THIS QUARTER", color = Den.cream.a(0.75f))
+            Kicker("THIS QUARTER", color = Tz.colors.cream.a(0.75f))
             Text(
                 buildAnnotatedString {
                     withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append("$aligned") }
                     append(" of your completed tasks served a direction you chose.")
                 },
                 style = TextStyle(fontFamily = DenType.serif, fontSize = 21.sp, fontWeight = FontWeight.Medium, lineHeight = 27.sp),
-                color = Den.cream,
+                color = Tz.colors.cream,
                 modifier = Modifier.padding(top = 8.dp),
             )
             Text(
                 "That's not busywork. That's who you're becoming.",
                 style = TextStyle(fontFamily = DenType.serif, fontStyle = FontStyle.Italic, fontSize = 14.sp),
-                color = Den.cream.a(0.85f),
+                color = Tz.colors.cream.a(0.85f),
                 modifier = Modifier.padding(top = 8.dp),
             )
         }
@@ -187,8 +189,8 @@ private fun MilestoneRow(m: Milestone, topPad: androidx.compose.ui.unit.Dp) {
         Modifier.fillMaxWidth()
             .padding(top = topPad)
             .clip(RoundedCornerShape(13.dp))
-            .background(Den.card)
-            .border(1.dp, Den.line, RoundedCornerShape(13.dp))
+            .background(Tz.colors.card)
+            .border(1.dp, Tz.colors.line, RoundedCornerShape(13.dp))
             .padding(horizontal = 14.dp, vertical = 13.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -203,7 +205,7 @@ private fun MilestoneRow(m: Milestone, topPad: androidx.compose.ui.unit.Dp) {
             Text(
                 m.goal.title,
                 style = TextStyle(fontFamily = DenType.serif, fontSize = 16.5.sp, fontWeight = FontWeight.SemiBold).contentDir(),
-                color = Den.ink,
+                color = Tz.colors.ink,
             )
             if (m.theme != null) {
                 Serves(label = m.theme.name, accent = accent, modifier = Modifier.padding(top = 3.dp))
@@ -212,7 +214,7 @@ private fun MilestoneRow(m: Milestone, topPad: androidx.compose.ui.unit.Dp) {
         Text(
             m.dateLabel,
             style = TextStyle(fontFamily = DenType.mono, fontSize = 9.5.sp),
-            color = Den.faint,
+            color = Tz.colors.faint,
             maxLines = 1,
         )
     }
@@ -230,12 +232,12 @@ private fun ArcRow(arc: Arc, topPad: androidx.compose.ui.unit.Dp) {
         Text(
             arc.habit.name,
             style = TextStyle(fontFamily = DenType.serif, fontSize = 16.sp, fontWeight = FontWeight.SemiBold).contentDir(),
-            color = Den.ink,
+            color = Tz.colors.ink,
         )
         Text(
             "— ${arc.detail}",
             style = TextStyle(fontFamily = DenType.body, fontSize = 13.sp),
-            color = Den.muted,
+            color = Tz.colors.muted,
             maxLines = 1,
         )
     }
@@ -247,16 +249,16 @@ private fun TransitionRow(t: JourneyLogic.Transition, last: Boolean) {
     val liveAccent = t.successor?.let { accentFor(it) }
     Row(Modifier.fillMaxWidth().padding(start = 4.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Box(Modifier.padding(top = 3.dp)) { Dot(liveAccent ?: Den.closed, 11.dp) }
+            Box(Modifier.padding(top = 3.dp)) { Dot(liveAccent ?: Tz.colors.closed, 11.dp) }
             if (!last) {
-                Box(Modifier.padding(top = 3.dp).width(2.dp).height(26.dp).background(Den.line))
+                Box(Modifier.padding(top = 3.dp).width(2.dp).height(26.dp).background(Tz.colors.line))
             }
         }
         Text(
             buildAnnotatedString {
-                withStyle(SpanStyle(fontWeight = FontWeight.Bold, color = Den.ink)) { append(t.theme.name) }
-                withStyle(SpanStyle(fontStyle = FontStyle.Italic, color = Den.faint)) { append(" ${t.mid} ") }
-                withStyle(SpanStyle(fontWeight = FontWeight.Bold, color = liveAccent ?: Den.muted)) { append(t.to) }
+                withStyle(SpanStyle(fontWeight = FontWeight.Bold, color = Tz.colors.ink)) { append(t.theme.name) }
+                withStyle(SpanStyle(fontStyle = FontStyle.Italic, color = Tz.colors.faint)) { append(" ${t.mid} ") }
+                withStyle(SpanStyle(fontWeight = FontWeight.Bold, color = liveAccent ?: Tz.colors.muted)) { append(t.to) }
             },
             style = TextStyle(fontFamily = DenType.body, fontSize = 14.5.sp, lineHeight = 20.sp),
             modifier = Modifier.padding(bottom = 14.dp),
@@ -269,29 +271,29 @@ private fun TransitionRow(t: JourneyLogic.Transition, last: Boolean) {
 private fun ReviewTimelineRow(row: ReviewRow, last: Boolean) {
     Row(Modifier.fillMaxWidth().padding(start = 4.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Box(Modifier.padding(top = 3.dp)) { Dot(Den.rust.a(0.55f), 11.dp) }
+            Box(Modifier.padding(top = 3.dp)) { Dot(Tz.colors.rust.a(0.55f), 11.dp) }
             if (!last) {
-                Box(Modifier.padding(top = 3.dp).width(2.dp).height(30.dp).background(Den.line))
+                Box(Modifier.padding(top = 3.dp).width(2.dp).height(30.dp).background(Tz.colors.line))
             }
         }
         Column(Modifier.padding(bottom = 14.dp)) {
             Text(
                 row.kicker,
                 style = TextStyle(fontFamily = DenType.mono, fontSize = 9.5.sp, letterSpacing = 0.6.sp),
-                color = Den.faint,
+                color = Tz.colors.faint,
             )
             if (row.note != null) {
                 Text(
                     "“${row.note}”",
                     style = TextStyle(fontFamily = DenType.serif, fontStyle = FontStyle.Italic, fontSize = 14.5.sp, lineHeight = 20.sp).contentDir(),
-                    color = Den.ink,
+                    color = Tz.colors.ink,
                     modifier = Modifier.padding(top = 3.dp),
                 )
             } else if (row.quiet != null) {
                 Text(
                     row.quiet,
                     style = TextStyle(fontFamily = DenType.body, fontSize = 13.sp),
-                    color = Den.muted,
+                    color = Tz.colors.muted,
                     modifier = Modifier.padding(top = 3.dp),
                 )
             }
@@ -306,17 +308,17 @@ private fun EmptyMirror() {
         Modifier.fillMaxWidth().padding(top = 56.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Compass(size = 52.dp, ring = Den.faint, needleN = Den.rust, needleS = Den.faint, stroke = 1.4f)
+        Compass(size = 52.dp, ring = Tz.colors.faint, needleN = Tz.colors.rust, needleS = Tz.colors.faint, stroke = 1.4f)
         Text(
             "The mirror fills as you go",
             style = TextStyle(fontFamily = DenType.serif, fontSize = 18.sp, fontWeight = FontWeight.SemiBold),
-            color = Den.ink,
+            color = Tz.colors.ink,
             modifier = Modifier.padding(top = 16.dp),
         )
         Text(
             "Finish a goal, keep a habit alive, let a season pass — this page will remember it with you.",
             style = TextStyle(fontFamily = DenType.body, fontSize = 13.5.sp, lineHeight = 19.sp),
-            color = Den.muted,
+            color = Tz.colors.muted,
             modifier = Modifier.padding(top = 7.dp).fillMaxWidth(0.8f),
             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
         )

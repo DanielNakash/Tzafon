@@ -37,7 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.thefoxworks.tzafon.ui.components.TzIcons
 import com.thefoxworks.tzafon.ui.components.pressable
-import com.thefoxworks.tzafon.ui.theme.Den
+import com.thefoxworks.tzafon.ui.theme.Tz
 import com.thefoxworks.tzafon.ui.theme.DenType
 import com.thefoxworks.tzafon.ui.theme.contentDir
 
@@ -61,8 +61,8 @@ fun QuickAddSheet(
 
     ModalBottomSheet(
         onDismissRequest = onClose,
-        containerColor = Den.surface,
-        contentColor = Den.ink,
+        containerColor = Tz.colors.surface,
+        contentColor = Tz.colors.ink,
         shape = RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp),
         dragHandle = null,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
@@ -77,7 +77,7 @@ fun QuickAddSheet(
             Text(
                 "QUICK ADD",
                 style = TextStyle(fontFamily = DenType.mono, fontSize = 10.sp, letterSpacing = 1.sp),
-                color = Den.faint,
+                color = Tz.colors.faint,
             )
             BasicTextField(
                 value = title,
@@ -86,9 +86,9 @@ fun QuickAddSheet(
                     fontFamily = DenType.serif,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = Den.ink,
+                    color = Tz.colors.ink,
                 ).contentDir(),
-                cursorBrush = SolidColor(Den.rust),
+                cursorBrush = SolidColor(Tz.colors.rust),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                 keyboardActions = KeyboardActions(onDone = {
                     if (title.isNotBlank()) { onSave(title.trim()); onClose() }
@@ -100,7 +100,7 @@ fun QuickAddSheet(
                             Text(
                                 "What needs doing?",
                                 style = TextStyle(fontFamily = DenType.serif, fontSize = 18.sp, fontWeight = FontWeight.SemiBold),
-                                color = Den.faint,
+                                color = Tz.colors.faint,
                             )
                         }
                         inner()
@@ -118,24 +118,24 @@ fun QuickAddSheet(
                 Row(
                     Modifier
                         .clip(RoundedCornerShape(999.dp))
-                        .border(1.dp, Den.line, RoundedCornerShape(999.dp))
+                        .border(1.dp, Tz.colors.line, RoundedCornerShape(999.dp))
                         .pressable { onExpand(title.trim()) }
                         .padding(horizontal = 13.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(7.dp),
                 ) {
-                    TzIcons.Pencil(13.dp, Den.muted)
+                    TzIcons.Pencil(13.dp, Tz.colors.muted)
                     Text(
                         "EXPAND — DATES, CUE, SERVES",
                         style = TextStyle(fontFamily = DenType.mono, fontSize = 11.sp),
-                        color = Den.muted,
+                        color = Tz.colors.muted,
                     )
                 }
                 Box(Modifier.weight(1f))
                 Text(
                     "↵ SAVE",
                     style = TextStyle(fontFamily = DenType.mono, fontSize = 10.5.sp),
-                    color = if (title.isBlank()) Den.faint else Den.rust,
+                    color = if (title.isBlank()) Tz.colors.faint else Tz.colors.rust,
                     modifier = Modifier
                         .clip(RoundedCornerShape(8.dp))
                         .pressable { if (title.isNotBlank()) { onSave(title.trim()); onClose() } }
@@ -146,7 +146,7 @@ fun QuickAddSheet(
                 Text(
                     "Just a title is enough. No date needed — it lands in your inbox to schedule later.",
                     style = TextStyle(fontFamily = DenType.body, fontSize = 12.sp, lineHeight = 16.5.sp),
-                    color = Den.faint,
+                    color = Tz.colors.faint,
                     modifier = Modifier.padding(top = 10.dp),
                 )
             }

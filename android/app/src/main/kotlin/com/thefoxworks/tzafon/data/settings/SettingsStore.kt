@@ -25,6 +25,7 @@ class SettingsStore(private val context: Context) {
         val overloadDismissed = stringPreferencesKey("overload_dismissed_on") // ISO date
         val remindersEnabled = booleanPreferencesKey("reminders_enabled") // FR-NOTIF opt-in
         val chimeEnabled = booleanPreferencesKey("chime_enabled")         // FR-AUDIO-1 completion chime
+        val palette = stringPreferencesKey("palette")                     // DM-PREF-1 den|blue|green|magenta|teal
     }
 
     val welcomeSeen: Flow<Boolean> = context.dataStore.data.map { it[Keys.welcomeSeen] ?: false }
@@ -37,6 +38,14 @@ class SettingsStore(private val context: Context) {
 
     suspend fun setWeekStart(day: String) {
         context.dataStore.edit { it[Keys.weekStart] = day }
+    }
+
+    // ── Palette (DM-PREF-1 / FR-DESIGN-4) — device-local, not synced ──────────
+
+    val palette: Flow<String> = context.dataStore.data.map { it[Keys.palette] ?: "den" }
+
+    suspend fun setPalette(name: String) {
+        context.dataStore.edit { it[Keys.palette] = name }
     }
 
     // ── Planning range (FR-PLAN-2) ────────────────────────────

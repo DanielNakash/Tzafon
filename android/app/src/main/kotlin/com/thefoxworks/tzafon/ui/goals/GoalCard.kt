@@ -31,7 +31,7 @@ import com.thefoxworks.tzafon.ui.components.Dot
 import com.thefoxworks.tzafon.ui.components.PillButton
 import com.thefoxworks.tzafon.ui.components.TzIcons
 import com.thefoxworks.tzafon.ui.components.pressable
-import com.thefoxworks.tzafon.ui.theme.Den
+import com.thefoxworks.tzafon.ui.theme.Tz
 import com.thefoxworks.tzafon.ui.theme.DenType
 import com.thefoxworks.tzafon.ui.theme.a
 import com.thefoxworks.tzafon.ui.theme.contentDir
@@ -45,7 +45,7 @@ import com.thefoxworks.tzafon.ui.theme.contentDir
 fun GoalCard(
     goal: Goal,
     engines: List<Habit>,
-    accent: Color = Den.rust,
+    accent: Color = Tz.colors.rust,
     servesLabel: String? = null,       // "serves: <theme>" (+N via sharedCount)
     sharedCount: Int = 0,              // FR-DIR-5 "+N" multiplicity
     stale: Boolean = false,
@@ -62,8 +62,8 @@ fun GoalCard(
         Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(13.dp))
-            .background(Den.card)
-            .border(1.dp, Den.line, RoundedCornerShape(13.dp))
+            .background(Tz.colors.card)
+            .border(1.dp, Tz.colors.line, RoundedCornerShape(13.dp))
             .pressable(onOpen)
             .padding(horizontal = 14.dp, vertical = 13.dp),
     ) {
@@ -86,21 +86,21 @@ fun GoalCard(
                     Text(
                         "serves: $servesLabel" + if (sharedCount > 0) " +$sharedCount" else "",
                         style = TextStyle(fontFamily = DenType.mono, fontSize = 10.sp),
-                        color = Den.muted,
+                        color = Tz.colors.muted,
                     )
                 }
             } else {
                 Text(
                     "NO THEME",
                     style = TextStyle(fontFamily = DenType.mono, fontSize = 10.sp),
-                    color = Den.faint,
+                    color = Tz.colors.faint,
                 )
             }
         }
         Text(
             goal.title,
             style = TextStyle(fontFamily = DenType.serif, fontSize = 17.sp, fontWeight = FontWeight.SemiBold, lineHeight = 19.5.sp).contentDir(),
-            color = Den.ink,
+            color = Tz.colors.ink,
             modifier = Modifier.padding(top = 7.dp),
         )
 
@@ -118,7 +118,7 @@ fun GoalCard(
                     Text(
                         "${fmtQty(goal.targetQty)} ${goal.unit ?: ""}",
                         style = TextStyle(fontFamily = DenType.mono, fontSize = 11.sp),
-                        color = Den.muted,
+                        color = Tz.colors.muted,
                     )
                 }
                 Bar(pct = pct.toFloat(), fill = accent)
@@ -126,7 +126,7 @@ fun GoalCard(
                     Text(
                         "↗ ${fmtQty(goal.targetQty - goal.currentQty)} ${goal.unit ?: ""} to go — nearly there",
                         style = TextStyle(fontFamily = DenType.mono, fontSize = 10.5.sp),
-                        color = Den.amber,
+                        color = Tz.colors.amber,
                         modifier = Modifier.padding(top = 7.dp),
                     )
                 }
@@ -140,7 +140,7 @@ fun GoalCard(
                     Text(
                         "${goal.steps.count { it.done }} of ${goal.steps.size} steps",
                         style = TextStyle(fontFamily = DenType.mono, fontSize = 11.sp),
-                        color = Den.muted,
+                        color = Tz.colors.muted,
                     )
                     Text(
                         "$pct%",
@@ -158,7 +158,7 @@ fun GoalCard(
                             Box(
                                 Modifier.size(14.dp).clip(RoundedCornerShape(4.dp)).let {
                                     if (s.done) it.background(accent)
-                                    else it.border(1.5.dp, Den.ink.a(0.28f), RoundedCornerShape(4.dp))
+                                    else it.border(1.5.dp, Tz.colors.ink.a(0.28f), RoundedCornerShape(4.dp))
                                 },
                                 contentAlignment = Alignment.Center,
                             ) {
@@ -170,7 +170,7 @@ fun GoalCard(
                                     fontFamily = DenType.body, fontSize = 12.sp,
                                     textDecoration = if (s.done) TextDecoration.LineThrough else TextDecoration.None,
                                 ).contentDir(),
-                                color = if (s.done) Den.muted else Den.ink,
+                                color = if (s.done) Tz.colors.muted else Tz.colors.ink,
                             )
                         }
                     }
@@ -181,7 +181,7 @@ fun GoalCard(
                 Text(
                     goal.description,
                     style = TextStyle(fontFamily = DenType.body, fontSize = 12.5.sp, fontStyle = FontStyle.Italic).contentDir(),
-                    color = Den.muted,
+                    color = Tz.colors.muted,
                     modifier = Modifier.padding(top = 8.dp),
                 )
             }
@@ -189,7 +189,7 @@ fun GoalCard(
 
         if (engines.isNotEmpty()) {
             Column(Modifier.fillMaxWidth().padding(top = 11.dp)) {
-                Box(Modifier.fillMaxWidth().height(1.dp).background(Den.line2))
+                Box(Modifier.fillMaxWidth().height(1.dp).background(Tz.colors.line2))
                 Row(
                     Modifier.padding(top = 10.dp),
                     verticalAlignment = Alignment.CenterVertically,
@@ -198,7 +198,7 @@ fun GoalCard(
                     Text(
                         "ENGINE",
                         style = TextStyle(fontFamily = DenType.mono, fontSize = 9.5.sp, letterSpacing = 0.5.sp),
-                        color = Den.faint,
+                        color = Tz.colors.faint,
                     )
                     engines.forEach { h ->
                         Row(
@@ -224,8 +224,8 @@ fun GoalCard(
             horizontalArrangement = Arrangement.spacedBy(7.dp),
         ) {
             if (goal.type == GoalType.ACCUMULATIVE) PillButton("UPDATE PROGRESS", onClick = onUpdate)
-            if (pct >= 100) PillButton("COMPLETE ✓", onClick = onComplete, color = Den.green)
-            if (stale) PillButton("QUIET LATELY — FREEZE?", onClick = onFreeze, color = Den.frozen)
+            if (pct >= 100) PillButton("COMPLETE ✓", onClick = onComplete, color = Tz.colors.green)
+            if (stale) PillButton("QUIET LATELY — FREEZE?", onClick = onFreeze, color = Tz.colors.frozen)
         }
     }
 }

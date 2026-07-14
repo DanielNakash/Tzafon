@@ -42,7 +42,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.thefoxworks.tzafon.domain.dates.Dates
-import com.thefoxworks.tzafon.ui.theme.Den
+import com.thefoxworks.tzafon.ui.theme.Tz
 import com.thefoxworks.tzafon.ui.theme.DenType
 import com.thefoxworks.tzafon.ui.theme.a
 import java.time.LocalDate
@@ -53,11 +53,11 @@ import java.time.LocalDate
 fun DenSheet(title: String, onClose: () -> Unit, content: @Composable () -> Unit) {
     ModalBottomSheet(
         onDismissRequest = onClose,
-        containerColor = Den.surface,
-        contentColor = Den.ink,
+        containerColor = Tz.colors.surface,
+        contentColor = Tz.colors.ink,
         shape = RoundedCornerShape(topStart = 26.dp, topEnd = 26.dp),
         dragHandle = {
-            Box(Modifier.padding(top = 14.dp, bottom = 12.dp).size(width = 40.dp, height = 5.dp).clip(RoundedCornerShape(3.dp)).background(Den.line))
+            Box(Modifier.padding(top = 14.dp, bottom = 12.dp).size(width = 40.dp, height = 5.dp).clip(RoundedCornerShape(3.dp)).background(Tz.colors.line))
         },
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     ) {
@@ -65,7 +65,7 @@ fun DenSheet(title: String, onClose: () -> Unit, content: @Composable () -> Unit
         // soft keyboard; without it, focusing a text field pushes the button out of view.
         Column(Modifier.padding(horizontal = 18.dp).navigationBarsPadding().imePadding()) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(title, style = TextStyle(fontFamily = DenType.serif, fontSize = 23.sp, fontWeight = FontWeight.SemiBold), color = Den.ink)
+                Text(title, style = TextStyle(fontFamily = DenType.serif, fontSize = 23.sp, fontWeight = FontWeight.SemiBold), color = Tz.colors.ink)
                 Box(Modifier.weight(1f))
                 Box(
                     Modifier.size(34.dp).wrapContentSize(Alignment.Center, unbounded = true).size(48.dp)
@@ -73,9 +73,9 @@ fun DenSheet(title: String, onClose: () -> Unit, content: @Composable () -> Unit
                     contentAlignment = Alignment.Center,
                 ) {
                     Box(
-                        Modifier.size(34.dp).clip(RoundedCornerShape(9.dp)).background(Den.surfaceAlt),
+                        Modifier.size(34.dp).clip(RoundedCornerShape(9.dp)).background(Tz.colors.surfaceAlt),
                         contentAlignment = Alignment.Center,
-                    ) { TzIcons.X(16.dp, Den.muted) }
+                    ) { TzIcons.X(16.dp, Tz.colors.muted) }
                 }
             }
             Box(Modifier.padding(top = 8.dp, bottom = 26.dp)) { content() }
@@ -120,12 +120,12 @@ fun CalendarPicker(
                 Box(
                     Modifier
                         .clip(RoundedCornerShape(999.dp))
-                        .background(Den.card)
-                        .border(1.dp, Den.line, RoundedCornerShape(999.dp))
+                        .background(Tz.colors.card)
+                        .border(1.dp, Tz.colors.line, RoundedCornerShape(999.dp))
                         .pressable { onPick(d) }
                         .padding(horizontal = 13.dp, vertical = 8.dp)
                 ) {
-                    Text(label, style = TextStyle(fontFamily = DenType.body, fontSize = 13.5.sp), color = Den.ink)
+                    Text(label, style = TextStyle(fontFamily = DenType.body, fontSize = 13.5.sp), color = Tz.colors.ink)
                 }
             }
         }
@@ -133,26 +133,26 @@ fun CalendarPicker(
         // month nav
         Row(Modifier.fillMaxWidth().padding(bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(
-                Modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).background(Den.card).border(1.dp, Den.line, RoundedCornerShape(10.dp))
+                Modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).background(Tz.colors.card).border(1.dp, Tz.colors.line, RoundedCornerShape(10.dp))
                     .pressable {
                         if (viewMonth == 1) { viewMonth = 12; viewYear-- } else viewMonth--
                     },
                 contentAlignment = Alignment.Center,
-            ) { TzIcons.Chevron(18.dp, Den.ink, dir = TzIcons.Dir.LEFT) }
+            ) { TzIcons.Chevron(18.dp, Tz.colors.ink, dir = TzIcons.Dir.LEFT) }
             Text(
                 "${Dates.MO_FULL[viewMonth - 1]} $viewYear",
                 style = TextStyle(fontFamily = DenType.serif, fontSize = 19.sp, fontWeight = FontWeight.SemiBold),
-                color = Den.ink,
+                color = Tz.colors.ink,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.weight(1f),
             )
             Box(
-                Modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).background(Den.card).border(1.dp, Den.line, RoundedCornerShape(10.dp))
+                Modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).background(Tz.colors.card).border(1.dp, Tz.colors.line, RoundedCornerShape(10.dp))
                     .pressable {
                         if (viewMonth == 12) { viewMonth = 1; viewYear++ } else viewMonth++
                     },
                 contentAlignment = Alignment.Center,
-            ) { TzIcons.Chevron(18.dp, Den.ink) }
+            ) { TzIcons.Chevron(18.dp, Tz.colors.ink) }
         }
 
         // weekday header + day grid
@@ -164,7 +164,7 @@ fun CalendarPicker(
                 Text(
                     d.take(1),
                     style = TextStyle(fontFamily = DenType.mono, fontSize = 10.5.sp, letterSpacing = 0.5.sp),
-                    color = Den.faint,
+                    color = Tz.colors.faint,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.weight(1f).padding(vertical = 4.dp),
                 )
@@ -187,8 +187,8 @@ fun CalendarPicker(
                                 .aspectRatio(1f)
                                 .padding(1.5.dp)
                                 .clip(RoundedCornerShape(10.dp))
-                                .background(if (isSel) Den.rust else Color.Transparent)
-                                .then(if (isToday && !isSel) Modifier.border(1.5.dp, Den.rust.a(0.4f), RoundedCornerShape(10.dp)) else Modifier)
+                                .background(if (isSel) Tz.colors.rust else Color.Transparent)
+                                .then(if (isToday && !isSel) Modifier.border(1.5.dp, Tz.colors.rust.a(0.4f), RoundedCornerShape(10.dp)) else Modifier)
                                 .then(
                                     if (disabled) Modifier
                                     else Modifier.pressable(
@@ -209,11 +209,11 @@ fun CalendarPicker(
                                         fontWeight = if (isToday || isSel || logged) FontWeight.Bold else FontWeight.Normal,
                                     ),
                                     color = when {
-                                        disabled -> Den.faint
+                                        disabled -> Tz.colors.faint
                                         isSel -> Color.White
-                                        logged -> Den.green
-                                        isToday -> Den.rust
-                                        else -> Den.ink
+                                        logged -> Tz.colors.green
+                                        isToday -> Tz.colors.rust
+                                        else -> Tz.colors.ink
                                     },
                                 )
                                 // FR-HAB-9.3 — logged-day marker so the un-log target is visible.
@@ -223,7 +223,7 @@ fun CalendarPicker(
                                             .padding(top = 1.5.dp)
                                             .size(4.dp)
                                             .clip(RoundedCornerShape(999.dp))
-                                            .background(if (isSel) Color.White else Den.green),
+                                            .background(if (isSel) Color.White else Tz.colors.green),
                                     )
                                 }
                             }
@@ -241,11 +241,11 @@ fun CalendarPicker(
                     .padding(top = 16.dp)
                     .height(46.dp)
                     .clip(RoundedCornerShape(12.dp))
-                    .border(1.dp, Den.line, RoundedCornerShape(12.dp))
+                    .border(1.dp, Tz.colors.line, RoundedCornerShape(12.dp))
                     .pressable(onClear),
                 contentAlignment = Alignment.Center,
             ) {
-                Text("Clear date", style = TextStyle(fontFamily = DenType.body, fontSize = 15.sp, fontWeight = FontWeight.SemiBold), color = Den.muted)
+                Text("Clear date", style = TextStyle(fontFamily = DenType.body, fontSize = 15.sp, fontWeight = FontWeight.SemiBold), color = Tz.colors.muted)
             }
         }
     }

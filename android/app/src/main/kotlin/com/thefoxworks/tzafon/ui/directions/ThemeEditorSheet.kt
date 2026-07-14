@@ -37,7 +37,7 @@ import com.thefoxworks.tzafon.ui.components.SheetGhostButton
 import com.thefoxworks.tzafon.ui.components.SheetPrimaryButton
 import com.thefoxworks.tzafon.ui.components.TzIcons
 import com.thefoxworks.tzafon.ui.components.pressable
-import com.thefoxworks.tzafon.ui.theme.Den
+import com.thefoxworks.tzafon.ui.theme.Tz
 import com.thefoxworks.tzafon.ui.theme.DenType
 import com.thefoxworks.tzafon.ui.theme.a
 import com.thefoxworks.tzafon.ui.theme.contentDir
@@ -95,7 +95,7 @@ fun ThemeEditorSheet(
             Text(
                 "Frame it toward — “more of…”, never “stop doing…”.",
                 style = TextStyle(fontFamily = DenType.body, fontSize = 12.sp),
-                color = Den.faint,
+                color = Tz.colors.faint,
                 modifier = Modifier.padding(top = 6.dp),
             )
 
@@ -109,7 +109,7 @@ fun ThemeEditorSheet(
             Text(
                 "The why is what keeps a theme from going fluffy. It's required — one honest line.",
                 style = TextStyle(fontFamily = DenType.body, fontSize = 12.sp),
-                color = Den.faint,
+                color = Tz.colors.faint,
                 modifier = Modifier.padding(top = 6.dp),
             )
 
@@ -121,7 +121,7 @@ fun ThemeEditorSheet(
             Text(
                 "Default is a quarter. The end is a renew moment — a theme can't fail.",
                 style = TextStyle(fontFamily = DenType.body, fontSize = 12.sp),
-                color = Den.faint,
+                color = Tz.colors.faint,
                 modifier = Modifier.padding(top = 6.dp),
             )
 
@@ -178,7 +178,7 @@ fun CapSheet(theme: Theme, onPark: () -> Unit, onClose: () -> Unit) {
             Text(
                 "Three directions is the most the compass holds — that's what keeps each one real. “${theme.name}” can wait as upcoming and step in when a window ends.",
                 style = TextStyle(fontFamily = DenType.body, fontSize = 14.sp, lineHeight = 21.sp),
-                color = Den.muted,
+                color = Tz.colors.muted,
                 modifier = Modifier.padding(top = 3.dp, bottom = 16.dp),
             )
             SheetPrimaryButton(label = "Park it as upcoming") { onPark() }
@@ -195,23 +195,23 @@ fun ArchiveSheet(theme: Theme, onPick: (ArchivedOutcome) -> Unit, onClose: () ->
             Text(
                 "“${theme.name}” has run its season. However it went — that was the direction you held. Where next?",
                 style = TextStyle(fontFamily = DenType.body, fontSize = 14.sp, lineHeight = 21.sp),
-                color = Den.muted,
+                color = Tz.colors.muted,
                 modifier = Modifier.padding(top = 3.dp, bottom = 12.dp),
             )
             OutcomeRow(
                 title = "Renew it",
                 sub = "Same direction, a fresh window — it's still where you're headed.",
-                icon = { TzIcons.Repeat(16.dp, Den.green) },
+                icon = { TzIcons.Repeat(16.dp, Tz.colors.green) },
             ) { onPick(ArchivedOutcome.RENEWED) }
             OutcomeRow(
                 title = "It evolved",
                 sub = "The direction changed shape — archive this one, start the next.",
-                icon = { TzIcons.Sprout(16.dp, Den.amber) },
+                icon = { TzIcons.Sprout(16.dp, Tz.colors.amber) },
             ) { onPick(ArchivedOutcome.EVOLVED) }
             OutcomeRow(
                 title = "Let it rest",
                 sub = "It served its season. It lives on in the Journey.",
-                icon = { TzIcons.Moon(16.dp, Den.backlog) },
+                icon = { TzIcons.Moon(16.dp, Tz.colors.backlog) },
                 last = true,
             ) { onPick(ArchivedOutcome.RETIRED) }
         }
@@ -237,21 +237,21 @@ private fun OutcomeRow(
                 Text(
                     title,
                     style = TextStyle(fontFamily = DenType.body, fontSize = 15.5.sp, fontWeight = FontWeight.SemiBold),
-                    color = Den.ink,
+                    color = Tz.colors.ink,
                 )
                 Text(
                     sub,
                     style = TextStyle(fontFamily = DenType.body, fontSize = 12.5.sp, lineHeight = 17.sp),
-                    color = Den.muted,
+                    color = Tz.colors.muted,
                     modifier = Modifier.padding(top = 2.dp),
                 )
             }
-            TzIcons.Chevron(16.dp, Den.ink.a(0.26f))
+            TzIcons.Chevron(16.dp, Tz.colors.ink.a(0.26f))
         }
         if (!last) {
             Box(
                 Modifier.fillMaxWidth().padding(0.dp)
-                    .background(Den.line2)
+                    .background(Tz.colors.line2)
                     .padding(vertical = 0.5.dp),
             )
         }
@@ -267,26 +267,26 @@ private fun Field(
     italic: Boolean = false,
 ) {
     val style = when {
-        serif -> TextStyle(fontFamily = DenType.serif, fontSize = 18.sp, fontWeight = FontWeight.SemiBold, color = Den.ink)
-        italic -> TextStyle(fontFamily = DenType.serif, fontSize = 15.sp, fontStyle = FontStyle.Italic, color = Den.ink)
-        else -> TextStyle(fontFamily = DenType.body, fontSize = 15.sp, color = Den.ink)
+        serif -> TextStyle(fontFamily = DenType.serif, fontSize = 18.sp, fontWeight = FontWeight.SemiBold, color = Tz.colors.ink)
+        italic -> TextStyle(fontFamily = DenType.serif, fontSize = 15.sp, fontStyle = FontStyle.Italic, color = Tz.colors.ink)
+        else -> TextStyle(fontFamily = DenType.body, fontSize = 15.sp, color = Tz.colors.ink)
     }.contentDir()
     BasicTextField(
         value = value,
         onValueChange = onChange,
         textStyle = style,
-        cursorBrush = SolidColor(Den.rust),
+        cursorBrush = SolidColor(Tz.colors.rust),
         decorationBox = { inner ->
             Box(
                 Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(13.dp))
-                    .background(Den.card)
-                    .border(1.dp, Den.line, RoundedCornerShape(13.dp))
+                    .background(Tz.colors.card)
+                    .border(1.dp, Tz.colors.line, RoundedCornerShape(13.dp))
                     .padding(horizontal = 14.dp, vertical = 13.dp),
             ) {
                 if (value.isEmpty()) {
-                    Text(placeholder, style = style.copy(color = Den.faint, fontWeight = FontWeight.Normal))
+                    Text(placeholder, style = style.copy(color = Tz.colors.faint, fontWeight = FontWeight.Normal))
                 }
                 inner()
             }
@@ -300,20 +300,20 @@ private fun DateBox(label: String, value: String, modifier: Modifier = Modifier,
     Column(
         modifier
             .clip(RoundedCornerShape(13.dp))
-            .background(Den.card)
-            .border(1.dp, Den.line, RoundedCornerShape(13.dp))
+            .background(Tz.colors.card)
+            .border(1.dp, Tz.colors.line, RoundedCornerShape(13.dp))
             .pressable(onClick)
             .padding(horizontal = 13.dp, vertical = 11.dp),
     ) {
         Text(
             label,
             style = TextStyle(fontFamily = DenType.mono, fontSize = 9.5.sp, letterSpacing = 0.6.sp),
-            color = Den.faint,
+            color = Tz.colors.faint,
         )
         Text(
             Dates.fmtDate(value),
             style = TextStyle(fontFamily = DenType.body, fontSize = 14.5.sp),
-            color = Den.ink,
+            color = Tz.colors.ink,
             modifier = Modifier.padding(top = 2.dp),
         )
     }

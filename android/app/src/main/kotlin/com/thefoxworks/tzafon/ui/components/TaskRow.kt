@@ -22,7 +22,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.thefoxworks.tzafon.domain.model.Task
 import com.thefoxworks.tzafon.domain.model.TaskState
-import com.thefoxworks.tzafon.ui.theme.Den
+import com.thefoxworks.tzafon.ui.theme.Tz
 import com.thefoxworks.tzafon.ui.theme.DenType
 import com.thefoxworks.tzafon.ui.theme.a
 import com.thefoxworks.tzafon.ui.theme.contentDir
@@ -51,7 +51,7 @@ fun TaskRow(
     onLongPress: (() -> Unit)? = null,
     recurSummary: String? = null,
     servesLabel: String? = null,
-    servesAccent: androidx.compose.ui.graphics.Color = Den.muted,
+    servesAccent: androidx.compose.ui.graphics.Color = Tz.colors.muted,
     habitLabel: String? = null,
     last: Boolean = false,
     chevron: Boolean = true,
@@ -84,7 +84,7 @@ fun TaskRow(
                     Text(
                         task.title,
                         style = DenType.rowTitle.contentDir(),
-                        color = if (struck) Den.muted else Den.ink,
+                        color = if (struck) Tz.colors.muted else Tz.colors.ink,
                         textDecoration = if (struck) TextDecoration.LineThrough else TextDecoration.None,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
@@ -107,9 +107,9 @@ fun TaskRow(
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
                         if (servesLabel != null) Serves(servesLabel, servesAccent)
-                        if (habitLabel != null) Chip(habitLabel, icon = { TzIcons.Repeat(12.dp, Den.faint) }, userContent = true)
+                        if (habitLabel != null) Chip(habitLabel, icon = { TzIcons.Repeat(12.dp, Tz.colors.faint) }, userContent = true)
                         task.cue?.let { CueChip(it.label) }
-                        if (recurSummary != null) Chip(recurSummary, icon = { TzIcons.Repeat(12.dp, Den.faint) })
+                        if (recurSummary != null) Chip(recurSummary, icon = { TzIcons.Repeat(12.dp, Tz.colors.faint) })
                     }
                 }
             }
@@ -124,18 +124,18 @@ fun TaskRow(
                     ) {
                         Compass(
                             size = 20.dp,
-                            ring = if (focused) Den.rust else Den.faint.a(0.7f),
-                            needleN = if (focused) Den.rust else Den.faint.a(0.7f),
-                            needleS = if (focused) Den.rust.a(0.5f) else Den.faint.a(0.4f),
+                            ring = if (focused) Tz.colors.rust else Tz.colors.faint.a(0.7f),
+                            needleN = if (focused) Tz.colors.rust else Tz.colors.faint.a(0.7f),
+                            needleS = if (focused) Tz.colors.rust.a(0.5f) else Tz.colors.faint.a(0.4f),
                             stroke = 2f,
                         )
                     }
                 }
             }
             if (chevron) {
-                Box(Modifier.padding(top = 3.dp)) { TzIcons.Chevron(17.dp, Den.ink.a(0.26f)) }
+                Box(Modifier.padding(top = 3.dp)) { TzIcons.Chevron(17.dp, Tz.colors.ink.a(0.26f)) }
             }
         }
-        if (!last) Box(Modifier.fillMaxWidth().height(1.dp).background(Den.line))
+        if (!last) Box(Modifier.fillMaxWidth().height(1.dp).background(Tz.colors.line))
     }
 }

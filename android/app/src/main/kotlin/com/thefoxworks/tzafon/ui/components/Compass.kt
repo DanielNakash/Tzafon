@@ -11,7 +11,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.thefoxworks.tzafon.ui.theme.Den
+import com.thefoxworks.tzafon.ui.theme.Tz
 import com.thefoxworks.tzafon.ui.theme.a
 
 /**
@@ -21,9 +21,9 @@ import com.thefoxworks.tzafon.ui.theme.a
 @Composable
 fun Compass(
     size: Dp = 44.dp,
-    ring: Color = Den.rust,
-    needleN: Color = Den.rust,
-    needleS: Color = Den.faint,
+    ring: Color = Tz.colors.rust,
+    needleN: Color = Tz.colors.rust,
+    needleS: Color = Tz.colors.faint,
     bg: Color = Color.Transparent,
     stroke: Float = 1.6f,
     ticks: Boolean = true,

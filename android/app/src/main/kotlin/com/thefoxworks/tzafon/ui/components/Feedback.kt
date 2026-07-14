@@ -21,7 +21,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.thefoxworks.tzafon.ui.theme.Den
+import com.thefoxworks.tzafon.ui.theme.Tz
 import com.thefoxworks.tzafon.ui.theme.DenType
 import com.thefoxworks.tzafon.ui.theme.a
 
@@ -29,7 +29,7 @@ import com.thefoxworks.tzafon.ui.theme.a
 @Composable
 fun Banner(
     text: androidx.compose.ui.text.AnnotatedString,
-    tone: Color = Den.rust,
+    tone: Color = Tz.colors.rust,
     onClose: () -> Unit,
     onClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
@@ -49,14 +49,14 @@ fun Banner(
         Text(
             text,
             style = TextStyle(fontFamily = DenType.body, fontSize = 13.sp, lineHeight = 17.5.sp),
-            color = Den.ink,
+            color = Tz.colors.ink,
             modifier = Modifier.weight(1f),
         )
         Box(
             Modifier.size(26.dp).clip(RoundedCornerShape(7.dp)).pressable(onClose)
                 .semantics { contentDescription = "Dismiss" },
             contentAlignment = Alignment.Center,
-        ) { TzIcons.X(13.dp, Den.muted) }
+        ) { TzIcons.X(13.dp, Tz.colors.muted) }
     }
 }
 
@@ -71,16 +71,16 @@ fun Nudge(
         modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(13.dp))
-            .background(Den.amber.a(0.14f))
-            .border(1.dp, Den.amber.a(0.4f), RoundedCornerShape(13.dp))
+            .background(Tz.colors.amber.a(0.14f))
+            .border(1.dp, Tz.colors.amber.a(0.4f), RoundedCornerShape(13.dp))
             .padding(14.dp),
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(9.dp)) {
-            Compass(size = 17.dp, ring = Den.rust, needleN = Den.rust, needleS = Den.faint, stroke = 2f)
+            Compass(size = 17.dp, ring = Tz.colors.rust, needleN = Tz.colors.rust, needleS = Tz.colors.faint, stroke = 2f)
             Text(
                 text,
                 style = TextStyle(fontFamily = DenType.body, fontSize = 13.5.sp, lineHeight = 19.5.sp),
-                color = Den.ink,
+                color = Tz.colors.ink,
                 modifier = Modifier.weight(1f),
             )
         }
@@ -98,7 +98,7 @@ fun Nudge(
 fun PillButton(
     label: String,
     onClick: () -> Unit,
-    color: Color = Den.muted,
+    color: Color = Tz.colors.muted,
     filled: Boolean = false,
     enabled: Boolean = true,
     modifier: Modifier = Modifier,
@@ -106,8 +106,8 @@ fun PillButton(
     Box(
         modifier
             .clip(RoundedCornerShape(999.dp))
-            .background(if (filled) color else Den.card)
-            .border(1.dp, if (filled) color else Den.line, RoundedCornerShape(999.dp))
+            .background(if (filled) color else Tz.colors.card)
+            .border(1.dp, if (filled) color else Tz.colors.line, RoundedCornerShape(999.dp))
             .let { if (enabled) it.pressable(onClick) else it }
             .padding(horizontal = 9.dp, vertical = 4.dp),
     ) {
@@ -117,7 +117,7 @@ fun PillButton(
             color = when {
                 filled -> Color.White
                 enabled -> color
-                else -> Den.faint.a(0.6f)
+                else -> Tz.colors.faint.a(0.6f)
             },
         )
     }

@@ -49,7 +49,7 @@ import com.thefoxworks.tzafon.ui.components.SectionLabel
 import com.thefoxworks.tzafon.ui.components.Segmented
 import com.thefoxworks.tzafon.ui.components.TzIcons
 import com.thefoxworks.tzafon.ui.components.pressable
-import com.thefoxworks.tzafon.ui.theme.Den
+import com.thefoxworks.tzafon.ui.theme.Tz
 import com.thefoxworks.tzafon.ui.theme.DenType
 import com.thefoxworks.tzafon.ui.theme.a
 import com.thefoxworks.tzafon.ui.theme.contentDir
@@ -112,10 +112,10 @@ fun TaskEditorScreen(
     val singular = repeat && rec!!.dueMode == DueMode.SINGULAR
     val canSave = draft.title.isNotBlank()
 
-    Column(Modifier.fillMaxSize().background(Den.bg)) {
+    Column(Modifier.fillMaxSize().background(Tz.colors.bg)) {
         // ── rust header bar ──
         Row(
-            Modifier.fillMaxWidth().background(Den.rust).statusBarsPadding()
+            Modifier.fillMaxWidth().background(Tz.colors.rust).statusBarsPadding()
                 .padding(start = 14.dp, end = 14.dp, top = 6.dp, bottom = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -124,13 +124,13 @@ fun TaskEditorScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(2.dp),
             ) {
-                TzIcons.Back(22.dp, Den.cream)
-                Text("Cancel", style = TextStyle(fontFamily = DenType.body, fontSize = 16.sp), color = Den.cream)
+                TzIcons.Back(22.dp, Tz.colors.cream)
+                Text("Cancel", style = TextStyle(fontFamily = DenType.body, fontSize = 16.sp), color = Tz.colors.cream)
             }
             Text(
                 if (isNew) "NEW TASK" else "EDIT TASK",
                 style = TextStyle(fontFamily = DenType.mono, fontSize = 11.sp, letterSpacing = 2.sp),
-                color = Den.cream.a(0.9f),
+                color = Tz.colors.cream.a(0.9f),
                 modifier = Modifier.weight(1f),
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center,
             )
@@ -138,11 +138,11 @@ fun TaskEditorScreen(
                 Modifier
                     .alpha(if (canSave) 1f else 0.45f)
                     .clip(RoundedCornerShape(10.dp))
-                    .background(Den.cream)
+                    .background(Tz.colors.cream)
                     .pressable { if (canSave) onSave(draft, scope) }
                     .padding(horizontal = 16.dp, vertical = 9.dp),
             ) {
-                Text("Save", style = TextStyle(fontFamily = DenType.body, fontSize = 15.sp, fontWeight = FontWeight.Bold), color = Den.rust)
+                Text("Save", style = TextStyle(fontFamily = DenType.body, fontSize = 15.sp, fontWeight = FontWeight.Bold), color = Tz.colors.rust)
             }
         }
 
@@ -155,16 +155,16 @@ fun TaskEditorScreen(
                 Column(
                     Modifier.fillMaxWidth().padding(top = 14.dp)
                         .clip(RoundedCornerShape(13.dp))
-                        .background(Den.amber.a(0.14f))
-                        .border(1.dp, Den.amber.a(0.4f), RoundedCornerShape(13.dp))
+                        .background(Tz.colors.amber.a(0.14f))
+                        .border(1.dp, Tz.colors.amber.a(0.4f), RoundedCornerShape(13.dp))
                         .padding(horizontal = 14.dp, vertical = 13.dp),
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-                        TzIcons.Repeat(15.dp, Den.rust)
+                        TzIcons.Repeat(15.dp, Tz.colors.rust)
                         Text(
                             buildString { append("Repeating task. Apply changes to:") },
                             style = TextStyle(fontFamily = DenType.body, fontSize = 13.5.sp, fontWeight = FontWeight.SemiBold),
-                            color = Den.ink,
+                            color = Tz.colors.ink,
                         )
                     }
                     Box(Modifier.padding(top = 10.dp)) {
@@ -182,7 +182,7 @@ fun TaskEditorScreen(
                             EditScope.ALL -> "Edits the whole series, past and future occurrences alike."
                         },
                         style = TextStyle(fontFamily = DenType.body, fontSize = 12.sp),
-                        color = Den.muted,
+                        color = Tz.colors.muted,
                         modifier = Modifier.padding(top = 8.dp),
                     )
                 }
@@ -194,7 +194,7 @@ fun TaskEditorScreen(
                 value = draft.title,
                 onChange = { draft = draft.copy(title = it) },
                 placeholder = "What needs doing?",
-                textStyle = TextStyle(fontFamily = DenType.serif, fontSize = 18.sp, fontWeight = FontWeight.SemiBold, color = Den.ink),
+                textStyle = TextStyle(fontFamily = DenType.serif, fontSize = 18.sp, fontWeight = FontWeight.SemiBold, color = Tz.colors.ink),
             )
 
             // ── description ──
@@ -203,7 +203,7 @@ fun TaskEditorScreen(
                 value = draft.description,
                 onChange = { draft = draft.copy(description = it) },
                 placeholder = "Add detail, links, context…",
-                textStyle = TextStyle(fontFamily = DenType.body, fontSize = 15.5.sp, color = Den.ink, lineHeight = 23.sp),
+                textStyle = TextStyle(fontFamily = DenType.body, fontSize = 15.5.sp, color = Tz.colors.ink, lineHeight = 23.sp),
                 minLines = 3,
             )
 
@@ -212,29 +212,29 @@ fun TaskEditorScreen(
             Row(
                 Modifier.fillMaxWidth()
                     .clip(RoundedCornerShape(13.dp))
-                    .background(if (draft.cue != null) Den.amber.a(0.1f) else Den.card)
-                    .border(1.dp, if (draft.cue != null) Den.amber.a(0.4f) else Den.line, RoundedCornerShape(13.dp))
+                    .background(if (draft.cue != null) Tz.colors.amber.a(0.1f) else Tz.colors.card)
+                    .border(1.dp, if (draft.cue != null) Tz.colors.amber.a(0.4f) else Tz.colors.line, RoundedCornerShape(13.dp))
                     .pressable { sheet = "cue" }
                     .padding(horizontal = 14.dp, vertical = 13.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(11.dp),
             ) {
-                TzIcons.Cue(17.dp, if (draft.cue != null) Den.rust else Den.faint)
+                TzIcons.Cue(17.dp, if (draft.cue != null) Tz.colors.rust else Tz.colors.faint)
                 Column(Modifier.weight(1f)) {
                     Text(
                         draft.cue?.label ?: "Anchor it to a routine — optional",
                         style = TextStyle(fontFamily = DenType.body, fontSize = 15.5.sp),
-                        color = if (draft.cue != null) Den.ink else Den.faint,
+                        color = if (draft.cue != null) Tz.colors.ink else Tz.colors.faint,
                     )
                     Text(
                         draft.cue?.let { "${it.type.name.replace('_', '-')} · A TRIGGER BEATS A CLOCK" }
                             ?: "WHEN X, I WILL DO Y",
                         style = TextStyle(fontFamily = DenType.mono, fontSize = 10.sp),
-                        color = Den.faint,
+                        color = Tz.colors.faint,
                         modifier = Modifier.padding(top = 2.dp),
                     )
                 }
-                TzIcons.Chevron(17.dp, Den.ink.a(0.28f))
+                TzIcons.Chevron(17.dp, Tz.colors.ink.a(0.28f))
             }
 
             // ── serves (M4: the habit link; themes M6, goals M5) ──
@@ -244,8 +244,8 @@ fun TaskEditorScreen(
                 Modifier.fillMaxWidth()
                     .clip(RoundedCornerShape(12.dp))
                     .let {
-                        if (linkedHabit != null) it.background(Den.card).border(1.dp, Den.line, RoundedCornerShape(12.dp))
-                        else it.border(1.dp, Den.line, RoundedCornerShape(12.dp))
+                        if (linkedHabit != null) it.background(Tz.colors.card).border(1.dp, Tz.colors.line, RoundedCornerShape(12.dp))
+                        else it.border(1.dp, Tz.colors.line, RoundedCornerShape(12.dp))
                     }
                     .pressable { sheet = "habit" }
                     .padding(horizontal = 13.dp, vertical = 11.dp),
@@ -253,24 +253,24 @@ fun TaskEditorScreen(
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 if (linkedHabit != null) {
-                    TzIcons.Repeat(14.dp, Den.green)
+                    TzIcons.Repeat(14.dp, Tz.colors.green)
                     Text(
                         linkedHabit.name,
                         style = TextStyle(fontFamily = DenType.body, fontSize = 14.5.sp),
-                        color = Den.ink,
+                        color = Tz.colors.ink,
                         modifier = Modifier.weight(1f),
                     )
                     Text(
                         "HABIT",
                         style = TextStyle(fontFamily = DenType.mono, fontSize = 9.5.sp),
-                        color = Den.faint,
+                        color = Tz.colors.faint,
                     )
                 } else {
-                    TzIcons.Plus(14.dp, Den.muted)
+                    TzIcons.Plus(14.dp, Tz.colors.muted)
                     Text(
                         "Link a habit — done ticks it",
                         style = TextStyle(fontFamily = DenType.body, fontSize = 13.5.sp),
-                        color = Den.muted,
+                        color = Tz.colors.muted,
                         modifier = Modifier.weight(1f),
                     )
                 }
@@ -283,8 +283,8 @@ fun TaskEditorScreen(
                     .padding(top = 8.dp)
                     .clip(RoundedCornerShape(12.dp))
                     .let {
-                        if (linkedGoals.isNotEmpty()) it.background(Den.card).border(1.dp, Den.line, RoundedCornerShape(12.dp))
-                        else it.border(1.dp, Den.line, RoundedCornerShape(12.dp))
+                        if (linkedGoals.isNotEmpty()) it.background(Tz.colors.card).border(1.dp, Tz.colors.line, RoundedCornerShape(12.dp))
+                        else it.border(1.dp, Tz.colors.line, RoundedCornerShape(12.dp))
                     }
                     .pressable { sheet = "goals" }
                     .padding(horizontal = 13.dp, vertical = 11.dp),
@@ -292,11 +292,11 @@ fun TaskEditorScreen(
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 if (linkedGoals.isNotEmpty()) {
-                    TzIcons.Target(14.dp, Den.rust)
+                    TzIcons.Target(14.dp, Tz.colors.rust)
                     Text(
                         linkedGoals.joinToString(" · ") { it.title },
                         style = TextStyle(fontFamily = DenType.body, fontSize = 14.5.sp),
-                        color = Den.ink,
+                        color = Tz.colors.ink,
                         modifier = Modifier.weight(1f),
                         maxLines = 1,
                         overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
@@ -304,14 +304,14 @@ fun TaskEditorScreen(
                     Text(
                         if (linkedGoals.size > 1) "GOALS +${linkedGoals.size - 1}" else "GOAL",
                         style = TextStyle(fontFamily = DenType.mono, fontSize = 9.5.sp),
-                        color = Den.faint,
+                        color = Tz.colors.faint,
                     )
                 } else {
-                    TzIcons.Plus(14.dp, Den.muted)
+                    TzIcons.Plus(14.dp, Tz.colors.muted)
                     Text(
                         "Link a goal — done moves it",
                         style = TextStyle(fontFamily = DenType.body, fontSize = 13.5.sp),
-                        color = Den.muted,
+                        color = Tz.colors.muted,
                         modifier = Modifier.weight(1f),
                     )
                 }
@@ -353,8 +353,8 @@ fun TaskEditorScreen(
                     Row(
                         Modifier.fillMaxWidth()
                             .clip(RoundedCornerShape(13.dp))
-                            .background(Den.card)
-                            .border(1.dp, Den.line, RoundedCornerShape(13.dp))
+                            .background(Tz.colors.card)
+                            .border(1.dp, Tz.colors.line, RoundedCornerShape(13.dp))
                             .pressable { sheet = "state" }
                             .padding(14.dp),
                         verticalAlignment = Alignment.CenterVertically,
@@ -372,14 +372,14 @@ fun TaskEditorScreen(
                                     com.thefoxworks.tzafon.domain.model.TaskState.BACKLOG -> "Someday"
                                 },
                                 style = TextStyle(fontFamily = DenType.body, fontSize = 16.sp),
-                                color = Den.ink,
+                                color = Tz.colors.ink,
                                 modifier = Modifier.padding(top = 2.dp),
                             )
                         }
                         Text(
                             "CHANGE",
                             style = TextStyle(fontFamily = DenType.mono, fontSize = 10.5.sp),
-                            color = Den.rust,
+                            color = Tz.colors.rust,
                         )
                     }
                 }
@@ -390,19 +390,19 @@ fun TaskEditorScreen(
             Row(
                 Modifier.fillMaxWidth()
                     .clip(RoundedCornerShape(13.dp))
-                    .background(Den.card)
-                    .border(1.dp, Den.line, RoundedCornerShape(13.dp))
+                    .background(Tz.colors.card)
+                    .border(1.dp, Tz.colors.line, RoundedCornerShape(13.dp))
                     .pressable { draft = toggleRecurrence(draft, today) }
                     .padding(14.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                TzIcons.Repeat(18.dp, if (repeat) Den.rust else Den.muted)
-                Text("Repeat this task", style = TextStyle(fontFamily = DenType.body, fontSize = 16.sp), color = Den.ink, modifier = Modifier.weight(1f))
+                TzIcons.Repeat(18.dp, if (repeat) Tz.colors.rust else Tz.colors.muted)
+                Text("Repeat this task", style = TextStyle(fontFamily = DenType.body, fontSize = 16.sp), color = Tz.colors.ink, modifier = Modifier.weight(1f))
                 // toggle pill
                 Box(
                     Modifier.size(width = 48.dp, height = 28.dp).clip(RoundedCornerShape(999.dp))
-                        .background(if (repeat) Den.rust else Den.ink.a(0.18f)),
+                        .background(if (repeat) Tz.colors.rust else Tz.colors.ink.a(0.18f)),
                 ) {
                     Box(
                         Modifier.padding(3.dp).size(22.dp).clip(CircleShape).background(Color.White)
@@ -417,7 +417,7 @@ fun TaskEditorScreen(
                 Text(
                     "Backlog is for non-recurring tasks — a recurring series can't be “someday”.",
                     style = TextStyle(fontFamily = DenType.body, fontSize = 12.sp, lineHeight = 16.sp),
-                    color = Den.faint,
+                    color = Tz.colors.faint,
                     modifier = Modifier.padding(top = 6.dp),
                 )
             }
@@ -426,25 +426,25 @@ fun TaskEditorScreen(
                 Column(
                     Modifier.fillMaxWidth().padding(top = 11.dp)
                         .clip(RoundedCornerShape(16.dp))
-                        .background(Den.surface)
-                        .border(1.dp, Den.line, RoundedCornerShape(16.dp))
+                        .background(Tz.colors.surface)
+                        .border(1.dp, Tz.colors.line, RoundedCornerShape(16.dp))
                         .padding(horizontal = 15.dp, vertical = 16.dp),
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(7.dp), modifier = Modifier.padding(bottom = 14.dp)) {
-                        TzIcons.Calendar(16.dp, Den.rust)
-                        Text("To Do repeats…", style = TextStyle(fontFamily = DenType.serif, fontSize = 17.sp, fontWeight = FontWeight.SemiBold), color = Den.ink)
+                        TzIcons.Calendar(16.dp, Tz.colors.rust)
+                        Text("To Do repeats…", style = TextStyle(fontFamily = DenType.serif, fontSize = 17.sp, fontWeight = FontWeight.SemiBold), color = Tz.colors.ink)
                     }
                     RecurrenceFields(rule = rec!!.rule, onChange = { draft = draft.copy(recurrence = rec.copy(rule = it)) })
 
                     Box(
-                        Modifier.fillMaxWidth().padding(top = 4.dp).clip(RoundedCornerShape(9.dp)).background(Den.rust.a(0.08f)).padding(horizontal = 12.dp, vertical = 9.dp),
+                        Modifier.fillMaxWidth().padding(top = 4.dp).clip(RoundedCornerShape(9.dp)).background(Tz.colors.rust.a(0.08f)).padding(horizontal = 12.dp, vertical = 9.dp),
                     ) {
-                        Text("↻ " + Recurrence.summary(rec.rule), style = TextStyle(fontFamily = DenType.mono, fontSize = 12.5.sp), color = Den.rust)
+                        Text("↻ " + Recurrence.summary(rec.rule), style = TextStyle(fontFamily = DenType.mono, fontSize = 12.5.sp), color = Tz.colors.rust)
                     }
 
                     // due-date mode (only when a due date is set)
                     if (draft.dueDate != null) {
-                        Box(Modifier.fillMaxWidth().padding(vertical = 18.dp).height(1.dp).background(Den.line))
+                        Box(Modifier.fillMaxWidth().padding(vertical = 18.dp).height(1.dp).background(Tz.colors.line))
                         Field("Due date on this series") {
                             Column {
                                 Segmented(
@@ -466,7 +466,7 @@ fun TaskEditorScreen(
                                     else
                                         "One fixed deadline for the whole series. It also ends the recurrence — no occurrences are generated after it.",
                                     style = TextStyle(fontFamily = DenType.body, fontSize = 12.5.sp, lineHeight = 18.sp),
-                                    color = Den.muted,
+                                    color = Tz.colors.muted,
                                     modifier = Modifier.padding(top = 9.dp),
                                 )
                             }
@@ -475,34 +475,34 @@ fun TaskEditorScreen(
                             Column(
                                 Modifier.fillMaxWidth()
                                     .clip(RoundedCornerShape(13.dp))
-                                    .background(Den.card)
-                                    .border(1.dp, Den.line, RoundedCornerShape(13.dp))
+                                    .background(Tz.colors.card)
+                                    .border(1.dp, Tz.colors.line, RoundedCornerShape(13.dp))
                                     .padding(horizontal = 13.dp, vertical = 14.dp),
                             ) {
                                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(7.dp), modifier = Modifier.padding(bottom = 12.dp)) {
-                                    TzIcons.Flag(14.dp, Den.due)
-                                    Text("Deadline repeats…", style = TextStyle(fontFamily = DenType.serif, fontSize = 16.sp, fontWeight = FontWeight.SemiBold), color = Den.ink)
+                                    TzIcons.Flag(14.dp, Tz.colors.due)
+                                    Text("Deadline repeats…", style = TextStyle(fontFamily = DenType.serif, fontSize = 16.sp, fontWeight = FontWeight.SemiBold), color = Tz.colors.ink)
                                 }
                                 val dr = rec.dueRule ?: Recurrence.defaultRule()
                                 RecurrenceFields(rule = dr, onChange = { draft = draft.copy(recurrence = rec.copy(dueRule = it)) })
                                 Box(
-                                    Modifier.fillMaxWidth().clip(RoundedCornerShape(9.dp)).background(Den.due.a(0.08f)).padding(horizontal = 12.dp, vertical = 9.dp),
+                                    Modifier.fillMaxWidth().clip(RoundedCornerShape(9.dp)).background(Tz.colors.due.a(0.08f)).padding(horizontal = 12.dp, vertical = 9.dp),
                                 ) {
-                                    Text("⚑ " + Recurrence.summary(dr), style = TextStyle(fontFamily = DenType.mono, fontSize = 12.5.sp), color = Den.due)
+                                    Text("⚑ " + Recurrence.summary(dr), style = TextStyle(fontFamily = DenType.mono, fontSize = 12.5.sp), color = Tz.colors.due)
                                 }
                             }
                         }
                     }
 
                     // end date — unavailable in singular mode
-                    Box(Modifier.fillMaxWidth().padding(vertical = 18.dp).height(1.dp).background(Den.line))
+                    Box(Modifier.fillMaxWidth().padding(vertical = 18.dp).height(1.dp).background(Tz.colors.line))
                     if (singular) {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(9.dp)) {
-                            TzIcons.Flag(15.dp, Den.faint)
+                            TzIcons.Flag(15.dp, Tz.colors.faint)
                             Text(
                                 "End date is set by the single deadline — ${draft.dueDate?.let { Dates.fmtLong(it, today) } ?: "none"}.",
                                 style = TextStyle(fontFamily = DenType.body, fontSize = 13.sp),
-                                color = Den.muted,
+                                color = Tz.colors.muted,
                             )
                         }
                     } else {
@@ -511,24 +511,24 @@ fun TaskEditorScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
-                            TzIcons.Calendar(18.dp, Den.muted)
+                            TzIcons.Calendar(18.dp, Tz.colors.muted)
                             Column(Modifier.weight(1f)) {
                                 SectionLabel("Ends")
                                 Text(
                                     rec.endDate?.let { Dates.fmtLong(it, today) } ?: "Never",
                                     style = TextStyle(fontFamily = DenType.body, fontSize = 15.5.sp),
-                                    color = if (rec.endDate != null) Den.ink else Den.faint,
+                                    color = if (rec.endDate != null) Tz.colors.ink else Tz.colors.faint,
                                     modifier = Modifier.padding(top = 2.dp),
                                 )
                             }
                             if (rec.endDate != null) {
                                 Box(
-                                    Modifier.size(30.dp).clip(RoundedCornerShape(8.dp)).background(Den.surfaceAlt)
+                                    Modifier.size(30.dp).clip(RoundedCornerShape(8.dp)).background(Tz.colors.surfaceAlt)
                                         .pressable { draft = draft.copy(recurrence = rec.copy(endDate = null)) },
                                     contentAlignment = Alignment.Center,
-                                ) { TzIcons.X(14.dp, Den.muted) }
+                                ) { TzIcons.X(14.dp, Tz.colors.muted) }
                             } else {
-                                TzIcons.Chevron(18.dp, Den.ink.a(0.3f))
+                                TzIcons.Chevron(18.dp, Tz.colors.ink.a(0.3f))
                             }
                         }
                     }
@@ -540,15 +540,15 @@ fun TaskEditorScreen(
                 Row(
                     Modifier.fillMaxWidth().padding(top = 26.dp).height(50.dp)
                         .clip(RoundedCornerShape(13.dp))
-                        .border(1.dp, Den.due.a(0.45f), RoundedCornerShape(13.dp))
+                        .border(1.dp, Tz.colors.due.a(0.45f), RoundedCornerShape(13.dp))
                         .pressable {
                             if (repeat) sheet = "delete" else onDelete(draft.id!!, EditScope.ONE)
                         },
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
                 ) {
-                    TzIcons.Trash(18.dp, Den.due)
-                    Text("Delete task", style = TextStyle(fontFamily = DenType.body, fontSize = 15.5.sp, fontWeight = FontWeight.SemiBold), color = Den.due)
+                    TzIcons.Trash(18.dp, Tz.colors.due)
+                    Text("Delete task", style = TextStyle(fontFamily = DenType.body, fontSize = 15.5.sp, fontWeight = FontWeight.SemiBold), color = Tz.colors.due)
                 }
             }
         }
@@ -596,14 +596,14 @@ fun TaskEditorScreen(
                 Text(
                     "Done ticks the habit for the day — counted once, reversed exactly if you undo.",
                     style = TextStyle(fontFamily = DenType.body, fontSize = 13.sp),
-                    color = Den.muted,
+                    color = Tz.colors.muted,
                     modifier = Modifier.padding(top = 3.dp, bottom = 8.dp),
                 )
                 if (habits.isEmpty()) {
                     Text(
                         "No habits yet — start one in the Habits tab first.",
                         style = TextStyle(fontFamily = DenType.body, fontSize = 14.sp),
-                        color = Den.muted,
+                        color = Tz.colors.muted,
                         modifier = Modifier.padding(vertical = 14.dp),
                     )
                 }
@@ -615,16 +615,16 @@ fun TaskEditorScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(11.dp),
                     ) {
-                        TzIcons.Repeat(15.dp, Den.green)
+                        TzIcons.Repeat(15.dp, Tz.colors.green)
                         Text(
                             h.name,
                             style = TextStyle(fontFamily = DenType.body, fontSize = 15.5.sp),
-                            color = Den.ink,
+                            color = Tz.colors.ink,
                             modifier = Modifier.weight(1f),
                         )
-                        if (draft.habitId == h.id) TzIcons.Check(15.dp, Den.rust, 2.6f)
+                        if (draft.habitId == h.id) TzIcons.Check(15.dp, Tz.colors.rust, 2.6f)
                     }
-                    Box(Modifier.fillMaxWidth().height(1.dp).background(Den.line2))
+                    Box(Modifier.fillMaxWidth().height(1.dp).background(Tz.colors.line2))
                 }
                 if (draft.habitId != null) {
                     Row(
@@ -634,11 +634,11 @@ fun TaskEditorScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(11.dp),
                     ) {
-                        TzIcons.X(14.dp, Den.muted)
+                        TzIcons.X(14.dp, Tz.colors.muted)
                         Text(
                             "No habit for this one",
                             style = TextStyle(fontFamily = DenType.body, fontSize = 14.5.sp),
-                            color = Den.muted,
+                            color = Tz.colors.muted,
                         )
                     }
                 }
@@ -649,14 +649,14 @@ fun TaskEditorScreen(
                 Text(
                     "Done moves each linked goal — once, and exactly reversed if you undo. One is plenty.",
                     style = TextStyle(fontFamily = DenType.body, fontSize = 13.sp),
-                    color = Den.muted,
+                    color = Tz.colors.muted,
                     modifier = Modifier.padding(top = 3.dp, bottom = 8.dp),
                 )
                 if (goals.isEmpty()) {
                     Text(
                         "No goals yet — aim at one in the Directions tab first.",
                         style = TextStyle(fontFamily = DenType.body, fontSize = 14.sp),
-                        color = Den.muted,
+                        color = Tz.colors.muted,
                         modifier = Modifier.padding(vertical = 14.dp),
                     )
                 }
@@ -673,16 +673,16 @@ fun TaskEditorScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(11.dp),
                     ) {
-                        TzIcons.Target(15.dp, if (on) Den.rust else Den.muted)
+                        TzIcons.Target(15.dp, if (on) Tz.colors.rust else Tz.colors.muted)
                         Text(
                             g.title,
                             style = TextStyle(fontFamily = DenType.body, fontSize = 15.5.sp),
-                            color = Den.ink,
+                            color = Tz.colors.ink,
                             modifier = Modifier.weight(1f),
                         )
-                        if (on) TzIcons.Check(15.dp, Den.rust, 2.6f)
+                        if (on) TzIcons.Check(15.dp, Tz.colors.rust, 2.6f)
                     }
-                    Box(Modifier.fillMaxWidth().height(1.dp).background(Den.line2))
+                    Box(Modifier.fillMaxWidth().height(1.dp).background(Tz.colors.line2))
                 }
             }
         }
@@ -691,24 +691,24 @@ fun TaskEditorScreen(
                 Text(
                     "This task repeats — choose what to remove.",
                     style = TextStyle(fontFamily = DenType.body, fontSize = 14.5.sp, lineHeight = 21.sp),
-                    color = Den.muted,
+                    color = Tz.colors.muted,
                     modifier = Modifier.padding(bottom = 16.dp),
                 )
                 Row(
                     Modifier.fillMaxWidth().height(52.dp)
                         .clip(RoundedCornerShape(13.dp))
-                        .border(1.dp, Den.due.a(0.45f), RoundedCornerShape(13.dp))
+                        .border(1.dp, Tz.colors.due.a(0.45f), RoundedCornerShape(13.dp))
                         .pressable { sheet = null; onDelete(draft.id!!, EditScope.ONE) },
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center,
                 ) {
-                    Text("Delete this occurrence", style = TextStyle(fontFamily = DenType.body, fontSize = 15.5.sp, fontWeight = FontWeight.SemiBold), color = Den.due)
+                    Text("Delete this occurrence", style = TextStyle(fontFamily = DenType.body, fontSize = 15.5.sp, fontWeight = FontWeight.SemiBold), color = Tz.colors.due)
                 }
                 Box(Modifier.height(10.dp))
                 Row(
                     Modifier.fillMaxWidth().height(52.dp)
                         .clip(RoundedCornerShape(13.dp))
-                        .background(Den.due)
+                        .background(Tz.colors.due)
                         .pressable { sheet = null; onDelete(draft.id!!, EditScope.ALL) },
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center,
@@ -744,17 +744,17 @@ private fun EdInput(
         onValueChange = onChange,
         textStyle = styled,
         minLines = minLines,
-        cursorBrush = SolidColor(Den.rust),
+        cursorBrush = SolidColor(Tz.colors.rust),
         decorationBox = { inner ->
             Box(
                 Modifier.fillMaxWidth()
                     .clip(RoundedCornerShape(13.dp))
-                    .background(Den.card)
-                    .border(1.dp, Den.line, RoundedCornerShape(13.dp))
+                    .background(Tz.colors.card)
+                    .border(1.dp, Tz.colors.line, RoundedCornerShape(13.dp))
                     .padding(14.dp),
             ) {
                 if (value.isEmpty()) {
-                    Text(placeholder, style = styled.copy(color = Den.faint, fontWeight = FontWeight.Normal))
+                    Text(placeholder, style = styled.copy(color = Tz.colors.faint, fontWeight = FontWeight.Normal))
                 }
                 inner()
             }
@@ -777,30 +777,30 @@ private fun DateRow(
         Row(
             Modifier.fillMaxWidth()
                 .clip(RoundedCornerShape(13.dp))
-                .background(Den.card)
-                .border(1.dp, Den.line, RoundedCornerShape(13.dp))
+                .background(Tz.colors.card)
+                .border(1.dp, Tz.colors.line, RoundedCornerShape(13.dp))
                 .pressable(onClick)
                 .padding(14.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(13.dp),
         ) {
-            TzIcons.Calendar(19.dp, Den.rust)
+            TzIcons.Calendar(19.dp, Tz.colors.rust)
             Column(Modifier.weight(1f)) {
                 SectionLabel(label)
                 Text(
                     value?.let { Dates.fmtLong(it, today) } ?: placeholder,
                     style = TextStyle(fontFamily = DenType.body, fontSize = 16.sp),
-                    color = if (value != null) Den.ink else Den.faint,
+                    color = if (value != null) Tz.colors.ink else Tz.colors.faint,
                     modifier = Modifier.padding(top = 2.dp),
                 )
             }
             if (value != null) {
                 Box(
-                    Modifier.size(30.dp).clip(RoundedCornerShape(8.dp)).background(Den.surfaceAlt).pressable(onClear),
+                    Modifier.size(30.dp).clip(RoundedCornerShape(8.dp)).background(Tz.colors.surfaceAlt).pressable(onClear),
                     contentAlignment = Alignment.Center,
-                ) { TzIcons.X(14.dp, Den.muted) }
+                ) { TzIcons.X(14.dp, Tz.colors.muted) }
             } else {
-                TzIcons.Chevron(18.dp, Den.ink.a(0.3f))
+                TzIcons.Chevron(18.dp, Tz.colors.ink.a(0.3f))
             }
         }
         if (note != null) {
@@ -809,8 +809,8 @@ private fun DateRow(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(5.dp),
             ) {
-                TzIcons.Alert(13.dp, Den.due)
-                Text(note, style = TextStyle(fontFamily = DenType.mono, fontSize = 12.5.sp), color = Den.due)
+                TzIcons.Alert(13.dp, Tz.colors.due)
+                Text(note, style = TextStyle(fontFamily = DenType.mono, fontSize = 12.5.sp), color = Tz.colors.due)
             }
         }
     }

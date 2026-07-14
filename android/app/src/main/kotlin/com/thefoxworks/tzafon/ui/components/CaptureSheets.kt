@@ -35,7 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.thefoxworks.tzafon.domain.model.Cue
 import com.thefoxworks.tzafon.domain.model.CueType
-import com.thefoxworks.tzafon.ui.theme.Den
+import com.thefoxworks.tzafon.ui.theme.Tz
 import com.thefoxworks.tzafon.ui.theme.DenType
 import com.thefoxworks.tzafon.ui.theme.a
 import com.thefoxworks.tzafon.ui.theme.contentDir
@@ -59,7 +59,7 @@ fun CueSheet(
             Text(
                 "A trigger beats a clock — anchor it to something you already do.",
                 style = TextStyle(fontFamily = DenType.body, fontSize = 13.sp),
-                color = Den.muted,
+                color = Tz.colors.muted,
                 modifier = Modifier.padding(top = 3.dp, bottom = 12.dp),
             )
 
@@ -74,18 +74,18 @@ fun CueSheet(
                     .fillMaxWidth()
                     .padding(top = 14.dp)
                     .clip(RoundedCornerShape(13.dp))
-                    .background(Den.amber.a(0.1f))
-                    .border(1.dp, Den.amber.a(0.4f), RoundedCornerShape(13.dp))
+                    .background(Tz.colors.amber.a(0.1f))
+                    .border(1.dp, Tz.colors.amber.a(0.4f), RoundedCornerShape(13.dp))
                     .padding(horizontal = 14.dp, vertical = 13.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(11.dp),
             ) {
-                TzIcons.Cue(17.dp, Den.rust)
+                TzIcons.Cue(17.dp, Tz.colors.rust)
                 BasicTextField(
                     value = label,
                     onValueChange = { label = it },
-                    textStyle = TextStyle(fontFamily = DenType.body, fontSize = 15.5.sp, color = Den.ink).contentDir(),
-                    cursorBrush = SolidColor(Den.rust),
+                    textStyle = TextStyle(fontFamily = DenType.body, fontSize = 15.5.sp, color = Tz.colors.ink).contentDir(),
+                    cursorBrush = SolidColor(Tz.colors.rust),
                     singleLine = true,
                     decorationBox = { inner ->
                         Box {
@@ -97,7 +97,7 @@ fun CueSheet(
                                         CueType.AT_PLACE -> "At the studio"
                                     },
                                     style = TextStyle(fontFamily = DenType.body, fontSize = 15.5.sp),
-                                    color = Den.faint,
+                                    color = Tz.colors.faint,
                                 )
                             }
                             inner()
@@ -113,18 +113,18 @@ fun CueSheet(
                         .fillMaxWidth()
                         .padding(top = 8.dp)
                         .clip(RoundedCornerShape(13.dp))
-                        .background(Den.card)
-                        .border(1.dp, Den.line, RoundedCornerShape(13.dp))
+                        .background(Tz.colors.card)
+                        .border(1.dp, Tz.colors.line, RoundedCornerShape(13.dp))
                         .padding(horizontal = 14.dp, vertical = 13.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(11.dp),
                 ) {
-                    TzIcons.Clock(16.dp, Den.muted)
+                    TzIcons.Clock(16.dp, Tz.colors.muted)
                     BasicTextField(
                         value = time,
                         onValueChange = { if (it.length <= 5) time = it },
-                        textStyle = TextStyle(fontFamily = DenType.mono, fontSize = 15.sp, color = Den.ink),
-                        cursorBrush = SolidColor(Den.rust),
+                        textStyle = TextStyle(fontFamily = DenType.mono, fontSize = 15.sp, color = Tz.colors.ink),
+                        cursorBrush = SolidColor(Tz.colors.rust),
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         decorationBox = { inner ->
@@ -133,7 +133,7 @@ fun CueSheet(
                                     Text(
                                         "08:30",
                                         style = TextStyle(fontFamily = DenType.mono, fontSize = 15.sp),
-                                        color = Den.faint,
+                                        color = Tz.colors.faint,
                                     )
                                 }
                                 inner()
@@ -144,7 +144,7 @@ fun CueSheet(
                     Text(
                         "REMINDS AT THIS TIME",
                         style = TextStyle(fontFamily = DenType.mono, fontSize = 9.5.sp),
-                        color = Den.faint,
+                        color = Tz.colors.faint,
                     )
                 }
             }
@@ -171,15 +171,15 @@ private fun CueKindChip(label: String, on: Boolean, onClick: () -> Unit) {
     Box(
         Modifier
             .clip(RoundedCornerShape(999.dp))
-            .background(if (on) Den.rust else Color.Transparent)
-            .border(1.dp, if (on) Den.rust else Den.line, RoundedCornerShape(999.dp))
+            .background(if (on) Tz.colors.rust else Color.Transparent)
+            .border(1.dp, if (on) Tz.colors.rust else Tz.colors.line, RoundedCornerShape(999.dp))
             .pressable(onClick)
             .padding(horizontal = 10.dp, vertical = 6.dp),
     ) {
         Text(
             label,
             style = TextStyle(fontFamily = DenType.mono, fontSize = 10.sp, letterSpacing = 0.3.sp),
-            color = if (on) Color.White else Den.muted,
+            color = if (on) Color.White else Tz.colors.muted,
         )
     }
 }
@@ -208,15 +208,15 @@ fun AmountSheet(
             Text(
                 "How much did it come to? Any number is a real number.",
                 style = TextStyle(fontFamily = DenType.body, fontSize = 13.sp),
-                color = Den.muted,
+                color = Tz.colors.muted,
                 modifier = Modifier.padding(top = 3.dp, bottom = 12.dp),
             )
             Row(
                 Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(13.dp))
-                    .background(Den.card)
-                    .border(1.dp, Den.line, RoundedCornerShape(13.dp))
+                    .background(Tz.colors.card)
+                    .border(1.dp, Tz.colors.line, RoundedCornerShape(13.dp))
                     .padding(horizontal = 14.dp, vertical = 14.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -228,9 +228,9 @@ fun AmountSheet(
                         fontFamily = DenType.serif,
                         fontSize = 22.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = Den.ink,
+                        color = Tz.colors.ink,
                     ),
-                    cursorBrush = SolidColor(Den.rust),
+                    cursorBrush = SolidColor(Tz.colors.rust),
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     decorationBox = { inner ->
@@ -239,7 +239,7 @@ fun AmountSheet(
                                 Text(
                                     "0",
                                     style = TextStyle(fontFamily = DenType.serif, fontSize = 22.sp, fontWeight = FontWeight.SemiBold),
-                                    color = Den.faint,
+                                    color = Tz.colors.faint,
                                 )
                             }
                             inner()
@@ -251,7 +251,7 @@ fun AmountSheet(
                     Text(
                         unit.uppercase(),
                         style = TextStyle(fontFamily = DenType.mono, fontSize = 11.sp, letterSpacing = 0.5.sp),
-                        color = Den.muted,
+                        color = Tz.colors.muted,
                     )
                 }
             }
@@ -263,7 +263,7 @@ fun AmountSheet(
                 value?.let(onConfirm)
                 onClose()
             }
-            // FR-HAB-9.2 — secondary, text-only un-log affordance in Den.due to
+            // FR-HAB-9.2 — secondary, text-only un-log affordance in Tz.colors.due to
             // read as destructive-ish without competing with the confirm button.
             // FR-HAB-9.6: single tap, no confirmation dialog.
             if (onClear != null) {
@@ -284,7 +284,7 @@ fun AmountSheet(
                     Text(
                         "Clear this log",
                         style = TextStyle(fontFamily = DenType.body, fontSize = 14.sp, fontWeight = FontWeight.SemiBold),
-                        color = Den.due,
+                        color = Tz.colors.due,
                     )
                 }
             }
@@ -337,7 +337,7 @@ fun SheetGhostButton(label: String, modifier: Modifier = Modifier, onClick: () -
             .fillMaxWidth()
             .height(46.dp)
             .clip(RoundedCornerShape(13.dp))
-            .border(1.dp, Den.line, RoundedCornerShape(13.dp))
+            .border(1.dp, Tz.colors.line, RoundedCornerShape(13.dp))
             .pressable(onClick),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center,
@@ -345,7 +345,7 @@ fun SheetGhostButton(label: String, modifier: Modifier = Modifier, onClick: () -
         Text(
             label,
             style = TextStyle(fontFamily = DenType.body, fontSize = 15.sp, fontWeight = FontWeight.SemiBold),
-            color = Den.muted,
+            color = Tz.colors.muted,
         )
     }
 }

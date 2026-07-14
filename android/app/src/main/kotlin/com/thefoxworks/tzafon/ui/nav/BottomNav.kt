@@ -29,7 +29,7 @@ import androidx.compose.ui.unit.sp
 import com.thefoxworks.tzafon.ui.components.DenSheet
 import com.thefoxworks.tzafon.ui.components.TzIcons
 import com.thefoxworks.tzafon.ui.components.pressable
-import com.thefoxworks.tzafon.ui.theme.Den
+import com.thefoxworks.tzafon.ui.theme.Tz
 import com.thefoxworks.tzafon.ui.theme.DenType
 import com.thefoxworks.tzafon.ui.theme.a
 
@@ -61,8 +61,8 @@ private fun TabIcon(tab: Tab, size: Dp, color: Color, weight: Float) {
  */
 @Composable
 fun DenBottomNav(active: Tab?, onSelect: (Tab) -> Unit, modifier: Modifier = Modifier) {
-    Column(modifier.fillMaxWidth().background(Den.surface.a(0.97f))) {
-        Box(Modifier.fillMaxWidth().height(1.dp).background(Den.line))
+    Column(modifier.fillMaxWidth().background(Tz.colors.surface.a(0.97f))) {
+        Box(Modifier.fillMaxWidth().height(1.dp).background(Tz.colors.line))
         Row(Modifier.fillMaxWidth().padding(top = 8.dp)) {
             Tab.entries.forEach { tab ->
                 val on = tab == active
@@ -82,10 +82,10 @@ fun DenBottomNav(active: Tab?, onSelect: (Tab) -> Unit, modifier: Modifier = Mod
                         Modifier
                             .size(width = 46.dp, height = 26.dp)
                             .clip(RoundedCornerShape(999.dp))
-                            .background(if (on) Den.rust.a(0.14f) else Color.Transparent),
+                            .background(if (on) Tz.colors.rust.a(0.14f) else Color.Transparent),
                         contentAlignment = Alignment.Center,
                     ) {
-                        TabIcon(tab, if (on) 22.dp else 21.dp, if (on) Den.rust else Den.faint, if (on) 2.1f else 1.8f)
+                        TabIcon(tab, if (on) 22.dp else 21.dp, if (on) Tz.colors.rust else Tz.colors.faint, if (on) 2.1f else 1.8f)
                     }
                     Text(
                         tab.label,
@@ -95,7 +95,7 @@ fun DenBottomNav(active: Tab?, onSelect: (Tab) -> Unit, modifier: Modifier = Mod
                             letterSpacing = 0.4.sp,
                             fontWeight = if (on) FontWeight.Bold else FontWeight.Medium,
                         ),
-                        color = if (on) Den.rust else Den.faint,
+                        color = if (on) Tz.colors.rust else Tz.colors.faint,
                     )
                 }
             }
@@ -118,23 +118,23 @@ fun AppMenuSheet(
 ) {
     DenSheet(title = "Around the den", onClose = onClose) {
         Column {
-            MenuRow("All Tasks", "The complete, searchable index", { TzIcons.Search(17.dp, Den.rust) }) {
+            MenuRow("All Tasks", "The complete, searchable index", { TzIcons.Search(17.dp, Tz.colors.rust) }) {
                 onClose(); onAllTasks()
             }
             if (onBacklog != null) {
-                MenuRow("Backlog", "Someday / maybe — parked, not scheduled", { TzIcons.Moon(17.dp, Den.backlog) }) {
+                MenuRow("Backlog", "Someday / maybe — parked, not scheduled", { TzIcons.Moon(17.dp, Tz.colors.backlog) }) {
                     onClose(); onBacklog()
                 }
             }
             if (onSettings != null) {
-                MenuRow("Settings", "Week start, reminders, account", { TzIcons.Bell(17.dp, Den.muted) }) {
+                MenuRow("Settings", "Week start, reminders, account", { TzIcons.Bell(17.dp, Tz.colors.muted) }) {
                     onClose(); onSettings()
                 }
             }
             // FR-NAV-4 — About is unconditionally rendered when a callback is
             // supplied. Placed after Settings so the daily-path ordering holds.
             if (onAbout != null) {
-                MenuRow("About", "Producer, implementer, contact", { TzIcons.Info(17.dp, Den.rust) }) {
+                MenuRow("About", "Producer, implementer, contact", { TzIcons.Info(17.dp, Tz.colors.rust) }) {
                     onClose(); onAbout()
                 }
             }
@@ -150,22 +150,22 @@ private fun MenuRow(title: String, sub: String, icon: @Composable () -> Unit, on
         horizontalArrangement = Arrangement.spacedBy(13.dp),
     ) {
         Box(
-            Modifier.size(38.dp).clip(RoundedCornerShape(11.dp)).background(Den.surfaceAlt),
+            Modifier.size(38.dp).clip(RoundedCornerShape(11.dp)).background(Tz.colors.surfaceAlt),
             contentAlignment = Alignment.Center,
         ) { icon() }
         Column(Modifier.weight(1f)) {
             Text(
                 title,
                 style = TextStyle(fontFamily = DenType.body, fontSize = 15.5.sp, fontWeight = FontWeight.SemiBold),
-                color = Den.ink,
+                color = Tz.colors.ink,
             )
             Text(
                 sub,
                 style = TextStyle(fontFamily = DenType.body, fontSize = 12.5.sp),
-                color = Den.muted,
+                color = Tz.colors.muted,
                 modifier = Modifier.padding(top = 1.dp),
             )
         }
-        TzIcons.Chevron(17.dp, Den.ink.a(0.26f))
+        TzIcons.Chevron(17.dp, Tz.colors.ink.a(0.26f))
     }
 }

@@ -41,7 +41,7 @@ import com.thefoxworks.tzafon.ui.components.TaskCheckbox
 import com.thefoxworks.tzafon.ui.components.TzIcons
 import com.thefoxworks.tzafon.ui.components.pressable
 import com.thefoxworks.tzafon.ui.nav.AppMenuSheet
-import com.thefoxworks.tzafon.ui.theme.Den
+import com.thefoxworks.tzafon.ui.theme.Tz
 import com.thefoxworks.tzafon.ui.theme.DenType
 import com.thefoxworks.tzafon.ui.theme.a
 
@@ -66,7 +66,7 @@ fun BacklogScreen(
     var quickAdd by remember { mutableStateOf(false) }
     var menu by remember { mutableStateOf(false) }
 
-    Box(Modifier.fillMaxSize().background(Den.bg)) {
+    Box(Modifier.fillMaxSize().background(Tz.colors.bg)) {
         Column(Modifier.fillMaxSize()) {
             RustHeader(
                 title = "Backlog",
@@ -84,7 +84,7 @@ fun BacklogScreen(
                     Text(
                         "A quiet pool for things you might do. They stay out of Today and Planning, and don't count toward your day. Pull one over whenever it calls.",
                         style = TextStyle(fontFamily = DenType.body, fontSize = 13.5.sp, lineHeight = 20.sp),
-                        color = Den.muted,
+                        color = Tz.colors.muted,
                         modifier = Modifier.padding(top = 16.dp, bottom = 4.dp),
                     )
                 }
@@ -105,17 +105,17 @@ fun BacklogScreen(
                             Modifier.fillMaxWidth().padding(top = 70.dp, start = 30.dp, end = 30.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                         ) {
-                            TzIcons.Moon(30.dp, Den.backlog.a(0.5f))
+                            TzIcons.Moon(30.dp, Tz.colors.backlog.a(0.5f))
                             Text(
                                 "Nothing parked",
                                 style = TextStyle(fontFamily = DenType.serif, fontSize = 21.sp),
-                                color = Den.ink,
+                                color = Tz.colors.ink,
                                 modifier = Modifier.padding(top = 12.dp),
                             )
                             Text(
                                 "Someday-things land here from Planning or the task editor — waiting without weighing on you.",
                                 style = TextStyle(fontFamily = DenType.body, fontSize = 13.5.sp, lineHeight = 19.5.sp),
-                                color = Den.muted,
+                                color = Tz.colors.muted,
                                 textAlign = TextAlign.Center,
                                 modifier = Modifier.padding(top = 6.dp),
                             )
@@ -127,11 +127,11 @@ fun BacklogScreen(
                             Modifier.fillMaxWidth().padding(top = 20.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                         ) {
-                            TzIcons.Moon(26.dp, Den.backlog.a(0.5f))
+                            TzIcons.Moon(26.dp, Tz.colors.backlog.a(0.5f))
                             Text(
                                 "NO RUSH · NO GUILT",
                                 style = TextStyle(fontFamily = DenType.mono, fontSize = 10.5.sp, letterSpacing = 0.4.sp),
-                                color = Den.faint,
+                                color = Tz.colors.faint,
                                 modifier = Modifier.padding(top = 6.dp),
                             )
                         }
@@ -153,7 +153,7 @@ fun BacklogScreen(
                     Text(
                         "Back on the plate — where should it land?",
                         style = TextStyle(fontFamily = DenType.body, fontSize = 13.sp),
-                        color = Den.muted,
+                        color = Tz.colors.muted,
                         modifier = Modifier.padding(top = 3.dp, bottom = 8.dp),
                     )
                     PullOption("Today", "Do it while it's calling.") {
@@ -229,7 +229,7 @@ private fun BacklogRow(
                 Text(
                     task.title,
                     style = TextStyle(fontFamily = DenType.body, fontSize = 16.sp, lineHeight = 21.sp),
-                    color = Den.ink,
+                    color = Tz.colors.ink,
                 )
                 if (hasLinks) {
                     Row(
@@ -237,11 +237,11 @@ private fun BacklogRow(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(5.dp),
                     ) {
-                        Dot(Den.backlog.a(0.5f), 6.dp)
+                        Dot(Tz.colors.backlog.a(0.5f), 6.dp)
                         Text(
                             "links dormant · kept for later",
                             style = TextStyle(fontFamily = DenType.mono, fontSize = 10.5.sp),
-                            color = Den.faint,
+                            color = Tz.colors.faint,
                         )
                     }
                 }
@@ -249,18 +249,18 @@ private fun BacklogRow(
             Box(
                 Modifier
                     .clip(RoundedCornerShape(999.dp))
-                    .border(1.dp, Den.rust.a(0.35f), RoundedCornerShape(999.dp))
+                    .border(1.dp, Tz.colors.rust.a(0.35f), RoundedCornerShape(999.dp))
                     .pressable(onPull)
                     .padding(horizontal = 10.dp, vertical = 4.dp),
             ) {
                 Text(
                     "PULL →",
                     style = TextStyle(fontFamily = DenType.mono, fontSize = 10.sp),
-                    color = Den.rust,
+                    color = Tz.colors.rust,
                 )
             }
         }
-        if (!last) Box(Modifier.fillMaxWidth().height(1.dp).background(Den.line))
+        if (!last) Box(Modifier.fillMaxWidth().height(1.dp).background(Tz.colors.line))
     }
 }
 
@@ -272,21 +272,21 @@ private fun PullOption(title: String, sub: String, last: Boolean = false, onClic
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            TzIcons.Calendar(18.dp, Den.rust)
+            TzIcons.Calendar(18.dp, Tz.colors.rust)
             Column(Modifier.weight(1f)) {
                 Text(
                     title,
-                    style = TextStyle(fontFamily = DenType.body, fontSize = 15.5.sp, color = Den.ink),
+                    style = TextStyle(fontFamily = DenType.body, fontSize = 15.5.sp, color = Tz.colors.ink),
                 )
                 Text(
                     sub,
                     style = TextStyle(fontFamily = DenType.body, fontSize = 12.5.sp),
-                    color = Den.muted,
+                    color = Tz.colors.muted,
                     modifier = Modifier.padding(top = 1.dp),
                 )
             }
-            TzIcons.Chevron(16.dp, Den.ink.a(0.26f))
+            TzIcons.Chevron(16.dp, Tz.colors.ink.a(0.26f))
         }
-        if (!last) Box(Modifier.fillMaxWidth().height(1.dp).background(Den.line2))
+        if (!last) Box(Modifier.fillMaxWidth().height(1.dp).background(Tz.colors.line2))
     }
 }

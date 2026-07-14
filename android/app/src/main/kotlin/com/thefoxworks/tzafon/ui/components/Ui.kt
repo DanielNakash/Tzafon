@@ -43,7 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.thefoxworks.tzafon.R
 import com.thefoxworks.tzafon.domain.model.TaskState
-import com.thefoxworks.tzafon.ui.theme.Den
+import com.thefoxworks.tzafon.ui.theme.Tz
 import com.thefoxworks.tzafon.ui.theme.DenType
 import com.thefoxworks.tzafon.ui.theme.a
 import com.thefoxworks.tzafon.ui.theme.contentDir
@@ -91,12 +91,12 @@ fun TouchTarget(
 // ── text + label primitives (tz-ui.jsx) ─────────────────────
 
 @Composable
-fun Kicker(text: String, color: Color = Den.faint, modifier: Modifier = Modifier) {
+fun Kicker(text: String, color: Color = Tz.colors.faint, modifier: Modifier = Modifier) {
     Text(text.uppercase(), style = DenType.kicker, color = color, modifier = modifier)
 }
 
 @Composable
-fun SectionLabel(text: String, color: Color = Den.faint, modifier: Modifier = Modifier) {
+fun SectionLabel(text: String, color: Color = Tz.colors.faint, modifier: Modifier = Modifier) {
     Text(text.uppercase(), style = DenType.sectionLabel, color = color, modifier = modifier)
 }
 
@@ -105,7 +105,7 @@ fun SectionLabel(text: String, color: Color = Den.faint, modifier: Modifier = Mo
 fun GroupHeader(
     label: String,
     count: Int? = null,
-    accent: Color = Den.muted,
+    accent: Color = Tz.colors.muted,
     modifier: Modifier = Modifier,
     right: (@Composable () -> Unit)? = null,
 ) {
@@ -116,9 +116,9 @@ fun GroupHeader(
     ) {
         Text(label.uppercase(), style = DenType.groupLabel, color = accent)
         if (count != null) {
-            Text("$count", style = TextStyle(fontFamily = DenType.mono, fontSize = 11.sp), color = Den.faint)
+            Text("$count", style = TextStyle(fontFamily = DenType.mono, fontSize = 11.sp), color = Tz.colors.faint)
         }
-        Box(Modifier.weight(1f).height(1.dp).background(Den.line))
+        Box(Modifier.weight(1f).height(1.dp).background(Tz.colors.line))
         right?.invoke()
     }
 }
@@ -128,8 +128,8 @@ fun GroupHeader(
 @Composable
 fun Bar(
     pct: Float,
-    fill: Color = Den.amber,
-    track: Color = Den.ink.a(0.1f),
+    fill: Color = Tz.colors.amber,
+    track: Color = Tz.colors.ink.a(0.1f),
     height: Dp = 8.dp,
     radius: Dp = 5.dp,
     modifier: Modifier = Modifier,
@@ -171,7 +171,7 @@ fun FoxLogo(size: Dp = 32.dp, ring: Color? = null, modifier: Modifier = Modifier
 @Composable
 fun Chip(
     text: String,
-    color: Color = Den.muted,
+    color: Color = Tz.colors.muted,
     icon: (@Composable () -> Unit)? = null,
     modifier: Modifier = Modifier,
     /** FR-DESIGN-3 — when true, the chip label carries user-authored content
@@ -188,7 +188,7 @@ fun Chip(
 
 @Composable
 fun CueChip(text: String, modifier: Modifier = Modifier) {
-    Chip(text, color = Den.muted, icon = { TzIcons.Cue(12.dp, Den.amber) }, modifier = modifier, userContent = true)
+    Chip(text, color = Tz.colors.muted, icon = { TzIcons.Cue(12.dp, Tz.colors.amber) }, modifier = modifier, userContent = true)
 }
 
 /** "serves: <theme>" — the auto-bridge made visible (PRIN-5). */
@@ -196,9 +196,9 @@ fun CueChip(text: String, modifier: Modifier = Modifier) {
 fun Serves(label: String, accent: Color, plus: Int = 0, modifier: Modifier = Modifier) {
     Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
         Dot(accent, 7.dp)
-        Text("serves", style = DenType.chip, color = Den.faint)
+        Text("serves", style = DenType.chip, color = Tz.colors.faint)
         Text(label, style = DenType.chip.copy(fontWeight = FontWeight.SemiBold).contentDir(), color = accent, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        if (plus > 0) Text("+$plus", style = DenType.chip, color = Den.faint)
+        if (plus > 0) Text("+$plus", style = DenType.chip, color = Tz.colors.faint)
     }
 }
 
@@ -206,10 +206,10 @@ fun Serves(label: String, accent: Color, plus: Int = 0, modifier: Modifier = Mod
 @Composable
 fun StateTag(state: TaskState, modifier: Modifier = Modifier) {
     val (label, color) = when (state) {
-        TaskState.DONE -> "DONE" to Den.green
-        TaskState.CLOSED -> "CLOSED" to Den.closed
-        TaskState.FROZEN -> "FROZEN" to Den.frozen
-        TaskState.BACKLOG -> "SOMEDAY" to Den.backlog
+        TaskState.DONE -> "DONE" to Tz.colors.green
+        TaskState.CLOSED -> "CLOSED" to Tz.colors.closed
+        TaskState.FROZEN -> "FROZEN" to Tz.colors.frozen
+        TaskState.BACKLOG -> "SOMEDAY" to Tz.colors.backlog
         TaskState.OPEN -> return
     }
     Box(
@@ -225,7 +225,7 @@ fun StateTag(state: TaskState, modifier: Modifier = Modifier) {
 @Composable
 fun DuePill(today: Boolean, modifier: Modifier = Modifier) {
     Row(
-        modifier.clip(RoundedCornerShape(4.dp)).background(Den.due).padding(horizontal = 6.dp, vertical = 2.dp),
+        modifier.clip(RoundedCornerShape(4.dp)).background(Tz.colors.due).padding(horizontal = 6.dp, vertical = 2.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(3.dp),
     ) {
@@ -243,13 +243,13 @@ fun DuePill(today: Boolean, modifier: Modifier = Modifier) {
 fun DeadlinePill(modifier: Modifier = Modifier) {
     Row(
         modifier
-            .border(1.dp, Den.due.a(0.4f), RoundedCornerShape(4.dp))
+            .border(1.dp, Tz.colors.due.a(0.4f), RoundedCornerShape(4.dp))
             .padding(horizontal = 6.dp, vertical = 1.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        TzIcons.Flag(11.dp, Den.due)
-        Text("DEADLINE", style = TextStyle(fontFamily = DenType.mono, fontSize = 10.sp, letterSpacing = 0.3.sp), color = Den.due)
+        TzIcons.Flag(11.dp, Tz.colors.due)
+        Text("DEADLINE", style = TextStyle(fontFamily = DenType.mono, fontSize = 10.sp, letterSpacing = 0.3.sp), color = Tz.colors.due)
     }
 }
 
@@ -285,19 +285,19 @@ private fun CheckboxVisual(state: TaskState, modifier: Modifier = Modifier) {
     val m = modifier.size(25.dp)
     val shape = RoundedCornerShape(7.dp)
     when (state) {
-        TaskState.DONE -> Box(m.clip(shape).background(Den.rust), contentAlignment = Alignment.Center) {
+        TaskState.DONE -> Box(m.clip(shape).background(Tz.colors.rust), contentAlignment = Alignment.Center) {
             TzIcons.Check(15.dp, Color.White)
         }
-        TaskState.CLOSED -> Box(m.border(2.dp, Den.closed.a(0.5f), shape), contentAlignment = Alignment.Center) {
-            TzIcons.Skip(14.dp, Den.closed)
+        TaskState.CLOSED -> Box(m.border(2.dp, Tz.colors.closed.a(0.5f), shape), contentAlignment = Alignment.Center) {
+            TzIcons.Skip(14.dp, Tz.colors.closed)
         }
-        TaskState.FROZEN -> Box(m.clip(shape).background(Den.frozen.a(0.12f)).border(2.dp, Den.frozen.a(0.5f), shape), contentAlignment = Alignment.Center) {
-            TzIcons.Frozen(13.dp, Den.frozen)
+        TaskState.FROZEN -> Box(m.clip(shape).background(Tz.colors.frozen.a(0.12f)).border(2.dp, Tz.colors.frozen.a(0.5f), shape), contentAlignment = Alignment.Center) {
+            TzIcons.Frozen(13.dp, Tz.colors.frozen)
         }
-        TaskState.BACKLOG -> Box(m.border(2.dp, Den.backlog.a(0.5f), shape), contentAlignment = Alignment.Center) {
-            TzIcons.Moon(13.dp, Den.backlog)
+        TaskState.BACKLOG -> Box(m.border(2.dp, Tz.colors.backlog.a(0.5f), shape), contentAlignment = Alignment.Center) {
+            TzIcons.Moon(13.dp, Tz.colors.backlog)
         }
-        TaskState.OPEN -> Box(m.border(2.dp, Den.ink.a(0.3f), shape))
+        TaskState.OPEN -> Box(m.border(2.dp, Tz.colors.ink.a(0.3f), shape))
     }
 }
 
@@ -307,8 +307,8 @@ private fun CheckboxVisual(state: TaskState, modifier: Modifier = Modifier) {
 fun DenCard(
     modifier: Modifier = Modifier,
     pad: Dp = 16.dp,
-    background: Color = Den.card,
-    border: Color = Den.line,
+    background: Color = Tz.colors.card,
+    border: Color = Tz.colors.line,
     radius: Dp = 15.dp,
     content: @Composable ColumnScope.() -> Unit,
 ) {
@@ -332,7 +332,7 @@ fun Fab(
         modifier
             .height(58.dp)
             .clip(RoundedCornerShape(18.dp))
-            .background(Den.rust)
+            .background(Tz.colors.rust)
             .pressable(label ?: "Add a task", Role.Button, onClick)
             .padding(horizontal = if (label != null) 18.dp else 17.dp),
         verticalAlignment = Alignment.CenterVertically,

@@ -48,7 +48,7 @@ import com.thefoxworks.tzafon.ui.components.RustHeader
 import com.thefoxworks.tzafon.ui.nav.AppMenuSheet
 import com.thefoxworks.tzafon.ui.components.TzIcons
 import com.thefoxworks.tzafon.ui.components.pressable
-import com.thefoxworks.tzafon.ui.theme.Den
+import com.thefoxworks.tzafon.ui.theme.Tz
 import com.thefoxworks.tzafon.ui.theme.DenType
 import com.thefoxworks.tzafon.ui.theme.a
 import com.thefoxworks.tzafon.ui.theme.contentDir
@@ -78,7 +78,7 @@ fun HabitsScreen(
     var amountForDate by remember { mutableStateOf<Pair<HabitCardState, String>?>(null) }
     var menu by remember { mutableStateOf(false) }
 
-    Box(Modifier.fillMaxSize().background(Den.bg)) {
+    Box(Modifier.fillMaxSize().background(Tz.colors.bg)) {
         Column(Modifier.fillMaxSize()) {
             RustHeader(
                 title = "Habits",
@@ -97,7 +97,7 @@ fun HabitsScreen(
                     Text(
                         "Aim for the rate, not perfection. Miss one — that's normal. It's the long arc that counts.",
                         style = TextStyle(fontFamily = DenType.body, fontSize = 13.5.sp, lineHeight = 20.sp),
-                        color = Den.muted,
+                        color = Tz.colors.muted,
                         modifier = Modifier.padding(bottom = 12.dp),
                     )
                 }
@@ -126,17 +126,17 @@ fun HabitsScreen(
                             Modifier.fillMaxWidth().padding(top = 70.dp, start = 30.dp, end = 30.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                         ) {
-                            TzIcons.Sprout(30.dp, Den.green)
+                            TzIcons.Sprout(30.dp, Tz.colors.green)
                             Text(
                                 "No rhythms yet",
                                 style = TextStyle(fontFamily = DenType.serif, fontSize = 21.sp, fontWeight = FontWeight.SemiBold),
-                                color = Den.ink,
+                                color = Tz.colors.ink,
                                 modifier = Modifier.padding(top = 12.dp),
                             )
                             Text(
                                 "A habit is a small thing you keep — anchored to a cue, measured gently by the week. Start with one.",
                                 style = TextStyle(fontFamily = DenType.body, fontSize = 13.5.sp, lineHeight = 19.5.sp),
-                                color = Den.muted,
+                                color = Tz.colors.muted,
                                 textAlign = TextAlign.Center,
                                 modifier = Modifier.padding(top = 6.dp),
                             )
@@ -237,7 +237,7 @@ internal fun HabitCard(
     onEdit: () -> Unit,
 ) {
     val h = card.habit
-    val accent = Den.green // per-theme accents arrive with M6
+    val accent = Tz.colors.green // per-theme accents arrive with M6
     val isQuant = h.kind == HabitKind.QUANTITATIVE
     // FR-HAB-5.2 — plain remember (not saveable): navigating away and back
     // re-collapses every card. Persisting expand state would be a stealth
@@ -250,8 +250,8 @@ internal fun HabitCard(
             .fillMaxWidth()
             .padding(bottom = 12.dp)
             .clip(RoundedCornerShape(16.dp))
-            .background(Den.card)
-            .border(1.dp, Den.line, RoundedCornerShape(16.dp)),
+            .background(Tz.colors.card)
+            .border(1.dp, Tz.colors.line, RoundedCornerShape(16.dp)),
     ) {
         // ── FR-HAB-5 + FR-HAB-7.1 collapsed header: name + edit + log + expand
         //     — four affordances, each an isolated hit target. Tap the name
@@ -278,13 +278,13 @@ internal fun HabitCard(
             ) {
                 TzIcons.Chevron(
                     18.dp,
-                    Den.muted,
+                    Tz.colors.muted,
                     dir = if (expanded) TzIcons.Dir.DOWN else TzIcons.Dir.RIGHT,
                 )
                 Text(
                     h.name,
                     style = TextStyle(fontFamily = DenType.serif, fontSize = 17.sp, fontWeight = FontWeight.SemiBold, lineHeight = 20.sp).contentDir(),
-                    color = Den.ink,
+                    color = Tz.colors.ink,
                     modifier = Modifier.weight(1f),
                 )
             }
@@ -335,11 +335,11 @@ internal fun HabitCard(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(5.dp),
                         ) {
-                            TzIcons.Target(12.dp, Den.rust)
+                            TzIcons.Target(12.dp, Tz.colors.rust)
                             Text(
                                 "serves: $servesGoal",
                                 style = TextStyle(fontFamily = DenType.mono, fontSize = 10.5.sp),
-                                color = Den.muted,
+                                color = Tz.colors.muted,
                             )
                         }
                     }
@@ -352,12 +352,12 @@ internal fun HabitCard(
                             .fillMaxWidth()
                             .padding(top = 12.dp)
                             .clip(RoundedCornerShape(10.dp))
-                            .background(Den.amber.a(0.1f))
+                            .background(Tz.colors.amber.a(0.1f))
                             .padding(horizontal = 12.dp, vertical = 9.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        TzIcons.Cue(14.dp, Den.rust)
+                        TzIcons.Cue(14.dp, Tz.colors.rust)
                         Text(
                             buildAnnotatedString {
                                 append("When ")
@@ -366,7 +366,7 @@ internal fun HabitCard(
                                 }
                             },
                             style = TextStyle(fontFamily = DenType.body, fontSize = 13.5.sp).contentDir(),
-                            color = Den.ink,
+                            color = Tz.colors.ink,
                         )
                     }
                 } else {
@@ -375,16 +375,16 @@ internal fun HabitCard(
                             .fillMaxWidth()
                             .padding(top = 12.dp)
                             .clip(RoundedCornerShape(10.dp))
-                            .border(1.dp, Den.line2, RoundedCornerShape(10.dp))
+                            .border(1.dp, Tz.colors.line2, RoundedCornerShape(10.dp))
                             .padding(horizontal = 12.dp, vertical = 9.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        TzIcons.Cue(14.dp, Den.faint)
+                        TzIcons.Cue(14.dp, Tz.colors.faint)
                         Text(
                             "No cue yet — without one it's just a tracker",
                             style = TextStyle(fontFamily = DenType.body, fontSize = 12.5.sp),
-                            color = Den.faint,
+                            color = Tz.colors.faint,
                         )
                     }
                 }
@@ -398,24 +398,24 @@ internal fun HabitCard(
                         Text(
                             "THIS WEEK",
                             style = TextStyle(fontFamily = DenType.mono, fontSize = 10.5.sp, letterSpacing = 0.5.sp),
-                            color = Den.faint,
+                            color = Tz.colors.faint,
                         )
                         Text(
                             buildAnnotatedString {
                                 if (isQuant) {
                                     append("${fmt(card.week.amountSum)} ${h.unit ?: ""}")
-                                    withStyle(SpanStyle(fontSize = 13.sp, color = Den.muted, fontWeight = FontWeight.Normal)) {
+                                    withStyle(SpanStyle(fontSize = 13.sp, color = Tz.colors.muted, fontWeight = FontWeight.Normal)) {
                                         append(" · ${card.week.doneDays} of ${h.targetDays ?: 7} days")
                                     }
                                 } else {
                                     append("${card.week.doneDays} of ${h.target.toInt()}")
-                                    withStyle(SpanStyle(fontSize = 13.sp, color = Den.muted, fontWeight = FontWeight.Normal)) {
+                                    withStyle(SpanStyle(fontSize = 13.sp, color = Tz.colors.muted, fontWeight = FontWeight.Normal)) {
                                         append(" done")
                                     }
                                 }
                             },
                             style = TextStyle(fontFamily = DenType.serif, fontSize = 17.sp, fontWeight = FontWeight.SemiBold),
-                            color = Den.ink,
+                            color = Tz.colors.ink,
                             modifier = Modifier.padding(top = 2.dp),
                         )
                     }
@@ -487,27 +487,27 @@ internal fun HabitCard(
                             .fillMaxWidth()
                             .padding(top = 12.dp)
                             .clip(RoundedCornerShape(10.dp))
-                            .background(Den.surface)
+                            .background(Tz.colors.surface)
                             .padding(horizontal = 12.dp, vertical = 9.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        TzIcons.Sprout(16.dp, Den.green)
+                        TzIcons.Sprout(16.dp, Tz.colors.green)
                         Text(
                             buildAnnotatedString {
                                 append("Missed a few last week? Normal. ")
-                                withStyle(SpanStyle(fontWeight = FontWeight.Bold, color = Den.ink)) {
+                                withStyle(SpanStyle(fontWeight = FontWeight.Bold, color = Tz.colors.ink)) {
                                     append("New week, clean slate.")
                                 }
                             },
                             style = TextStyle(fontFamily = DenType.body, fontSize = 12.5.sp, lineHeight = 17.5.sp),
-                            color = Den.muted,
+                            color = Tz.colors.muted,
                         )
                     }
                 }
 
                 // ── 5-week history + long arc ──
                 Column(Modifier.fillMaxWidth().padding(top = 14.dp)) {
-                    Box(Modifier.fillMaxWidth().height(1.dp).background(Den.line2))
+                    Box(Modifier.fillMaxWidth().height(1.dp).background(Tz.colors.line2))
                     Row(
                         Modifier.fillMaxWidth().padding(top = 12.dp),
                         verticalAlignment = Alignment.CenterVertically,
@@ -516,17 +516,17 @@ internal fun HabitCard(
                         HistoryGrid(weeks = card.grid, accent = accent)
                         Column(Modifier.weight(1f)) {
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                TzIcons.Sprout(15.dp, Den.green)
+                                TzIcons.Sprout(15.dp, Tz.colors.green)
                                 Text(
                                     card.arc,
                                     style = TextStyle(fontFamily = DenType.mono, fontSize = 11.sp),
-                                    color = Den.muted,
+                                    color = Tz.colors.muted,
                                 )
                             }
                             Text(
                                 "LAST 5 WEEKS",
                                 style = TextStyle(fontFamily = DenType.mono, fontSize = 9.sp, letterSpacing = 0.3.sp),
-                                color = Den.faint,
+                                color = Tz.colors.faint,
                                 modifier = Modifier.padding(top = 3.dp),
                             )
                         }
@@ -551,8 +551,8 @@ private fun CollapsedEditPill(habitName: String, onEdit: () -> Unit) {
         Modifier
             .size(34.dp)
             .clip(RoundedCornerShape(999.dp))
-            .background(Den.ink.a(0.05f))
-            .border(1.dp, Den.line, RoundedCornerShape(999.dp))
+            .background(Tz.colors.ink.a(0.05f))
+            .border(1.dp, Tz.colors.line, RoundedCornerShape(999.dp))
             .semantics { contentDescription = cd }
             .pressable(
                 label = cd,
@@ -561,7 +561,7 @@ private fun CollapsedEditPill(habitName: String, onEdit: () -> Unit) {
             ),
         contentAlignment = Alignment.Center,
     ) {
-        TzIcons.Pencil(15.dp, Den.muted)
+        TzIcons.Pencil(15.dp, Tz.colors.muted)
     }
 }
 
@@ -619,7 +619,7 @@ private fun WeekDots(done: Int, total: Int, accent: androidx.compose.ui.graphics
         repeat(total.coerceIn(1, 7)) { i ->
             Box(
                 Modifier.size(22.dp).clip(RoundedCornerShape(7.dp))
-                    .background(if (i < done) accent else Den.ink.a(0.08f)),
+                    .background(if (i < done) accent else Tz.colors.ink.a(0.08f)),
                 contentAlignment = Alignment.Center,
             ) {
                 if (i < done) TzIcons.Check(13.dp, androidx.compose.ui.graphics.Color.White)
@@ -645,12 +645,12 @@ private fun QuantBars(amounts: List<Double>, target: Double, accent: androidx.co
                         .fillMaxWidth()
                         .height(max(3.0, v / scale * 30.0).dp)
                         .clip(RoundedCornerShape(2.dp))
-                        .background(if (v > 0) accent else Den.ink.a(0.1f)),
+                        .background(if (v > 0) accent else Tz.colors.ink.a(0.1f)),
                 )
                 Text(
                     days[i % 7],
                     style = TextStyle(fontFamily = DenType.mono, fontSize = 8.sp),
-                    color = Den.faint,
+                    color = Tz.colors.faint,
                     modifier = Modifier.padding(top = 3.dp),
                 )
             }
@@ -670,7 +670,7 @@ private fun HistoryGrid(weeks: List<List<Int>>, accent: androidx.compose.ui.grap
                             when (v) {
                                 2 -> accent
                                 1 -> accent.a(0.4f)
-                                else -> Den.ink.a(0.08f)
+                                else -> Tz.colors.ink.a(0.08f)
                             },
                         ),
                     )

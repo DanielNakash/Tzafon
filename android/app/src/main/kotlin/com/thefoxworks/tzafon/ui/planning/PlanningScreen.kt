@@ -47,7 +47,7 @@ import com.thefoxworks.tzafon.ui.components.TaskCheckbox
 import com.thefoxworks.tzafon.ui.components.TaskRow
 import com.thefoxworks.tzafon.ui.components.pressable
 import com.thefoxworks.tzafon.ui.nav.AppMenuSheet
-import com.thefoxworks.tzafon.ui.theme.Den
+import com.thefoxworks.tzafon.ui.theme.Tz
 import com.thefoxworks.tzafon.ui.theme.DenType
 import com.thefoxworks.tzafon.ui.theme.a
 
@@ -86,7 +86,7 @@ fun PlanningScreen(
         }
     }
 
-    Box(Modifier.fillMaxSize().background(Den.bg)) {
+    Box(Modifier.fillMaxSize().background(Tz.colors.bg)) {
         Column(Modifier.fillMaxSize()) {
             RustHeader(
                 title = "Planning",
@@ -112,7 +112,7 @@ fun PlanningScreen(
                                 Modifier
                                     .clip(RoundedCornerShape(999.dp))
                                     .background(if (on) Color.White.a(0.2f) else Color.Transparent)
-                                    .border(1.dp, if (on) Den.cream else Color.White.a(0.4f), RoundedCornerShape(999.dp))
+                                    .border(1.dp, if (on) Tz.colors.cream else Color.White.a(0.4f), RoundedCornerShape(999.dp))
                                     .pressable {
                                         if (p == RangePreset.CUSTOM) customRange = true else vm.setRange(p)
                                     }
@@ -139,12 +139,12 @@ fun PlanningScreen(
                         GroupHeader(
                             label = "Overdue",
                             count = state.overdue.size,
-                            accent = Den.due,
+                            accent = Tz.colors.due,
                             right = {
                                 Text(
                                     "DECIDE →",
                                     style = TextStyle(fontFamily = DenType.mono, fontSize = 10.sp),
-                                    color = Den.due,
+                                    color = Tz.colors.due,
                                 )
                             },
                         )
@@ -154,8 +154,8 @@ fun PlanningScreen(
                             Modifier
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(13.dp))
-                                .background(Den.due.a(0.05f))
-                                .border(1.dp, Den.due.a(0.2f), RoundedCornerShape(13.dp))
+                                .background(Tz.colors.due.a(0.05f))
+                                .border(1.dp, Tz.colors.due.a(0.2f), RoundedCornerShape(13.dp))
                                 .padding(horizontal = 14.dp, vertical = 4.dp),
                         ) {
                             state.overdue.forEachIndexed { i, t ->
@@ -180,7 +180,7 @@ fun PlanningScreen(
                         GroupHeader(
                             label = group.label,
                             count = tasks.size,
-                            accent = if (group.key == "today") Den.rust else Den.muted,
+                            accent = if (group.key == "today") Tz.colors.rust else Tz.colors.muted,
                         )
                     }
                     items(tasks, key = { it.id }) { t ->
@@ -198,7 +198,7 @@ fun PlanningScreen(
                 // ── Inbox — needs a date (FR-PLAN-1) ──
                 if (state.inbox.isNotEmpty()) {
                     item(key = "h_inbox") {
-                        GroupHeader(label = "Inbox — needs a date", count = state.inbox.size, accent = Den.muted)
+                        GroupHeader(label = "Inbox — needs a date", count = state.inbox.size, accent = Tz.colors.muted)
                     }
                     items(state.inbox, key = { it.id }) { t ->
                         TaskRow(
@@ -221,12 +221,12 @@ fun PlanningScreen(
                             Text(
                                 "The table is clear",
                                 style = TextStyle(fontFamily = DenType.serif, fontSize = 21.sp),
-                                color = Den.ink,
+                                color = Tz.colors.ink,
                             )
                             Text(
                                 "Captured things land here to be given a day.",
                                 style = TextStyle(fontFamily = DenType.body, fontSize = 13.5.sp),
-                                color = Den.muted,
+                                color = Tz.colors.muted,
                                 modifier = Modifier.padding(top = 6.dp),
                             )
                         }
@@ -324,14 +324,14 @@ private fun DecideCard(
                 Text(
                     task.title,
                     style = TextStyle(fontFamily = DenType.body, fontSize = 15.5.sp, lineHeight = 19.5.sp),
-                    color = Den.ink,
+                    color = Tz.colors.ink,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
                 Text(
                     "SLIPPED ${ActionLogic.slippedDays(task, today)}D AGO",
                     style = TextStyle(fontFamily = DenType.mono, fontSize = 10.5.sp),
-                    color = Den.due,
+                    color = Tz.colors.due,
                     modifier = Modifier.padding(top = 3.dp),
                 )
             }
@@ -349,7 +349,7 @@ private fun DecideCard(
                 Modifier.fillMaxWidth().padding(top = 11.dp)
                     .size(width = 0.dp, height = 1.dp)
                     .fillMaxWidth()
-                    .background(Den.line2)
+                    .background(Tz.colors.line2)
             )
         }
     }

@@ -58,7 +58,7 @@ import com.thefoxworks.tzafon.ui.components.TaskRow
 import com.thefoxworks.tzafon.ui.components.TzIcons
 import com.thefoxworks.tzafon.ui.components.pressable
 import com.thefoxworks.tzafon.ui.nav.AppMenuSheet
-import com.thefoxworks.tzafon.ui.theme.Den
+import com.thefoxworks.tzafon.ui.theme.Tz
 import com.thefoxworks.tzafon.ui.theme.DenType
 import com.thefoxworks.tzafon.ui.theme.a
 import kotlinx.coroutines.launch
@@ -160,7 +160,7 @@ fun AllTasksScreen(
         }.map { it.substring(0, 7) }.distinct() // yyyy-MM
     }
 
-    Box(Modifier.fillMaxSize().background(Den.bg)) {
+    Box(Modifier.fillMaxSize().background(Tz.colors.bg)) {
         Column(Modifier.fillMaxSize()) {
             RustHeader(
                 title = "All Tasks",
@@ -183,7 +183,7 @@ fun AllTasksScreen(
                                 value = query,
                                 onValueChange = { query = it; vm.setQuery(it) },
                                 textStyle = TextStyle(fontFamily = DenType.body, fontSize = 14.sp, color = Color.White),
-                                cursorBrush = SolidColor(Den.cream),
+                                cursorBrush = SolidColor(Tz.colors.cream),
                                 singleLine = true,
                                 decorationBox = { inner ->
                                     Box {
@@ -235,21 +235,21 @@ fun AllTasksScreen(
                         when (e) {
                             is Entry.Header -> stickyHeader(key = e.key) {
                                 val isCollapsed = collapsed[e.groupKey] == true
-                                Box(Modifier.background(Den.bg)) {
+                                Box(Modifier.background(Tz.colors.bg)) {
                                     GroupHeader(
                                         label = e.label,
                                         count = e.count,
                                         accent = when (e.groupKey) {
-                                            "overdue" -> Den.due
-                                            "today" -> Den.rust
-                                            else -> Den.muted
+                                            "overdue" -> Tz.colors.due
+                                            "today" -> Tz.colors.rust
+                                            else -> Tz.colors.muted
                                         },
                                         modifier = Modifier.pressable {
                                             collapsed[e.groupKey] = !isCollapsed
                                         },
                                         right = {
                                             TzIcons.Chevron(
-                                                14.dp, Den.faint,
+                                                14.dp, Tz.colors.faint,
                                                 modifier = Modifier.rotate(if (isCollapsed) 90f else -90f),
                                             )
                                         },
@@ -296,7 +296,7 @@ fun AllTasksScreen(
                             Text(
                                 "Nothing matches — try fewer words.",
                                 style = TextStyle(fontFamily = DenType.body, fontSize = 13.5.sp),
-                                color = Den.muted,
+                                color = Tz.colors.muted,
                                 textAlign = TextAlign.Center,
                                 modifier = Modifier.fillMaxWidth().padding(top = 40.dp),
                             )
@@ -406,15 +406,15 @@ private fun JumpBar(
         Text(
             "JUMP TO",
             style = TextStyle(fontFamily = DenType.mono, fontSize = 9.5.sp, letterSpacing = 0.4.sp),
-            color = Den.faint,
+            color = Tz.colors.faint,
             modifier = Modifier.padding(end = 2.dp),
         )
-        if (hasOverdue) JumpChip("OVERDUE", Den.due, onOverdue)
-        JumpChip("TODAY", Den.rust, onToday)
-        if (hasUndated) JumpChip("UNDATED", Den.muted, onUndated)
+        if (hasOverdue) JumpChip("OVERDUE", Tz.colors.due, onOverdue)
+        JumpChip("TODAY", Tz.colors.rust, onToday)
+        if (hasUndated) JumpChip("UNDATED", Tz.colors.muted, onUndated)
         months.forEach { m ->
             val mo = Dates.MO[m.substring(5).toInt() - 1].uppercase()
-            JumpChip(mo, Den.muted) { onMonth(m) }
+            JumpChip(mo, Tz.colors.muted) { onMonth(m) }
         }
     }
 }
@@ -424,8 +424,8 @@ private fun JumpChip(label: String, color: Color, onClick: () -> Unit) {
     Box(
         Modifier
             .clip(RoundedCornerShape(999.dp))
-            .background(Den.card)
-            .border(1.dp, Den.line, RoundedCornerShape(999.dp))
+            .background(Tz.colors.card)
+            .border(1.dp, Tz.colors.line, RoundedCornerShape(999.dp))
             .pressable(onClick)
             .padding(horizontal = 10.dp, vertical = 5.dp),
     ) {
@@ -445,7 +445,7 @@ private fun HorizonMarker(horizonDate: String, today: String) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        Box(Modifier.weight(1f).height(1.dp).background(Den.line))
+        Box(Modifier.weight(1f).height(1.dp).background(Tz.colors.line))
         Text(
             "SCHEDULED THROUGH ${Dates.fmtDate(horizonDate, today).uppercase()}\nRECURRING TASKS REPEAT BEYOND THIS",
             style = TextStyle(
@@ -454,10 +454,10 @@ private fun HorizonMarker(horizonDate: String, today: String) {
                 letterSpacing = 0.4.sp,
                 lineHeight = 13.5.sp,
             ),
-            color = Den.faint,
+            color = Tz.colors.faint,
             textAlign = TextAlign.Center,
         )
-        Box(Modifier.weight(1f).height(1.dp).background(Den.line))
+        Box(Modifier.weight(1f).height(1.dp).background(Tz.colors.line))
     }
 }
 
@@ -506,12 +506,12 @@ private fun DateScrubber(
     ) {
         slots.forEach { m ->
             if (m == null) {
-                Box(Modifier.size(3.dp).clip(CircleShape).background(Den.ink.a(0.25f)))
+                Box(Modifier.size(3.dp).clip(CircleShape).background(Tz.colors.ink.a(0.25f)))
             } else {
                 Text(
                     Dates.MO[m.substring(5).toInt() - 1].uppercase(),
                     style = TextStyle(fontFamily = DenType.mono, fontSize = 8.sp, fontWeight = FontWeight.Bold),
-                    color = Den.muted,
+                    color = Tz.colors.muted,
                 )
             }
         }
@@ -528,13 +528,13 @@ private fun EmptyDen() {
         Text(
             "All clear.",
             style = TextStyle(fontFamily = DenType.serif, fontSize = 22.sp, fontWeight = FontWeight.SemiBold),
-            color = Den.ink,
+            color = Tz.colors.ink,
             modifier = Modifier.padding(top = 8.dp),
         )
         Text(
             "Nothing left on the list. Go read a book.",
             style = TextStyle(fontFamily = DenType.body, fontSize = 15.sp),
-            color = Den.muted,
+            color = Tz.colors.muted,
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(top = 6.dp),
         )
@@ -548,17 +548,17 @@ private fun StateToggle(label: String, on: Boolean, onClick: () -> Unit) {
         Modifier
             .clip(RoundedCornerShape(999.dp))
             .background(if (on) Color.White.a(0.16f) else Color.Transparent)
-            .border(1.dp, if (on) Den.cream else Color.White.a(0.35f), RoundedCornerShape(999.dp))
+            .border(1.dp, if (on) Tz.colors.cream else Color.White.a(0.35f), RoundedCornerShape(999.dp))
             .pressable(onClick)
             .padding(horizontal = 10.dp, vertical = 5.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        Box(Modifier.size(6.dp).clip(CircleShape).background(if (on) Den.cream else Color.White.a(0.5f)))
+        Box(Modifier.size(6.dp).clip(CircleShape).background(if (on) Tz.colors.cream else Color.White.a(0.5f)))
         Text(
             label,
             style = TextStyle(fontFamily = DenType.mono, fontSize = 10.5.sp, letterSpacing = 0.3.sp),
-            color = if (on) Den.cream else Color.White.a(0.6f),
+            color = if (on) Tz.colors.cream else Color.White.a(0.6f),
         )
     }
 }

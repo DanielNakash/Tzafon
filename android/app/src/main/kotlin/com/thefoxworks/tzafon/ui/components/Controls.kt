@@ -29,7 +29,7 @@ import com.thefoxworks.tzafon.domain.recurrence.IntervalUnit
 import com.thefoxworks.tzafon.domain.recurrence.MonthMode
 import com.thefoxworks.tzafon.domain.recurrence.Pattern
 import com.thefoxworks.tzafon.domain.recurrence.Rule
-import com.thefoxworks.tzafon.ui.theme.Den
+import com.thefoxworks.tzafon.ui.theme.Tz
 import com.thefoxworks.tzafon.ui.theme.DenType
 
 /** Field wrapper with a mono caps label (RecurrenceFields.jsx Field). */
@@ -54,8 +54,8 @@ fun <T> Segmented(
         modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(Den.surfaceAlt)
-            .border(1.dp, Den.line, RoundedCornerShape(12.dp))
+            .background(Tz.colors.surfaceAlt)
+            .border(1.dp, Tz.colors.line, RoundedCornerShape(12.dp))
             .padding(3.dp),
         horizontalArrangement = Arrangement.spacedBy(3.dp),
     ) {
@@ -65,7 +65,7 @@ fun <T> Segmented(
                 Modifier
                     .weight(1f)
                     .clip(RoundedCornerShape(9.dp))
-                    .background(if (on) Den.rust else Color.Transparent)
+                    .background(if (on) Tz.colors.rust else Color.Transparent)
                     .pressable { onSelect(v) }
                     .padding(vertical = if (small) 8.dp else 10.dp, horizontal = 4.dp),
                 contentAlignment = Alignment.Center,
@@ -77,7 +77,7 @@ fun <T> Segmented(
                         fontSize = if (small) 13.sp else 14.sp,
                         fontWeight = if (on) FontWeight.Bold else FontWeight.Medium,
                     ),
-                    color = if (on) Color.White else Den.muted,
+                    color = if (on) Color.White else Tz.colors.muted,
                     maxLines = 1,
                 )
             }
@@ -91,20 +91,20 @@ fun Stepper(value: Int, onChange: (Int) -> Unit, min: Int = 1, max: Int = 99, mo
     Row(
         modifier
             .clip(RoundedCornerShape(11.dp))
-            .background(Den.card)
-            .border(1.dp, Den.line, RoundedCornerShape(11.dp)),
+            .background(Tz.colors.card)
+            .border(1.dp, Tz.colors.line, RoundedCornerShape(11.dp)),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
             Modifier.size(38.dp).pressable { if (value > min) onChange(value - 1) },
             contentAlignment = Alignment.Center,
         ) {
-            Text("–", style = TextStyle(fontSize = 22.sp, fontWeight = FontWeight.SemiBold), color = if (value <= min) Den.faint else Den.rust)
+            Text("–", style = TextStyle(fontSize = 22.sp, fontWeight = FontWeight.SemiBold), color = if (value <= min) Tz.colors.faint else Tz.colors.rust)
         }
         Text(
             "$value",
             style = TextStyle(fontFamily = DenType.mono, fontSize = 16.sp, fontWeight = FontWeight.SemiBold),
-            color = Den.ink,
+            color = Tz.colors.ink,
             textAlign = TextAlign.Center,
             modifier = Modifier.width(30.dp),
         )
@@ -112,7 +112,7 @@ fun Stepper(value: Int, onChange: (Int) -> Unit, min: Int = 1, max: Int = 99, mo
             Modifier.size(38.dp).pressable { if (value < max) onChange(value + 1) },
             contentAlignment = Alignment.Center,
         ) {
-            Text("+", style = TextStyle(fontSize = 22.sp, fontWeight = FontWeight.SemiBold), color = if (value >= max) Den.faint else Den.rust)
+            Text("+", style = TextStyle(fontSize = 22.sp, fontWeight = FontWeight.SemiBold), color = if (value >= max) Tz.colors.faint else Tz.colors.rust)
         }
     }
 }
@@ -158,8 +158,8 @@ fun RecurrenceFields(rule: Rule, onChange: (Rule) -> Unit) {
                                     .weight(1f)
                                     .aspectRatio(1f)
                                     .clip(CircleShape)
-                                    .background(if (on) Den.rust else Color.Transparent)
-                                    .border(1.5.dp, if (on) Den.rust else Den.line, CircleShape)
+                                    .background(if (on) Tz.colors.rust else Color.Transparent)
+                                    .border(1.5.dp, if (on) Tz.colors.rust else Tz.colors.line, CircleShape)
                                     .pressable {
                                         onChange(rule.copy(weekdays = if (on) rule.weekdays - i else rule.weekdays + i))
                                     },
@@ -168,7 +168,7 @@ fun RecurrenceFields(rule: Rule, onChange: (Rule) -> Unit) {
                                 Text(
                                     d.take(1),
                                     style = TextStyle(fontFamily = DenType.body, fontSize = 12.5.sp, fontWeight = if (on) FontWeight.Bold else FontWeight.Medium),
-                                    color = if (on) Color.White else Den.muted,
+                                    color = if (on) Color.White else Tz.colors.muted,
                                 )
                             }
                         }
@@ -176,9 +176,9 @@ fun RecurrenceFields(rule: Rule, onChange: (Rule) -> Unit) {
                 }
                 Field("Frequency") {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Text("Every", style = TextStyle(fontFamily = DenType.body, fontSize = 15.sp), color = Den.muted)
+                        Text("Every", style = TextStyle(fontFamily = DenType.body, fontSize = 15.sp), color = Tz.colors.muted)
                         Stepper(rule.weekInterval, { onChange(rule.copy(weekInterval = it)) })
-                        Text(if (rule.weekInterval == 1) "week" else "weeks", style = TextStyle(fontFamily = DenType.body, fontSize = 15.sp), color = Den.muted)
+                        Text(if (rule.weekInterval == 1) "week" else "weeks", style = TextStyle(fontFamily = DenType.body, fontSize = 15.sp), color = Tz.colors.muted)
                     }
                 }
             }
@@ -194,9 +194,9 @@ fun RecurrenceFields(rule: Rule, onChange: (Rule) -> Unit) {
                 if (rule.monthMode == MonthMode.DATE) {
                     Field("Day of month") {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                            Text("The", style = TextStyle(fontFamily = DenType.body, fontSize = 15.sp), color = Den.muted)
+                            Text("The", style = TextStyle(fontFamily = DenType.body, fontSize = 15.sp), color = Tz.colors.muted)
                             Stepper(rule.monthDate, { onChange(rule.copy(monthDate = it)) }, min = 1, max = 31)
-                            Text(Dates.ordinal(rule.monthDate).drop("${rule.monthDate}".length), style = TextStyle(fontFamily = DenType.body, fontSize = 15.sp), color = Den.muted)
+                            Text(Dates.ordinal(rule.monthDate).drop("${rule.monthDate}".length), style = TextStyle(fontFamily = DenType.body, fontSize = 15.sp), color = Tz.colors.muted)
                         }
                     }
                 } else {
@@ -219,9 +219,9 @@ fun RecurrenceFields(rule: Rule, onChange: (Rule) -> Unit) {
                 }
                 Field("Frequency") {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Text("Every", style = TextStyle(fontFamily = DenType.body, fontSize = 15.sp), color = Den.muted)
+                        Text("Every", style = TextStyle(fontFamily = DenType.body, fontSize = 15.sp), color = Tz.colors.muted)
                         Stepper(rule.monthInterval, { onChange(rule.copy(monthInterval = it)) })
-                        Text(if (rule.monthInterval == 1) "month" else "months", style = TextStyle(fontFamily = DenType.body, fontSize = 15.sp), color = Den.muted)
+                        Text(if (rule.monthInterval == 1) "month" else "months", style = TextStyle(fontFamily = DenType.body, fontSize = 15.sp), color = Tz.colors.muted)
                     }
                 }
             }

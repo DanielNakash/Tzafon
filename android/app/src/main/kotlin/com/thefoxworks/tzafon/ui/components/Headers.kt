@@ -21,7 +21,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.thefoxworks.tzafon.ui.theme.Den
+import com.thefoxworks.tzafon.ui.theme.Tz
 import com.thefoxworks.tzafon.ui.theme.DenType
 import com.thefoxworks.tzafon.ui.theme.a
 
@@ -44,10 +44,10 @@ fun RustHeader(
 ) {
     // FR-NAV-7 — every rust header renders `title` at the h1 (37.sp) size so
     // the daily-path silhouette is uniform; there is no compact variant.
-    Box(Modifier.fillMaxWidth().background(Den.rust).clipToBounds()) {
+    Box(Modifier.fillMaxWidth().background(Tz.colors.rust).clipToBounds()) {
         if (compass) {
             Box(Modifier.align(Alignment.TopEnd).offset(x = 20.dp, y = 38.dp).alpha(0.13f)) {
-                Compass(size = 140.dp, ring = Den.cream, needleN = Den.cream, needleS = Den.cream, stroke = 1.2f, ticks = true)
+                Compass(size = 140.dp, ring = Tz.colors.cream, needleN = Tz.colors.cream, needleS = Tz.colors.cream, stroke = 1.2f, ticks = true)
             }
         }
         Column(
@@ -64,9 +64,9 @@ fun RustHeader(
                         label = "Back",
                         role = Role.Button,
                         semantics = { contentDescription = "Back" },
-                    ) { TzIcons.Back(22.dp, Den.cream) }
+                    ) { TzIcons.Back(22.dp, Tz.colors.cream) }
                 } else {
-                    Kicker(kicker, color = Den.cream.a(0.82f))
+                    Kicker(kicker, color = Tz.colors.cream.a(0.82f))
                 }
                 Box(Modifier.weight(1f))
                 // The menu (when present) is an anchored overlay below, kept at a fixed
@@ -76,14 +76,14 @@ fun RustHeader(
                     // A left-slot back-button surface (e.g. About) is a leaf —
                     // the header carries no identity mark and no menu trigger.
                     onBack != null -> {}
-                    onMenu == null -> FoxLogo(30.dp, ring = Den.cream.a(0.9f))
+                    onMenu == null -> FoxLogo(30.dp, ring = Tz.colors.cream.a(0.9f))
                     else -> {}
                 }
             }
             Text(
                 title,
                 style = DenType.h1,
-                color = Den.cream,
+                color = Tz.colors.cream,
                 modifier = Modifier.padding(top = 7.dp),
             )
             if (metaLeft != null || metaRight != null) {
@@ -92,13 +92,13 @@ fun RustHeader(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.Bottom,
                 ) {
-                    Text(metaLeft?.uppercase() ?: "", style = DenType.meta, color = Den.cream.a(0.92f))
-                    Text(metaRight?.uppercase() ?: "", style = DenType.meta, color = Den.cream.a(0.92f))
+                    Text(metaLeft?.uppercase() ?: "", style = DenType.meta, color = Tz.colors.cream.a(0.92f))
+                    Text(metaRight?.uppercase() ?: "", style = DenType.meta, color = Tz.colors.cream.a(0.92f))
                 }
             }
             if (progress != null) {
                 Box(Modifier.padding(top = 9.dp)) {
-                    Bar(pct = progress, fill = Den.amber, track = Color.White.a(0.22f), height = 9.dp, radius = 6.dp)
+                    Bar(pct = progress, fill = Tz.colors.amber, track = Color.White.a(0.22f), height = 9.dp, radius = 6.dp)
                 }
             }
             if (bottomContent != null) {
@@ -107,7 +107,7 @@ fun RustHeader(
         }
         if (onMenu != null) {
             Box(Modifier.align(Alignment.TopEnd).statusBarsPadding().padding(top = 2.dp, end = 12.dp)) {
-                HeaderMenuButton(onClick = onMenu, color = Den.cream)
+                HeaderMenuButton(onClick = onMenu, color = Tz.colors.cream)
             }
         }
     }
@@ -123,7 +123,7 @@ fun RustHeader(
 @Composable
 fun HeaderMenuButton(
     onClick: () -> Unit,
-    color: Color = Den.cream,
+    color: Color = Tz.colors.cream,
 ) {
     TouchTarget(
         visualSize = 30.dp,
@@ -142,15 +142,15 @@ fun LayerHeader(
     kicker: String,
     title: String,
     sub: String? = null,
-    accent: Color = Den.rust,
+    accent: Color = Tz.colors.rust,
     compass: Boolean = false,
     mascot: (@Composable () -> Unit)? = null,
     onMenu: (() -> Unit)? = null,
 ) {
-    Box(Modifier.fillMaxWidth().background(Den.surface)) {
+    Box(Modifier.fillMaxWidth().background(Tz.colors.surface)) {
         if (compass) {
             Box(Modifier.align(Alignment.TopEnd).padding(top = 34.dp, end = 16.dp).statusBarsPadding()) {
-                Compass(size = 46.dp, ring = accent, needleN = accent, needleS = Den.faint)
+                Compass(size = 46.dp, ring = accent, needleN = accent, needleS = Tz.colors.faint)
             }
         }
         Column(
@@ -164,21 +164,21 @@ fun LayerHeader(
                 Box(Modifier.weight(1f))
                 when {
                     mascot != null -> mascot()
-                    !compass && onMenu == null -> FoxLogo(30.dp, ring = Den.ink.a(0.06f))
+                    !compass && onMenu == null -> FoxLogo(30.dp, ring = Tz.colors.ink.a(0.06f))
                     else -> {}
                 }
             }
             Text(
                 title,
                 style = DenType.h1.copy(fontSize = androidx.compose.ui.unit.TextUnit(33f, androidx.compose.ui.unit.TextUnitType.Sp)),
-                color = Den.ink,
+                color = Tz.colors.ink,
                 modifier = Modifier.padding(top = 6.dp).fillMaxWidth(0.82f),
             )
             if (sub != null) {
                 Text(
                     sub,
                     style = DenType.chip.copy(fontFamily = DenType.body, fontSize = androidx.compose.ui.unit.TextUnit(13.5f, androidx.compose.ui.unit.TextUnitType.Sp)),
-                    color = Den.muted,
+                    color = Tz.colors.muted,
                     modifier = Modifier.padding(top = 9.dp).fillMaxWidth(0.85f),
                     maxLines = 3,
                     overflow = TextOverflow.Ellipsis,
@@ -187,9 +187,9 @@ fun LayerHeader(
         }
         if (onMenu != null) {
             Box(Modifier.align(Alignment.TopEnd).statusBarsPadding().padding(top = 2.dp, end = 12.dp)) {
-                HeaderMenuButton(onClick = onMenu, color = Den.ink.a(0.7f))
+                HeaderMenuButton(onClick = onMenu, color = Tz.colors.ink.a(0.7f))
             }
         }
-        Box(Modifier.align(Alignment.BottomStart).fillMaxWidth().height(1.dp).background(Den.line))
+        Box(Modifier.align(Alignment.BottomStart).fillMaxWidth().height(1.dp).background(Tz.colors.line))
     }
 }

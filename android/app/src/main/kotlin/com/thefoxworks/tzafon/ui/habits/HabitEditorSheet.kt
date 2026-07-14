@@ -38,7 +38,7 @@ import com.thefoxworks.tzafon.ui.components.SheetGhostButton
 import com.thefoxworks.tzafon.ui.components.SheetPrimaryButton
 import com.thefoxworks.tzafon.ui.components.TzIcons
 import com.thefoxworks.tzafon.ui.components.pressable
-import com.thefoxworks.tzafon.ui.theme.Den
+import com.thefoxworks.tzafon.ui.theme.Tz
 import com.thefoxworks.tzafon.ui.theme.DenType
 import com.thefoxworks.tzafon.ui.theme.a
 import com.thefoxworks.tzafon.ui.theme.contentDir
@@ -88,7 +88,7 @@ fun HabitEditorSheet(
                 Text(
                     "The habit becomes the goal's engine — matching units auto-advance the bar.",
                     style = TextStyle(fontFamily = DenType.body, fontSize = 13.sp),
-                    color = Den.muted,
+                    color = Tz.colors.muted,
                     modifier = Modifier.padding(top = 3.dp, bottom = 8.dp),
                 )
                 goals.filter { it.state == com.thefoxworks.tzafon.domain.model.GoalState.ONGOING }.forEach { g ->
@@ -99,14 +99,14 @@ fun HabitEditorSheet(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(11.dp),
                     ) {
-                        TzIcons.Target(15.dp, Den.rust)
+                        TzIcons.Target(15.dp, Tz.colors.rust)
                         Text(
                             g.title,
                             style = TextStyle(fontFamily = DenType.body, fontSize = 15.5.sp),
-                            color = Den.ink,
+                            color = Tz.colors.ink,
                             modifier = Modifier.weight(1f),
                         )
-                        if (goalId == g.id) TzIcons.Check(15.dp, Den.rust, 2.6f)
+                        if (goalId == g.id) TzIcons.Check(15.dp, Tz.colors.rust, 2.6f)
                     }
                 }
                 if (goalId != null) {
@@ -126,20 +126,20 @@ fun HabitEditorSheet(
         if (confirmDelete) {
             Column(Modifier.padding(top = 6.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(9.dp)) {
-                    TzIcons.Trash(18.dp, Den.due)
+                    TzIcons.Trash(18.dp, Tz.colors.due)
                     Text(
                         "Delete this habit?",
                         style = TextStyle(fontFamily = DenType.serif, fontSize = 19.sp, fontWeight = FontWeight.SemiBold),
-                        color = Den.ink,
+                        color = Tz.colors.ink,
                     )
                 }
                 Text(
                     "This wipes the habit and its whole history — every logged day. There's no undo. Freezing the linked tasks keeps the history instead.",
                     style = TextStyle(fontFamily = DenType.body, fontSize = 14.sp, lineHeight = 21.sp),
-                    color = Den.muted,
+                    color = Tz.colors.muted,
                     modifier = Modifier.padding(top = 8.dp, bottom = 16.dp),
                 )
-                SheetPrimaryButton(label = "Delete — history and all", color = Den.due) {
+                SheetPrimaryButton(label = "Delete — history and all", color = Tz.colors.due) {
                     initial?.let { onDelete(it.id) }
                     onClose()
                 }
@@ -155,23 +155,23 @@ fun HabitEditorSheet(
             BasicTextField(
                 value = name,
                 onValueChange = { name = it },
-                textStyle = TextStyle(fontFamily = DenType.serif, fontSize = 18.sp, fontWeight = FontWeight.SemiBold, color = Den.ink).contentDir(),
-                cursorBrush = SolidColor(Den.rust),
+                textStyle = TextStyle(fontFamily = DenType.serif, fontSize = 18.sp, fontWeight = FontWeight.SemiBold, color = Tz.colors.ink).contentDir(),
+                cursorBrush = SolidColor(Tz.colors.rust),
                 singleLine = true,
                 decorationBox = { inner ->
                     Box(
                         Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(13.dp))
-                            .background(Den.card)
-                            .border(1.dp, Den.line, RoundedCornerShape(13.dp))
+                            .background(Tz.colors.card)
+                            .border(1.dp, Tz.colors.line, RoundedCornerShape(13.dp))
                             .padding(horizontal = 14.dp, vertical = 13.dp),
                     ) {
                         if (name.isEmpty()) {
                             Text(
                                 "Write in the morning",
                                 style = TextStyle(fontFamily = DenType.serif, fontSize = 18.sp, fontWeight = FontWeight.SemiBold),
-                                color = Den.faint,
+                                color = Tz.colors.faint,
                             )
                         }
                         inner()
@@ -194,7 +194,7 @@ fun HabitEditorSheet(
                 Text(
                     "Kind is fixed once you've logged this habit — delete and recreate if you need to switch.",
                     style = TextStyle(fontFamily = DenType.body, fontSize = 12.sp, lineHeight = 16.5.sp),
-                    color = Den.faint,
+                    color = Tz.colors.faint,
                     modifier = Modifier.padding(top = 6.dp),
                 )
             }
@@ -217,8 +217,8 @@ fun HabitEditorSheet(
                         Modifier
                             .weight(1f)
                             .clip(RoundedCornerShape(13.dp))
-                            .background(Den.card)
-                            .border(1.dp, Den.line, RoundedCornerShape(13.dp))
+                            .background(Tz.colors.card)
+                            .border(1.dp, Tz.colors.line, RoundedCornerShape(13.dp))
                             .padding(horizontal = 14.dp, vertical = 13.dp),
                     ) {
                         var amountText by remember {
@@ -230,8 +230,8 @@ fun HabitEditorSheet(
                                 amountText = s.filter { it.isDigit() || it == '.' }
                                 amountText.toDoubleOrNull()?.let { target = it }
                             },
-                            textStyle = TextStyle(fontFamily = DenType.serif, fontSize = 18.sp, fontWeight = FontWeight.SemiBold, color = Den.ink),
-                            cursorBrush = SolidColor(Den.rust),
+                            textStyle = TextStyle(fontFamily = DenType.serif, fontSize = 18.sp, fontWeight = FontWeight.SemiBold, color = Tz.colors.ink),
+                            cursorBrush = SolidColor(Tz.colors.rust),
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         )
@@ -240,15 +240,15 @@ fun HabitEditorSheet(
                         Modifier
                             .weight(1f)
                             .clip(RoundedCornerShape(13.dp))
-                            .background(Den.card)
-                            .border(1.dp, Den.line, RoundedCornerShape(13.dp))
+                            .background(Tz.colors.card)
+                            .border(1.dp, Tz.colors.line, RoundedCornerShape(13.dp))
                             .padding(horizontal = 14.dp, vertical = 13.dp),
                     ) {
                         BasicTextField(
                             value = unit,
                             onValueChange = { unit = it },
-                            textStyle = TextStyle(fontFamily = DenType.body, fontSize = 15.sp, color = Den.ink).contentDir(),
-                            cursorBrush = SolidColor(Den.rust),
+                            textStyle = TextStyle(fontFamily = DenType.body, fontSize = 15.sp, color = Tz.colors.ink).contentDir(),
+                            cursorBrush = SolidColor(Tz.colors.rust),
                             singleLine = true,
                             decorationBox = { inner ->
                                 Box {
@@ -256,7 +256,7 @@ fun HabitEditorSheet(
                                         Text(
                                             "words · km · pages",
                                             style = TextStyle(fontFamily = DenType.body, fontSize = 15.sp),
-                                            color = Den.faint,
+                                            color = Tz.colors.faint,
                                         )
                                     }
                                     inner()
@@ -282,23 +282,23 @@ fun HabitEditorSheet(
                         .fillMaxWidth()
                         .padding(top = 6.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .border(1.dp, Den.line, RoundedCornerShape(12.dp))
+                        .border(1.dp, Tz.colors.line, RoundedCornerShape(12.dp))
                         .pressable { goalPick = true }
                         .padding(horizontal = 13.dp, vertical = 11.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
-                    TzIcons.Target(14.dp, if (linked != null) Den.rust else Den.muted)
+                    TzIcons.Target(14.dp, if (linked != null) Tz.colors.rust else Tz.colors.muted)
                     Text(
                         linked?.title ?: "Point it at a goal",
                         style = TextStyle(fontFamily = DenType.body, fontSize = 14.sp),
-                        color = if (linked != null) Den.ink else Den.muted,
+                        color = if (linked != null) Tz.colors.ink else Tz.colors.muted,
                         modifier = Modifier.weight(1f),
                     )
                     Text(
                         if (linked != null) "GOAL" else "",
                         style = TextStyle(fontFamily = DenType.mono, fontSize = 9.5.sp),
-                        color = Den.faint,
+                        color = Tz.colors.faint,
                     )
                 }
             }
@@ -309,29 +309,29 @@ fun HabitEditorSheet(
                     .fillMaxWidth()
                     .padding(top = 6.dp)
                     .clip(RoundedCornerShape(13.dp))
-                    .background(if (cue != null) Den.amber.a(0.1f) else Den.card)
-                    .border(1.dp, if (cue != null) Den.amber.a(0.4f) else Den.line, RoundedCornerShape(13.dp))
+                    .background(if (cue != null) Tz.colors.amber.a(0.1f) else Tz.colors.card)
+                    .border(1.dp, if (cue != null) Tz.colors.amber.a(0.4f) else Tz.colors.line, RoundedCornerShape(13.dp))
                     .pressable { cueOpen = true }
                     .padding(horizontal = 14.dp, vertical = 13.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(11.dp),
             ) {
-                TzIcons.Cue(17.dp, if (cue != null) Den.rust else Den.faint)
+                TzIcons.Cue(17.dp, if (cue != null) Tz.colors.rust else Tz.colors.faint)
                 Column(Modifier.weight(1f)) {
                     Text(
                         cue?.label ?: "Anchor it to a routine",
                         style = TextStyle(fontFamily = DenType.body, fontSize = 15.5.sp),
-                        color = if (cue != null) Den.ink else Den.faint,
+                        color = if (cue != null) Tz.colors.ink else Tz.colors.faint,
                     )
                     Text(
                         if (cue != null) "${cue!!.type.name.replace('_', '-')} · A TRIGGER BEATS A CLOCK"
                         else "WITHOUT A CUE IT'S JUST A TRACKER",
                         style = TextStyle(fontFamily = DenType.mono, fontSize = 10.sp),
-                        color = Den.faint,
+                        color = Tz.colors.faint,
                         modifier = Modifier.padding(top = 2.dp),
                     )
                 }
-                TzIcons.Chevron(17.dp, Den.ink.a(0.28f))
+                TzIcons.Chevron(17.dp, Tz.colors.ink.a(0.28f))
             }
 
             SheetPrimaryButton(
@@ -368,18 +368,18 @@ fun HabitEditorSheet(
 @Composable
 private fun KindChip(label: String, on: Boolean, enabled: Boolean = true, onClick: () -> Unit) {
     val bg = when {
-        on && enabled -> Den.green
-        on && !enabled -> Den.green.a(0.45f)
+        on && enabled -> Tz.colors.green
+        on && !enabled -> Tz.colors.green.a(0.45f)
         else -> Color.Transparent
     }
     val border = when {
-        on -> Den.green.a(if (enabled) 1f else 0.45f)
-        else -> Den.line
+        on -> Tz.colors.green.a(if (enabled) 1f else 0.45f)
+        else -> Tz.colors.line
     }
     val textColor = when {
         on -> Color.White.copy(alpha = if (enabled) 1f else 0.85f)
-        enabled -> Den.muted
-        else -> Den.faint
+        enabled -> Tz.colors.muted
+        else -> Tz.colors.faint
     }
     Box(
         Modifier
@@ -408,13 +408,13 @@ private fun Stepper(value: Int, range: IntRange, label: String, onChange: (Int) 
         Text(
             label,
             style = TextStyle(fontFamily = DenType.serif, fontSize = 17.sp, fontWeight = FontWeight.SemiBold),
-            color = Den.ink,
+            color = Tz.colors.ink,
         )
         StepBtn("+") { if (value < range.last) onChange(value + 1) }
         Text(
             "GENTLE BEATS PERFECT",
             style = TextStyle(fontFamily = DenType.mono, fontSize = 9.5.sp),
-            color = Den.faint,
+            color = Tz.colors.faint,
         )
     }
 }
@@ -425,15 +425,15 @@ private fun StepBtn(glyph: String, onClick: () -> Unit) {
         Modifier
             .size(34.dp)
             .clip(RoundedCornerShape(10.dp))
-            .background(Den.card)
-            .border(1.dp, Den.line, RoundedCornerShape(10.dp))
+            .background(Tz.colors.card)
+            .border(1.dp, Tz.colors.line, RoundedCornerShape(10.dp))
             .pressable(onClick),
         contentAlignment = Alignment.Center,
     ) {
         Text(
             glyph,
             style = TextStyle(fontFamily = DenType.body, fontSize = 18.sp, fontWeight = FontWeight.Bold),
-            color = Den.rust,
+            color = Tz.colors.rust,
         )
     }
 }

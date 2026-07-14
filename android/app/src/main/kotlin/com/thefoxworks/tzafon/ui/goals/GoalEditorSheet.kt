@@ -44,7 +44,7 @@ import com.thefoxworks.tzafon.ui.components.SheetGhostButton
 import com.thefoxworks.tzafon.ui.components.SheetPrimaryButton
 import com.thefoxworks.tzafon.ui.components.TzIcons
 import com.thefoxworks.tzafon.ui.components.pressable
-import com.thefoxworks.tzafon.ui.theme.Den
+import com.thefoxworks.tzafon.ui.theme.Tz
 import com.thefoxworks.tzafon.ui.theme.DenType
 import com.thefoxworks.tzafon.ui.theme.a
 import com.thefoxworks.tzafon.ui.theme.contentDir
@@ -112,15 +112,15 @@ fun GoalEditorSheet(
                 Text(
                     "Delete this goal?",
                     style = TextStyle(fontFamily = DenType.serif, fontSize = 19.sp, fontWeight = FontWeight.SemiBold),
-                    color = Den.ink,
+                    color = Tz.colors.ink,
                 )
                 Text(
                     "Its progress record goes with it. Freezing keeps it on ice instead — nothing lost.",
                     style = TextStyle(fontFamily = DenType.body, fontSize = 14.sp, lineHeight = 21.sp),
-                    color = Den.muted,
+                    color = Tz.colors.muted,
                     modifier = Modifier.padding(top = 8.dp, bottom = 16.dp),
                 )
-                SheetPrimaryButton(label = "Delete it", color = Den.due) {
+                SheetPrimaryButton(label = "Delete it", color = Tz.colors.due) {
                     initial?.let { onDelete(it.id) }
                     onClose()
                 }
@@ -159,8 +159,8 @@ fun GoalEditorSheet(
                                 Box(
                                     Modifier.size(16.dp).clip(RoundedCornerShape(5.dp))
                                         .let {
-                                            if (s.done) it.background(Den.rust)
-                                            else it.border(1.5.dp, Den.ink.a(0.28f), RoundedCornerShape(5.dp))
+                                            if (s.done) it.background(Tz.colors.rust)
+                                            else it.border(1.5.dp, Tz.colors.ink.a(0.28f), RoundedCornerShape(5.dp))
                                         }
                                         .pressable { steps[i] = s.copy(done = !s.done) },
                                     contentAlignment = Alignment.Center,
@@ -168,12 +168,12 @@ fun GoalEditorSheet(
                                 Text(
                                     s.label,
                                     style = TextStyle(fontFamily = DenType.body, fontSize = 13.5.sp),
-                                    color = Den.ink,
+                                    color = Tz.colors.ink,
                                     modifier = Modifier.weight(1f),
                                 )
                                 if (steps.size > 1) {
                                     Box(Modifier.pressable { steps.removeAt(i) }.padding(3.dp)) {
-                                        TzIcons.X(12.dp, Den.faint)
+                                        TzIcons.X(12.dp, Tz.colors.faint)
                                     }
                                 }
                             }
@@ -182,12 +182,12 @@ fun GoalEditorSheet(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
-                            TzIcons.Plus(14.dp, Den.muted)
+                            TzIcons.Plus(14.dp, Tz.colors.muted)
                             BasicTextField(
                                 value = newStep,
                                 onValueChange = { newStep = it },
-                                textStyle = TextStyle(fontFamily = DenType.body, fontSize = 13.5.sp, color = Den.ink).contentDir(),
-                                cursorBrush = SolidColor(Den.rust),
+                                textStyle = TextStyle(fontFamily = DenType.body, fontSize = 13.5.sp, color = Tz.colors.ink).contentDir(),
+                                cursorBrush = SolidColor(Tz.colors.rust),
                                 singleLine = true,
                                 decorationBox = { inner ->
                                     Box {
@@ -195,7 +195,7 @@ fun GoalEditorSheet(
                                             Text(
                                                 "Add a step…",
                                                 style = TextStyle(fontFamily = DenType.body, fontSize = 13.5.sp),
-                                                color = Den.faint,
+                                                color = Tz.colors.faint,
                                             )
                                         }
                                         inner()
@@ -205,7 +205,7 @@ fun GoalEditorSheet(
                             )
                             if (newStep.isNotBlank()) {
                                 Box(
-                                    Modifier.clip(RoundedCornerShape(7.dp)).background(Den.rust.a(0.12f))
+                                    Modifier.clip(RoundedCornerShape(7.dp)).background(Tz.colors.rust.a(0.12f))
                                         .pressable {
                                             steps.add(GoalStep(newStep.trim(), false))
                                             newStep = ""
@@ -215,7 +215,7 @@ fun GoalEditorSheet(
                                     Text(
                                         "ADD",
                                         style = TextStyle(fontFamily = DenType.mono, fontSize = 10.sp),
-                                        color = Den.rust,
+                                        color = Tz.colors.rust,
                                     )
                                 }
                             }
@@ -241,7 +241,7 @@ fun GoalEditorSheet(
                     Text(
                         "Count what's already real — the bar never starts empty if you've started.",
                         style = TextStyle(fontFamily = DenType.body, fontSize = 12.sp, lineHeight = 16.5.sp),
-                        color = Den.faint,
+                        color = Tz.colors.faint,
                         modifier = Modifier.padding(top = 7.dp),
                     )
                 }
@@ -250,7 +250,7 @@ fun GoalEditorSheet(
                     Text(
                         "A direction without a number — tasks and habits feed it; you decide when it's done.",
                         style = TextStyle(fontFamily = DenType.body, fontSize = 12.5.sp, lineHeight = 17.5.sp),
-                        color = Den.muted,
+                        color = Tz.colors.muted,
                         modifier = Modifier.padding(top = 12.dp),
                     )
                 }
@@ -296,7 +296,7 @@ fun GoalEditorSheet(
                 Text(
                     if (extraExpanded) "▾" else "▸",
                     style = TextStyle(fontFamily = DenType.mono, fontSize = 11.sp),
-                    color = Den.muted,
+                    color = Tz.colors.muted,
                 )
             }
             if (extraExpanded) {
@@ -311,7 +311,7 @@ fun GoalEditorSheet(
                     Text(
                         "No other active themes to serve.",
                         style = TextStyle(fontFamily = DenType.body, fontSize = 12.5.sp),
-                        color = Den.faint,
+                        color = Tz.colors.faint,
                         modifier = Modifier.padding(top = 6.dp),
                     )
                 } else {
@@ -405,20 +405,20 @@ fun CompletionSheet(
             Text(
                 "“${goal.title}” — done. That happened because you kept showing up.",
                 style = TextStyle(fontFamily = DenType.body, fontSize = 14.5.sp, lineHeight = 21.sp),
-                color = Den.ink,
+                color = Tz.colors.ink,
                 modifier = Modifier.padding(top = 3.dp),
             )
             Text(
                 "Where would you like to go from here?",
                 style = TextStyle(fontFamily = DenType.serif, fontSize = 18.sp, fontWeight = FontWeight.SemiBold),
-                color = Den.ink,
+                color = Tz.colors.ink,
                 modifier = Modifier.padding(top = 14.dp, bottom = 12.dp),
             )
             // FR-HAB-6.2: the rebound sits outside the create-flow audit; the Den palette
             // has no explicit on-green pair, and white gives the safer 4.8:1 on the green.
             SheetPrimaryButton(
                 label = "Make a habit of it",
-                color = Den.green,
+                color = Tz.colors.green,
                 contentColor = Color.White,
             ) { onMakeHabit() }
             SheetGhostButton(label = "Set a follow-on goal", modifier = Modifier.padding(top = 9.dp)) { onFollowOn() }
@@ -438,14 +438,14 @@ private fun ReadOnlyChip(label: String) {
     Box(
         Modifier
             .clip(RoundedCornerShape(999.dp))
-            .background(Den.line.a(0.30f))
-            .border(1.dp, Den.line, RoundedCornerShape(999.dp))
+            .background(Tz.colors.line.a(0.30f))
+            .border(1.dp, Tz.colors.line, RoundedCornerShape(999.dp))
             .padding(horizontal = 11.dp, vertical = 6.dp),
     ) {
         Text(
             label,
             style = TextStyle(fontFamily = DenType.mono, fontSize = 10.sp, letterSpacing = 0.3.sp),
-            color = Den.faint,
+            color = Tz.colors.faint,
         )
     }
 }
@@ -455,15 +455,15 @@ private fun TypeChip(label: String, on: Boolean, onClick: () -> Unit) {
     Box(
         Modifier
             .clip(RoundedCornerShape(999.dp))
-            .background(if (on) Den.rust else Color.Transparent)
-            .border(1.dp, if (on) Den.rust else Den.line, RoundedCornerShape(999.dp))
+            .background(if (on) Tz.colors.rust else Color.Transparent)
+            .border(1.dp, if (on) Tz.colors.rust else Tz.colors.line, RoundedCornerShape(999.dp))
             .pressable(onClick)
             .padding(horizontal = 11.dp, vertical = 6.dp),
     ) {
         Text(
             label,
             style = TextStyle(fontFamily = DenType.mono, fontSize = 10.sp, letterSpacing = 0.3.sp),
-            color = if (on) Color.White else Den.muted,
+            color = if (on) Color.White else Tz.colors.muted,
         )
     }
 }
@@ -477,9 +477,9 @@ private fun EditorField(
     number: Boolean = false,
 ) {
     val baseStyle = if (serif) {
-        TextStyle(fontFamily = DenType.serif, fontSize = 18.sp, fontWeight = FontWeight.SemiBold, color = Den.ink)
+        TextStyle(fontFamily = DenType.serif, fontSize = 18.sp, fontWeight = FontWeight.SemiBold, color = Tz.colors.ink)
     } else {
-        TextStyle(fontFamily = DenType.body, fontSize = 15.sp, color = Den.ink)
+        TextStyle(fontFamily = DenType.body, fontSize = 15.sp, color = Tz.colors.ink)
     }
     // FR-DESIGN-3: user-authored strings resolve direction from first strong
     // character; numeric fields stay LTR (digits carry no directional signal).
@@ -488,7 +488,7 @@ private fun EditorField(
         value = value,
         onValueChange = onChange,
         textStyle = style,
-        cursorBrush = SolidColor(Den.rust),
+        cursorBrush = SolidColor(Tz.colors.rust),
         singleLine = true,
         keyboardOptions = if (number) KeyboardOptions(keyboardType = KeyboardType.Decimal) else KeyboardOptions.Default,
         decorationBox = { inner ->
@@ -496,12 +496,12 @@ private fun EditorField(
                 Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(13.dp))
-                    .background(Den.card)
-                    .border(1.dp, Den.line, RoundedCornerShape(13.dp))
+                    .background(Tz.colors.card)
+                    .border(1.dp, Tz.colors.line, RoundedCornerShape(13.dp))
                     .padding(horizontal = 14.dp, vertical = 13.dp),
             ) {
                 if (value.isEmpty()) {
-                    Text(placeholder, style = style.copy(color = Den.faint, fontWeight = FontWeight.Normal))
+                    Text(placeholder, style = style.copy(color = Tz.colors.faint, fontWeight = FontWeight.Normal))
                 }
                 inner()
             }

@@ -37,7 +37,7 @@ import com.thefoxworks.tzafon.ui.components.FoxLogo
 import com.thefoxworks.tzafon.ui.components.RustHeader
 import com.thefoxworks.tzafon.ui.components.TzIcons
 import com.thefoxworks.tzafon.ui.components.pressable
-import com.thefoxworks.tzafon.ui.theme.Den
+import com.thefoxworks.tzafon.ui.theme.Tz
 import com.thefoxworks.tzafon.ui.theme.DenType
 import com.thefoxworks.tzafon.ui.theme.a
 
@@ -64,12 +64,12 @@ fun AboutScreen(
     }
     var noEmailHandler by remember { mutableStateOf(false) }
 
-    Column(Modifier.fillMaxSize().background(Den.bg)) {
+    Column(Modifier.fillMaxSize().background(Tz.colors.bg)) {
         RustHeader(
             title = "About",
             kicker = "TZAFON",
             right = {
-                Box(Modifier.pressable("Close", Role.Button, onClose).padding(4.dp)) { TzIcons.X(20.dp, Den.cream) }
+                Box(Modifier.pressable("Close", Role.Button, onClose).padding(4.dp)) { TzIcons.X(20.dp, Tz.colors.cream) }
             },
         )
 
@@ -110,13 +110,13 @@ fun AboutScreen(
                             fontWeight = FontWeight.SemiBold,
                             letterSpacing = (-0.3).sp,
                         ),
-                        color = Den.ink,
+                        color = Tz.colors.ink,
                         textAlign = TextAlign.Center,
                     )
                     Text(
                         "Implemented by Claude",
                         style = TextStyle(fontFamily = DenType.body, fontSize = 15.5.sp),
-                        color = Den.ink,
+                        color = Tz.colors.ink,
                         textAlign = TextAlign.Center,
                     )
                     Text(
@@ -126,13 +126,13 @@ fun AboutScreen(
                             fontSize = 12.5.sp,
                             letterSpacing = 0.4.sp,
                         ),
-                        color = Den.muted,
+                        color = Tz.colors.muted,
                         textAlign = TextAlign.Center,
                     )
                 }
 
                 Spacer(Modifier.height(28.dp))
-                FoxLogo(size = logoSize, ring = Den.ink.a(0.06f))
+                FoxLogo(size = logoSize, ring = Tz.colors.ink.a(0.06f))
                 Spacer(Modifier.height(24.dp))
 
                 val contactLabel = "Contact Us"
@@ -143,7 +143,7 @@ fun AboutScreen(
                         fontSize = 15.sp,
                         fontWeight = FontWeight.SemiBold,
                     ),
-                    color = Den.rust,
+                    color = Tz.colors.rust,
                     textAlign = TextAlign.Center,
                     modifier = Modifier
                         .semantics {
@@ -166,7 +166,7 @@ fun AboutScreen(
                     Text(
                         "No email app is available",
                         style = TextStyle(fontFamily = DenType.body, fontSize = 13.sp, lineHeight = 18.sp),
-                        color = Den.muted,
+                        color = Tz.colors.muted,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth(),
                     )

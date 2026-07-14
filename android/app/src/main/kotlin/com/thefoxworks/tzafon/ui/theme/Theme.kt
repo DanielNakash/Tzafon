@@ -11,32 +11,33 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 /**
- * Material 3 re-themed to the Den look (FR-DESIGN-2) — components inherit
- * Den colors/type/shape and are never left default-Material.
+ * Material 3 re-themed to the Den look (FR-DESIGN-2) — components inherit the
+ * active palette's colors/type/shape and are never left default-Material.
+ * FR-DESIGN-4: the scheme is derived from the selected [Palette] at render time.
  */
-private val DenColorScheme = lightColorScheme(
-    primary = Den.rust,
-    onPrimary = Den.cream,
-    primaryContainer = Den.rust.a(0.14f),
-    onPrimaryContainer = Den.rustDeep,
-    secondary = Den.amber,
-    onSecondary = Den.ink,
-    background = Den.bg,
-    onBackground = Den.ink,
-    surface = Den.surface,
-    onSurface = Den.ink,
-    surfaceVariant = Den.surfaceAlt,
-    onSurfaceVariant = Den.muted,
-    outline = Den.line,
-    outlineVariant = Den.line2,
-    error = Den.due,
-    onError = Den.cream,
-    surfaceContainer = Den.card,
-    surfaceContainerHigh = Den.card,
-    surfaceContainerHighest = Den.card,
-    surfaceContainerLow = Den.surface,
-    inverseSurface = Den.ink,
-    inverseOnSurface = Den.surface,
+private fun colorSchemeFor(p: Palette) = lightColorScheme(
+    primary = p.rust,
+    onPrimary = p.cream,
+    primaryContainer = p.rust.a(0.14f),
+    onPrimaryContainer = p.rustDeep,
+    secondary = p.amber,
+    onSecondary = p.ink,
+    background = p.bg,
+    onBackground = p.ink,
+    surface = p.surface,
+    onSurface = p.ink,
+    surfaceVariant = p.surfaceAlt,
+    onSurfaceVariant = p.muted,
+    outline = p.line,
+    outlineVariant = p.line2,
+    error = p.due,
+    onError = p.cream,
+    surfaceContainer = p.card,
+    surfaceContainerHigh = p.card,
+    surfaceContainerHighest = p.card,
+    surfaceContainerLow = p.surface,
+    inverseSurface = p.ink,
+    inverseOnSurface = p.surface,
 )
 
 private val DenTypography = Typography(
@@ -62,9 +63,9 @@ private val DenShapes = Shapes(
 )
 
 @Composable
-fun TzafonTheme(content: @Composable () -> Unit) {
+fun TzafonTheme(palette: Palette = LocalPalette.current, content: @Composable () -> Unit) {
     MaterialTheme(
-        colorScheme = DenColorScheme,
+        colorScheme = colorSchemeFor(palette),
         typography = DenTypography,
         shapes = DenShapes,
         content = content,
