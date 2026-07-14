@@ -233,6 +233,10 @@ private fun BacklogRow(
                     // Backlog title renders RTL (the last surface still LTR-locked).
                     style = TextStyle(fontFamily = DenType.body, fontSize = 16.sp, lineHeight = 21.sp).contentDir(),
                     color = Tz.colors.ink,
+                    // Fill the weighted slot so an RTL title actually right-aligns —
+                    // matching TaskRow / the Habits list (content-direction alone only
+                    // sets paragraph direction; the box must span the width to show it).
+                    modifier = Modifier.fillMaxWidth(),
                 )
                 if (hasLinks) {
                     Row(
