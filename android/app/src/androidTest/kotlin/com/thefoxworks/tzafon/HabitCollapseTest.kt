@@ -65,18 +65,20 @@ class HabitCollapseTest {
         loggedToday = false,
         todayAmount = null,
         hasHistory = false,
+        logs = emptyList(),
     )
 
     @Test
     fun rendersCollapsed_showsOnlyName_logControl_expandAffordance() {
         rule.setContent {
             TzafonTheme {
-                HabitCard(card = card, servesGoal = null, onLog = {}, onEdit = {})
+                HabitCard(card = card, servesGoal = null, onLog = {}, onLogDate = {}, onEdit = {})
             }
         }
 
         rule.onNodeWithText("Read").assertIsDisplayed()
-        rule.onNodeWithText("Log").assertIsDisplayed()
+        // FR-HAB-9 — the collapsed log pill now shows the "Mark"/"Un-mark" token.
+        rule.onNodeWithText("Mark").assertIsDisplayed()
         rule.onNodeWithContentDescription("Expand habit Read").assertIsDisplayed()
         // FR-HAB-5.3 / FR-HAB-1 details must NOT surface until expanded.
         rule.onNodeWithText("THIS WEEK").assertDoesNotExist()
@@ -89,11 +91,11 @@ class HabitCollapseTest {
         var logs = 0
         rule.setContent {
             TzafonTheme {
-                HabitCard(card = card, servesGoal = null, onLog = { logs++ }, onEdit = {})
+                HabitCard(card = card, servesGoal = null, onLog = { logs++ }, onLogDate = {}, onEdit = {})
             }
         }
 
-        rule.onNodeWithText("Log").performClick()
+        rule.onNodeWithText("Mark").performClick()
         assertEquals("collapsed log tap fires exactly once", 1, logs)
         // Card must stay collapsed after a log tap.
         rule.onNodeWithText("THIS WEEK").assertDoesNotExist()
@@ -103,7 +105,7 @@ class HabitCollapseTest {
     fun expandThenCollapse_revealsFullContentsAndHidesAgain() {
         rule.setContent {
             TzafonTheme {
-                HabitCard(card = card, servesGoal = null, onLog = {}, onEdit = {})
+                HabitCard(card = card, servesGoal = null, onLog = {}, onLogDate = {}, onEdit = {})
             }
         }
 
@@ -133,7 +135,7 @@ class HabitCollapseTest {
                     // The key drives a fresh composition — analogous to leaving
                     // and returning to the Habits tab.
                     androidx.compose.runtime.key(mountKey) {
-                        HabitCard(card = card, servesGoal = null, onLog = {}, onEdit = {})
+                        HabitCard(card = card, servesGoal = null, onLog = {}, onLogDate = {}, onEdit = {})
                     }
                 }
             }
@@ -156,7 +158,7 @@ class HabitCollapseTest {
     fun noStreakOrAdherenceSurface_inEitherState() {
         rule.setContent {
             TzafonTheme {
-                HabitCard(card = card, servesGoal = null, onLog = {}, onEdit = {})
+                HabitCard(card = card, servesGoal = null, onLog = {}, onLogDate = {}, onEdit = {})
             }
         }
 

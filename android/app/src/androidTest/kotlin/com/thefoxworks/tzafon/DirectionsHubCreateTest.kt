@@ -1,6 +1,9 @@
 package com.thefoxworks.tzafon
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
@@ -26,8 +29,8 @@ import org.junit.runner.RunWith
  * exercisable at the composable level:
  *   1. hub chooser exposes both "Add a goal" and "Add a theme" as labelled,
  *      independently addressable tap targets (FR-DIR-7.1);
- *   2. goal editor with `showThemePicker = true` renders a picker including a
- *      "No theme" option plus one chip per active theme (FR-DIR-7.3);
+ *   2. the goal editor renders a theme picker including a "No theme" option
+ *      plus one chip per active theme (FR-DIR-7.3, now always visible);
  *   3. saving with a picked theme writes it into `primaryThemeId`; saving
  *      without a pick keeps the goal orphan (FR-DIR-7.3, FR-DIR-1);
  *   4. DM-NOT audit — no gamification surface in the hub create flow.
@@ -95,39 +98,26 @@ class DirectionsHubCreateTest {
                     onDelete = {},
                     onComplete = {},
                     onClose = {},
-                    showThemePicker = true,
                     activeThemes = listOf(a, b),
                 )
             }
         }
 
-        // SectionLabel uppercases: "Theme" → "THEME".
-        rule.onNodeWithText("THEME").assertExists()
+        // The picker is always visible now; SectionLabel uppercases:
+        // "Primary theme" → "PRIMARY THEME". Theme chips also surface in the
+        // "Also serves" section, so scope the chip lookups to the primary
+        // picker (contentDescription "Primary theme") to stay unambiguous.
+        rule.onNodeWithText("PRIMARY THEME").assertExists()
         rule.onNodeWithText("No theme").assertExists()
-        rule.onNodeWithText("Craft").assertExists()
-        rule.onNodeWithText("Movement").assertExists()
+        rule.onNode(hasText("Craft") and hasAnyAncestor(hasContentDescription("Primary theme")))
+            .assertExists()
+        rule.onNode(hasText("Movement") and hasAnyAncestor(hasContentDescription("Primary theme")))
+            .assertExists()
     }
 
-    /** FR-DIR-7.3 — the same editor without the picker hides the picker surface. */
-    @Test
-    fun goalEditor_withoutThemePicker_hidesPicker() {
-        rule.setContent {
-            TzafonTheme {
-                GoalEditorSheet(
-                    initial = null,
-                    onSave = {},
-                    onDelete = {},
-                    onComplete = {},
-                    onClose = {},
-                    showThemePicker = false,
-                    activeThemes = listOf(theme("t1", "Craft")),
-                )
-            }
-        }
-
-        rule.onNodeWithText("No theme").assertDoesNotExist()
-        rule.onNodeWithText("Craft").assertDoesNotExist()
-    }
+    // NOTE: the former `goalEditor_withoutThemePicker_hidesPicker` test was
+    // removed with FR-DIR-8.4 — the theme picker is now always visible in every
+    // route (there is no longer a `showThemePicker` toggle to hide it).
 
     /** Hub-create default-save lands the goal in the orphan bucket (`primaryThemeId == null`). */
     @Test
@@ -141,7 +131,6 @@ class DirectionsHubCreateTest {
                     onDelete = {},
                     onComplete = {},
                     onClose = {},
-                    showThemePicker = true,
                     activeThemes = listOf(theme("t1", "Craft")),
                 )
             }
@@ -177,14 +166,15 @@ class DirectionsHubCreateTest {
                     onDelete = {},
                     onComplete = {},
                     onClose = {},
-                    showThemePicker = true,
                     activeThemes = listOf(theme("t1", "Craft"), theme("t2", "Movement")),
                 )
             }
         }
 
-        // Pick "Movement".
-        rule.onNodeWithText("Movement").performClick()
+        // Pick "Movement" from the primary picker (a same-named chip also
+        // appears under "Also serves", so scope to the primary section).
+        rule.onNode(hasText("Movement") and hasAnyAncestor(hasContentDescription("Primary theme")))
+            .performClick()
         // Save (the title is prefilled, so the primary button is enabled).
         rule.onNodeWithText("Save").performClick()
 
@@ -208,7 +198,6 @@ class DirectionsHubCreateTest {
                     onDelete = {},
                     onComplete = {},
                     onClose = {},
-                    showThemePicker = true,
                     activeThemes = listOf(theme("t1", "Craft")),
                 )
             }

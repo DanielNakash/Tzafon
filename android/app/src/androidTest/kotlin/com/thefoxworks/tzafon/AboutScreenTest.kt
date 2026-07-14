@@ -2,6 +2,9 @@ package com.thefoxworks.tzafon
 
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.getOrNull
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -68,9 +71,15 @@ class AboutScreenTest {
         rule.onNodeWithContentDescription("The Fox Works").assertIsDisplayed()
     }
 
-    /** FR-ABOUT-1.1 — a Back control lives in the header. */
+    /**
+     * FR-ABOUT-1.1 — a dismiss control lives in the header. Since v2.4.0 M1
+     * (nav-affordance consistency) this is the "Close" (X) affordance rendered
+     * in the header's `right` slot. It's an icon-only pressable, so its "Close"
+     * label rides the OnClick action (TalkBack action label) rather than a
+     * `contentDescription`; select it by that label.
+     */
     @Test
-    fun rendersBackControl() {
+    fun rendersCloseControl() {
         var closed = 0
         rule.setContent {
             TzafonTheme {
@@ -78,10 +87,17 @@ class AboutScreenTest {
             }
         }
 
-        rule.onNodeWithContentDescription("Back").assertIsDisplayed()
-        rule.onNodeWithContentDescription("Back").performClick()
-        assertEquals("back tap dismisses via onClose", 1, closed)
+        rule.onNode(hasOnClickLabel("Close")).assertIsDisplayed()
+        rule.onNode(hasOnClickLabel("Close")).performClick()
+        assertEquals("close tap dismisses via onClose", 1, closed)
     }
+
+    /** Matches an icon-only pressable whose "Close"-style label rides the
+     *  OnClick action (see [Modifier.pressable]'s `onClickLabel`). */
+    private fun hasOnClickLabel(label: String) =
+        SemanticsMatcher("onClickLabel == '$label'") { node ->
+            node.config.getOrNull(SemanticsActions.OnClick)?.label == label
+        }
 
     /** FR-ABOUT-1.5 — Contact Us dispatches ACTION_SENDTO with the exact mailto URI. */
     @Test

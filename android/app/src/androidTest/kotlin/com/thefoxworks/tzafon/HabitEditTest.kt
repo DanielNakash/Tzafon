@@ -58,13 +58,14 @@ class HabitEditTest {
         loggedToday = false,
         todayAmount = null,
         hasHistory = hasHistory,
+        logs = emptyList(),
     )
 
     @Test
     fun collapsedRow_exposesExplicitEditAffordance() {
         rule.setContent {
             TzafonTheme {
-                HabitCard(card = card(), servesGoal = null, onLog = {}, onEdit = {})
+                HabitCard(card = card(), servesGoal = null, onLog = {}, onLogDate = {}, onEdit = {})
             }
         }
 
@@ -79,7 +80,7 @@ class HabitEditTest {
         var edits = 0
         rule.setContent {
             TzafonTheme {
-                HabitCard(card = card(), servesGoal = null, onLog = {}, onEdit = { edits++ })
+                HabitCard(card = card(), servesGoal = null, onLog = {}, onLogDate = {}, onEdit = { edits++ })
             }
         }
 
@@ -96,11 +97,12 @@ class HabitEditTest {
         var logs = 0
         rule.setContent {
             TzafonTheme {
-                HabitCard(card = card(), servesGoal = null, onLog = { logs++ }, onEdit = { edits++ })
+                HabitCard(card = card(), servesGoal = null, onLog = { logs++ }, onLogDate = {}, onEdit = { edits++ })
             }
         }
 
-        rule.onNodeWithText("Log").performClick()
+        // FR-HAB-9 — the collapsed log pill now reads "Mark" / "Un-mark".
+        rule.onNodeWithText("Mark").performClick()
         assertEquals("log tap fires log", 1, logs)
         assertEquals("log tap must not fire edit", 0, edits)
     }
@@ -112,7 +114,7 @@ class HabitEditTest {
         var logs = 0
         rule.setContent {
             TzafonTheme {
-                HabitCard(card = card(), servesGoal = null, onLog = { logs++ }, onEdit = { edits++ })
+                HabitCard(card = card(), servesGoal = null, onLog = { logs++ }, onLogDate = {}, onEdit = { edits++ })
             }
         }
 
@@ -127,7 +129,7 @@ class HabitEditTest {
     fun expandedBody_hasEditAffordance() {
         rule.setContent {
             TzafonTheme {
-                HabitCard(card = card(), servesGoal = null, onLog = {}, onEdit = {})
+                HabitCard(card = card(), servesGoal = null, onLog = {}, onLogDate = {}, onEdit = {})
             }
         }
 
