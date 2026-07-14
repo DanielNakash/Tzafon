@@ -106,10 +106,13 @@ fun HabitsScreen(
                         card = card,
                         servesGoal = state.goalsById[card.habit.goalId]?.title,
                         onLog = {
-                            if (card.habit.kind == HabitKind.QUANTITATIVE) {
-                                amountFor = card
-                            } else {
-                                vm.logToday(card.habit.id, done = !card.loggedToday)
+                            // FR-HAB-9.1 — the today pill now un-logs directly when
+                            // already logged (both kinds; quantitative un-log does not
+                            // re-open AmountSheet). The "mark" path keeps v2.5.0 wiring.
+                            when {
+                                card.loggedToday -> vm.logToday(card.habit.id, done = false)
+                                card.habit.kind == HabitKind.QUANTITATIVE -> amountFor = card
+                                else -> vm.logToday(card.habit.id, done = true)
                             }
                         },
                         onLogDate = { pickDateFor = card },
@@ -179,6 +182,7 @@ fun HabitsScreen(
                 value = null,
                 today = state.today,
                 maxDate = state.today,
+                loggedDates = card.logs.filter { it.done }.map { it.date }.toSet(),
                 onPick = { pickedDate ->
                     pickDateFor = null
                     val h = card.habit
@@ -198,12 +202,18 @@ fun HabitsScreen(
     // FR-HAB-8.2.1 — the quantitative-picked-date confirm sheet.
     amountForDate?.let { (card, pickedDate) ->
         val existing = card.logs.firstOrNull { it.date == pickedDate }
+        val alreadyLogged = existing?.done == true
         AmountSheet(
             title = "Log ${Dates.fmtDate(pickedDate, state.today)} · ${card.habit.name}",
             unit = card.habit.unit,
             suggested = existing?.amount ?: card.habit.target,
             onConfirm = { vm.logForDate(card.habit.id, pickedDate, done = true, amount = it) },
             onClose = { amountForDate = null },
+            // FR-HAB-9.2 — reopening on an already-logged date surfaces the clear row.
+            onClear = if (alreadyLogged) {
+                { vm.logForDate(card.habit.id, pickedDate, done = false, amount = null) }
+            } else null,
+            clearDateLabel = if (alreadyLogged) Dates.fmtDate(pickedDate, state.today) else null,
         )
     }
 
@@ -283,8 +293,8 @@ internal fun HabitCard(
                 onEdit = onEdit,
             )
             CollapsedLogPill(
+                habitName = h.name,
                 loggedToday = card.loggedToday,
-                isQuant = isQuant,
                 accent = accent,
                 onLog = onLog,
             )
@@ -418,25 +428,29 @@ internal fun HabitCard(
                 }
 
                 // ── log today (full-width, the same affordance as collapsed) ──
+                // FR-HAB-9.1 — the expanded today pill re-labels on loggedToday for
+                // both kinds ("Mark today done" ⇄ "Un-mark today"); a logged
+                // quantitative habit shows its amount in the caption below.
+                val pillLabel = if (card.loggedToday) "Un-mark today" else "Mark today done"
                 Row(
                     Modifier
                         .fillMaxWidth()
                         .padding(top = 12.dp)
                         .height(40.dp)
                         .clip(RoundedCornerShape(11.dp))
-                        .background(accent.a(if (card.loggedToday && !isQuant) 0.22f else 0.1f))
+                        .background(accent.a(if (card.loggedToday) 0.22f else 0.1f))
                         .border(1.dp, accent.a(0.5f), RoundedCornerShape(11.dp))
-                        .pressable(onLog),
+                        .semantics { contentDescription = "$pillLabel ${h.name}" }
+                        .pressable(label = "$pillLabel ${h.name}", role = Role.Button, onClick = onLog),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center,
                 ) {
                     TzIcons.Check(16.dp, accent, 2.6f)
                     Text(
-                        when {
-                            isQuant && card.loggedToday -> "Logged ${fmt(card.todayAmount ?: 0.0)} ${h.unit ?: ""} — edit"
-                            isQuant -> "Log today's ${h.unit ?: "amount"}"
-                            card.loggedToday -> "Done today — tap to undo"
-                            else -> "Mark today done"
+                        if (isQuant && card.loggedToday) {
+                            "Un-mark today · ${fmt(card.todayAmount ?: 0.0)} ${h.unit ?: ""}"
+                        } else {
+                            pillLabel
                         },
                         style = TextStyle(fontFamily = DenType.body, fontSize = 14.sp, fontWeight = FontWeight.SemiBold),
                         color = accent,
@@ -559,24 +573,24 @@ private fun CollapsedEditPill(habitName: String, onEdit: () -> Unit) {
  */
 @Composable
 private fun CollapsedLogPill(
+    habitName: String,
     loggedToday: Boolean,
-    isQuant: Boolean,
     accent: androidx.compose.ui.graphics.Color,
     onLog: () -> Unit,
 ) {
-    val doneStyle = loggedToday && !isQuant
+    // FR-HAB-9.1 — a single re-labelling pill (per the DECISION): logged today ⇒
+    // "Un-mark today", else "Mark today done". Both kinds behave the same here;
+    // the quantitative un-log clears directly (owner: parent [onLog]). TalkBack
+    // reads the full label + habit name; the compact pill shows a short token.
+    val label = if (loggedToday) "Un-mark today" else "Mark today done"
     Row(
         Modifier
             .height(34.dp)
             .clip(RoundedCornerShape(999.dp))
-            .background(accent.a(if (doneStyle) 0.24f else 0.12f))
+            .background(accent.a(if (loggedToday) 0.24f else 0.12f))
             .border(1.dp, accent.a(0.5f), RoundedCornerShape(999.dp))
             .pressable(
-                label = when {
-                    doneStyle -> "Undo today's log"
-                    isQuant -> "Log today's amount"
-                    else -> "Mark today done"
-                },
+                label = "$label $habitName",
                 role = Role.Button,
                 onClick = onLog,
             )
@@ -586,7 +600,7 @@ private fun CollapsedLogPill(
     ) {
         TzIcons.Check(13.dp, accent, 2.6f)
         Text(
-            if (doneStyle) "Done" else "Log",
+            if (loggedToday) "Un-mark" else "Mark",
             style = TextStyle(
                 fontFamily = DenType.mono,
                 fontSize = 11.sp,

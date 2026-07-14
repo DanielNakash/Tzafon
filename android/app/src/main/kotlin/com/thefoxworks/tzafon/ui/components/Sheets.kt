@@ -35,6 +35,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -97,6 +98,10 @@ fun CalendarPicker(
     onPick: (String) -> Unit,
     onClear: (() -> Unit)? = null,
     maxDate: String? = null,
+    // FR-HAB-9.3 — when supplied (the "Log a date…" habit flow), each day cell
+    // announces its log state to TalkBack ("Tap to log …" / "Tap to un-log …")
+    // and logged days carry a small filled marker. Null for generic date pickers.
+    loggedDates: Set<String>? = null,
 ) {
     val init = remember(value, today) { Dates.parse(value ?: today) }
     var viewYear by remember { mutableStateOf(init.year) }
@@ -175,6 +180,7 @@ fun CalendarPicker(
                         val isToday = c == today
                         val isSel = c == value
                         val disabled = maxDate != null && c > maxDate
+                        val logged = loggedDates?.contains(c) == true
                         Box(
                             Modifier
                                 .weight(1f)
@@ -183,22 +189,44 @@ fun CalendarPicker(
                                 .clip(RoundedCornerShape(10.dp))
                                 .background(if (isSel) Den.rust else Color.Transparent)
                                 .then(if (isToday && !isSel) Modifier.border(1.5.dp, Den.rust.a(0.4f), RoundedCornerShape(10.dp)) else Modifier)
-                                .then(if (disabled) Modifier else Modifier.pressable { onPick(c) }),
+                                .then(
+                                    if (disabled) Modifier
+                                    else Modifier.pressable(
+                                        // FR-HAB-9.3 — distinct log-state announcement per day.
+                                        label = if (loggedDates != null) {
+                                            if (logged) "Tap to un-log $c" else "Tap to log $c"
+                                        } else null,
+                                        role = Role.Button,
+                                    ) { onPick(c) }
+                                ),
                             contentAlignment = Alignment.Center,
                         ) {
-                            Text(
-                                "${Dates.parse(c).dayOfMonth}",
-                                style = TextStyle(
-                                    fontFamily = DenType.body, fontSize = 14.5.sp,
-                                    fontWeight = if (isToday || isSel) FontWeight.Bold else FontWeight.Normal,
-                                ),
-                                color = when {
-                                    disabled -> Den.faint
-                                    isSel -> Color.White
-                                    isToday -> Den.rust
-                                    else -> Den.ink
-                                },
-                            )
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(
+                                    "${Dates.parse(c).dayOfMonth}",
+                                    style = TextStyle(
+                                        fontFamily = DenType.body, fontSize = 14.5.sp,
+                                        fontWeight = if (isToday || isSel || logged) FontWeight.Bold else FontWeight.Normal,
+                                    ),
+                                    color = when {
+                                        disabled -> Den.faint
+                                        isSel -> Color.White
+                                        logged -> Den.green
+                                        isToday -> Den.rust
+                                        else -> Den.ink
+                                    },
+                                )
+                                // FR-HAB-9.3 — logged-day marker so the un-log target is visible.
+                                if (logged) {
+                                    Box(
+                                        Modifier
+                                            .padding(top = 1.5.dp)
+                                            .size(4.dp)
+                                            .clip(RoundedCornerShape(999.dp))
+                                            .background(if (isSel) Color.White else Den.green),
+                                    )
+                                }
+                            }
                         }
                     }
                 }

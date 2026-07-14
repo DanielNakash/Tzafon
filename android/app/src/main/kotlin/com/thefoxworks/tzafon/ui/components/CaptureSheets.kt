@@ -25,6 +25,9 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -189,6 +192,11 @@ fun AmountSheet(
     suggested: Double? = null,
     onConfirm: (Double) -> Unit,
     onClose: () -> Unit,
+    // FR-HAB-9.2 — when the sheet is opened on an already-logged date, the caller
+    // passes an un-log callback; the sheet then surfaces a secondary "Clear this
+    // log" row. Null (the default, and the create-capture callers) hides it.
+    onClear: (() -> Unit)? = null,
+    clearDateLabel: String? = null,
 ) {
     var text by remember {
         mutableStateOf(suggested?.let { if (it % 1.0 == 0.0) it.toInt().toString() else it.toString() } ?: "")
@@ -254,6 +262,31 @@ fun AmountSheet(
             ) {
                 value?.let(onConfirm)
                 onClose()
+            }
+            // FR-HAB-9.2 — secondary, text-only un-log affordance in Den.due to
+            // read as destructive-ish without competing with the confirm button.
+            // FR-HAB-9.6: single tap, no confirmation dialog.
+            if (onClear != null) {
+                val clearCd = "Clear this log" + (clearDateLabel?.let { " for $it" } ?: "")
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .height(44.dp)
+                        .padding(top = 4.dp)
+                        .semantics { contentDescription = clearCd }
+                        .pressable(label = clearCd, role = Role.Button) {
+                            onClear()
+                            onClose()
+                        },
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center,
+                ) {
+                    Text(
+                        "Clear this log",
+                        style = TextStyle(fontFamily = DenType.body, fontSize = 14.sp, fontWeight = FontWeight.SemiBold),
+                        color = Den.due,
+                    )
+                }
             }
         }
     }
