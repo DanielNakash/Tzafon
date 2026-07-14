@@ -44,6 +44,7 @@ import com.thefoxworks.tzafon.ui.nav.AppMenuSheet
 import com.thefoxworks.tzafon.ui.theme.Tz
 import com.thefoxworks.tzafon.ui.theme.DenType
 import com.thefoxworks.tzafon.ui.theme.a
+import com.thefoxworks.tzafon.ui.theme.contentDir
 
 /**
  * Backlog (FR-BACKLOG, design: BacklogScreen) — a quiet someday/maybe pool.
@@ -228,7 +229,9 @@ private fun BacklogRow(
             Column(Modifier.weight(1f)) {
                 Text(
                     task.title,
-                    style = TextStyle(fontFamily = DenType.body, fontSize = 16.sp, lineHeight = 21.sp),
+                    // FR-DESIGN-3.5 — content-driven direction so a Hebrew/Arabic
+                    // Backlog title renders RTL (the last surface still LTR-locked).
+                    style = TextStyle(fontFamily = DenType.body, fontSize = 16.sp, lineHeight = 21.sp).contentDir(),
                     color = Tz.colors.ink,
                 )
                 if (hasLinks) {

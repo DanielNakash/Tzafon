@@ -79,6 +79,37 @@ class ContentDirectionTest {
      * to `.contentDir().copy(...)`, this test still passes as long as
      * `TextDirection.Content` survives the intermediate copy.
      */
+    /**
+     * FR-DESIGN-3.5 — the Backlog row title now resolves content direction. The
+     * exact style BacklogRow applies (`DenType.body` 16sp / 21sp lineHeight,
+     * `.contentDir()`) must carry [TextDirection.Content], and a Hebrew and an
+     * English title both render under the LTR host chrome.
+     */
+    @Test
+    fun backlogTitleStyle_carriesContentDirection() {
+        val backlogTitle = TextStyle(fontFamily = DenType.body, fontSize = 16.sp, lineHeight = 21.sp).contentDir()
+        assertEquals(TextDirection.Content, backlogTitle.textDirection)
+    }
+
+    @Test
+    fun backlogHebrewAndEnglishTitles_bothRender() {
+        val hebrew = "לנקות את השולחן"
+        val english = "Clean the desk"
+        val style = TextStyle(fontFamily = DenType.body, fontSize = 16.sp, lineHeight = 21.sp).contentDir()
+        rule.setContent {
+            TzafonTheme {
+                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                    Column {
+                        Text(hebrew, style = style)
+                        Text(english, style = style)
+                    }
+                }
+            }
+        }
+        rule.onNodeWithText(hebrew).assertIsDisplayed()
+        rule.onNodeWithText(english).assertIsDisplayed()
+    }
+
     @Test
     fun contentDir_survivesFurtherCopyChain() {
         val chained = TextStyle(fontFamily = DenType.serif, fontSize = 18.sp)
