@@ -23,10 +23,11 @@ class ActionLogicTest {
         createdAt: Long = 0,
         completedAt: Long? = null,
         focusDate: String? = null,
+        seriesId: String? = null,
     ) = Task(
         id = id, title = id, toDoDate = toDo, dueDate = due, state = state,
         sortOrder = sortOrder, createdAt = createdAt, completedAt = completedAt,
-        focusDate = focusDate,
+        focusDate = focusDate, seriesId = seriesId,
     )
 
     // ── FR-TODAY-1/3 membership ───────────────────────────────
@@ -122,6 +123,84 @@ class ActionLogicTest {
         assertEquals(listOf("over1", "over2"), g.overdue.map { it.id }) // oldest first
         assertEquals(listOf("Today", "Tomorrow", "Fri, Jul 10"), g.dated.map { it.first.label })
         assertEquals(listOf("inbox1"), g.inbox.map { it.id })
+    }
+
+    // ── FR-PLAN-5 slipped recurring hidden when next occurrence is today ──
+
+    @Test
+    fun `FR-PLAN-5 slipped recurring hidden when today occurrence exists - open done closed`() {
+        // A single series S with a slipped Sunday occurrence + a today occurrence.
+        // The today occurrence's state must not matter: Open, Done, Skipped(≈CLOSED).
+        for (todayState in listOf(TaskState.OPEN, TaskState.DONE, TaskState.CLOSED)) {
+            val g = ActionLogic.planningGroups(
+                listOf(
+                    task("S__slip", toDo = "2026-07-03", seriesId = "S"),
+                    task("S__today", toDo = today, state = todayState, seriesId = "S"),
+                ),
+                today,
+                rangeDays = 7,
+            )
+            assertEquals(
+                "today occurrence state=$todayState should hide the slip",
+                emptyList<String>(),
+                g.overdue.map { it.id },
+            )
+        }
+    }
+
+    @Test
+    fun `FR-PLAN-5 slipped recurring visible when no today occurrence`() {
+        val g = ActionLogic.planningGroups(
+            listOf(
+                task("S__slip", toDo = "2026-07-03", seriesId = "S"),
+                task("S__tomorrow", toDo = "2026-07-06", seriesId = "S"),
+            ),
+            today,
+            rangeDays = 7,
+        )
+        assertEquals(listOf("S__slip"), g.overdue.map { it.id })
+    }
+
+    @Test
+    fun `FR-PLAN-5 one-off overdue tasks are never hidden`() {
+        val g = ActionLogic.planningGroups(
+            listOf(
+                task("oneoff", toDo = "2026-07-03"), // seriesId == null
+                task("unrelatedToday", toDo = today),
+            ),
+            today,
+            rangeDays = 7,
+        )
+        assertEquals(listOf("oneoff"), g.overdue.map { it.id })
+    }
+
+    @Test
+    fun `FR-PLAN-5 multiple slipped occurrences of one series all hidden`() {
+        val g = ActionLogic.planningGroups(
+            listOf(
+                task("S__slip1", toDo = "2026-07-01", seriesId = "S"),
+                task("S__slip2", toDo = "2026-07-03", seriesId = "S"),
+                task("S__today", toDo = today, seriesId = "S"),
+            ),
+            today,
+            rangeDays = 7,
+        )
+        assertEquals(emptyList<String>(), g.overdue.map { it.id })
+    }
+
+    @Test
+    fun `FR-PLAN-5 independent series evaluated independently`() {
+        // Series A has a today occurrence (its slip hides); series B does not (its slip stays).
+        val g = ActionLogic.planningGroups(
+            listOf(
+                task("A__slip", toDo = "2026-07-03", seriesId = "A"),
+                task("A__today", toDo = today, seriesId = "A"),
+                task("B__slip", toDo = "2026-07-02", seriesId = "B"),
+            ),
+            today,
+            rangeDays = 7,
+        )
+        assertEquals(listOf("B__slip"), g.overdue.map { it.id })
     }
 
     @Test

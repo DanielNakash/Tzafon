@@ -89,7 +89,16 @@ object ActionLogic {
         val open = tasks.filter { it.state == TaskState.OPEN }
         val rangeEnd = Dates.addDays(today, rangeDays)
 
+        // FR-PLAN-5 — a slipped recurring occurrence is hidden from overdue once the
+        // series has an occurrence dated today (regardless of that occurrence's state):
+        // the "next one is already on the desk" case is a non-decision, not a slip.
+        // One-off tasks (seriesId == null) are never hidden by this filter.
+        val seriesDueToday = tasks
+            .filter { it.seriesId != null && it.toDoDate == today }
+            .map { it.seriesId }
+            .toSet()
         val overdue = open.filter { (it.toDoDate ?: "") < today && it.toDoDate != null }
+            .filterNot { it.seriesId != null && it.seriesId in seriesDueToday }
             .sortedBy { it.toDoDate }
         val inRange = open.filter { it.toDoDate != null && it.toDoDate >= today && it.toDoDate <= rangeEnd }
         val dated = inRange
