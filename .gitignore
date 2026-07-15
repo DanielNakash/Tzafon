@@ -23,6 +23,7 @@ android/.kotlin/
 .screenshots/
 .shots/
 .build-shots/
+.tz-screenshots/
 
 # Pipeline / local build artifacts (not part of the source of record)
 PIPELINE_LOG.md

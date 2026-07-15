@@ -69,6 +69,12 @@ fun SettingsScreen(
     settings: SettingsStore,
     auth: AuthRepository,
     onClose: () -> Unit,
+    /**
+     * FR-AUTH-1.4 — after `signOut()` completes, the root nav pops Settings
+     * (and the whole main-tab back stack) back to Welcome. Passed as a
+     * callback so this screen stays nav-agnostic and testable in isolation.
+     */
+    onSignedOut: () -> Unit = {},
 ) {
     val weekStart by settings.weekStart.collectAsStateWithLifecycle(initialValue = "SUNDAY")
     val paletteName by settings.palette.collectAsStateWithLifecycle(initialValue = "den")
@@ -92,7 +98,7 @@ fun SettingsScreen(
                 .padding(bottom = 40.dp),
         ) {
             // ── account + sync (M9b) ──
-            AccountCard(auth, scope)
+            AccountCard(auth, scope, onSignedOut)
 
             // ── the week (FR-SET-1) ──
             SectionLabel("The week", modifier = Modifier.padding(top = 20.dp, bottom = 9.dp))
@@ -340,7 +346,7 @@ private fun PaletteSheet(current: String, onPick: (String) -> Unit, onClose: () 
  * mirror via the auth-state collector in TzafonApp.
  */
 @Composable
-private fun AccountCard(auth: AuthRepository, scope: CoroutineScope) {
+private fun AccountCard(auth: AuthRepository, scope: CoroutineScope, onSignedOut: () -> Unit = {}) {
     val user by auth.authState.collectAsStateWithLifecycle(initialValue = null)
     val context = LocalContext.current
     var busy by remember { mutableStateOf(false) }
@@ -391,6 +397,13 @@ private fun AccountCard(auth: AuthRepository, scope: CoroutineScope) {
                         busy = true
                         if (signedIn) {
                             auth.signOut()
+                            busy = false
+                            // FR-AUTH-1.4 — nav back to Welcome AFTER signOut()
+                            // completes; do not clear busy on the outer path or
+                            // the button label flashes back to "Sign in" for one
+                            // frame before we leave the screen.
+                            onSignedOut()
+                            return@launch
                         } else {
                             error = auth.signIn(activity).exceptionOrNull()?.let { it.message ?: "Sign-in failed" }
                         }

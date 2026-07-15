@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -14,6 +15,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.thefoxworks.tzafon.domain.model.TzafonUser
+import kotlinx.coroutines.flow.map
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -106,17 +109,58 @@ internal val REFERENCE_ROUTES = setOf("alltasks", "backlog")
 /** FR-NAV-9 — is the current top a reference view (opened on top of a tab)? */
 internal fun isReferenceView(currentRoute: String?): Boolean = currentRoute in REFERENCE_ROUTES
 
+/**
+ * FR-AUTH-1.10 — auth state has three phases: not-yet-emitted (loading),
+ * signed-out, signed-in. Wrapping the Firebase flow so the first frame can
+ * render a bare Den-themed splash instead of flashing Welcome to a user
+ * whose persisted session is still being read.
+ */
+internal sealed interface AuthGate {
+    data object Loading : AuthGate
+    data class Ready(val user: TzafonUser?) : AuthGate
+}
+
+/**
+ * FR-AUTH-1.1 — pure gate logic (extracted so the JUnit nav-layer test can
+ * exercise it without the Compose runtime): a signed-in identity opens on
+ * Today, a null identity opens on Welcome. `welcomeSeen` is retired — auth
+ * state alone decides.
+ */
+internal fun authStartDestination(user: TzafonUser?): String =
+    if (user != null) Tab.TODAY.route else "welcome"
+
 @Composable
 fun TzafonNavHost(container: AppContainer) {
+    val gate by remember(container.authRepository) {
+        container.authRepository.authState.map<TzafonUser?, AuthGate> { AuthGate.Ready(it) }
+    }.collectAsStateWithLifecycle(initialValue = AuthGate.Loading)
+
+    when (val g = gate) {
+        AuthGate.Loading -> {
+            // FR-AUTH-1.10 [DECISION] (a) — bare Den background until authState resolves.
+            Box(Modifier.fillMaxSize().background(TzafonThemeBackground()))
+        }
+        is AuthGate.Ready -> TzafonMainNav(container, initialUser = g.user)
+    }
+}
+
+/** Read the current theme's background so the splash matches everything else. */
+@Composable
+private fun TzafonThemeBackground(): androidx.compose.ui.graphics.Color =
+    com.thefoxworks.tzafon.ui.theme.Tz.colors.bg
+
+@Composable
+private fun TzafonMainNav(container: AppContainer, initialUser: TzafonUser?) {
     val nav = rememberNavController()
     val scope = rememberCoroutineScope()
-    val welcomeSeen by container.settings.welcomeSeen.collectAsStateWithLifecycle(initialValue = null as Boolean?)
     val today = Dates.todayIso()
 
-    if (welcomeSeen == null) return // waiting on DataStore's first emission
-
-    // frozen for the composition so the DataStore flip can't rebuild the graph
-    val start = remember { if (welcomeSeen == true) Tab.TODAY.route else "welcome" }
+    // FR-AUTH-1.1 — auth state is the sole cold-start gate: signed-in users
+    // land straight on Today, signed-out users see Welcome. Frozen for this
+    // composition; live `authState` transitions are handled inline (WelcomeScreen
+    // observes it to nav out on sign-in; SettingsScreen calls `onSignedOut` to
+    // nav back on sign-out) so the graph itself doesn't rebuild mid-session.
+    val start = remember { authStartDestination(initialUser) }
 
     fun goTab(tab: Tab) {
         // FR-NAV-9 — a reference view (All Tasks / Backlog) opened on top of a tab must be
@@ -176,10 +220,14 @@ fun TzafonNavHost(container: AppContainer) {
             modifier = Modifier.fillMaxSize(),
         ) {
             composable("welcome") {
-                WelcomeScreen(onStart = {
-                    scope.launch { container.settings.setWelcomeSeen() }
-                    nav.navigate(Tab.TODAY.route) { popUpTo("welcome") { inclusive = true } }
-                })
+                WelcomeScreen(
+                    authRepository = container.authRepository,
+                    onSignedIn = {
+                        // FR-AUTH-1.3 — clear Welcome from the back stack so
+                        // Android back from Today does not return here.
+                        nav.navigate(Tab.TODAY.route) { popUpTo("welcome") { inclusive = true } }
+                    },
+                )
             }
 
             // ── the five tabs (FR-NAV-1; Today default, FR-NAV-2) ──
@@ -278,6 +326,15 @@ fun TzafonNavHost(container: AppContainer) {
                     settings = container.settings,
                     auth = container.authRepository,
                     onClose = { nav.popBackStack() },
+                    onSignedOut = {
+                        // FR-AUTH-1.4 — sign-out returns to Welcome and clears
+                        // the entire main-tab back stack so back from Welcome
+                        // exits the app rather than returning to a signed-in tab.
+                        nav.navigate("welcome") {
+                            popUpTo(nav.graph.startDestinationId) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    },
                 )
             }
 

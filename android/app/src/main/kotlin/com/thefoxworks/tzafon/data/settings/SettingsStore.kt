@@ -17,7 +17,9 @@ private val Context.dataStore by preferencesDataStore(name = "tzafon_settings")
 class SettingsStore(private val context: Context) {
 
     private object Keys {
-        val welcomeSeen = booleanPreferencesKey("welcome_seen")
+        // NB: `welcome_seen` (v2.0-v2.6) was retired in v2.7.0 (FR-AUTH-1.1) — auth state
+        // is now the sole cold-start gate. The DataStore key may still be present on
+        // upgraded installs; we simply never read it. No migration needed.
         val weekStart = stringPreferencesKey("week_start") // SUNDAY | MONDAY | SATURDAY
         val planningPreset = stringPreferencesKey("planning_preset") // ActionLogic.RangePreset name
         val planningCustomEnd = stringPreferencesKey("planning_custom_end") // ISO date
@@ -26,12 +28,6 @@ class SettingsStore(private val context: Context) {
         val remindersEnabled = booleanPreferencesKey("reminders_enabled") // FR-NOTIF opt-in
         val chimeEnabled = booleanPreferencesKey("chime_enabled")         // FR-AUDIO-1 completion chime
         val palette = stringPreferencesKey("palette")                     // DM-PREF-1 den|blue|green|magenta|teal
-    }
-
-    val welcomeSeen: Flow<Boolean> = context.dataStore.data.map { it[Keys.welcomeSeen] ?: false }
-
-    suspend fun setWelcomeSeen() {
-        context.dataStore.edit { it[Keys.welcomeSeen] = true }
     }
 
     val weekStart: Flow<String> = context.dataStore.data.map { it[Keys.weekStart] ?: "SUNDAY" }
