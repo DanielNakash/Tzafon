@@ -200,6 +200,14 @@ requirements: FR-DESIGN-3.5
 target: 2.6.0
 Please add RTL support also to the tasks in the Backlog View.
 
+## FR-2026-07-15-a
+status: groomed
+target: 2.7.0
+requested: 2026-07-15
+implemented: (auto)
+requirements: (auto)
+Allow linking a Habit directly to a Theme, not only to a Goal. In several cases a habit cannot be tied to a specific, well-defined goal — for example, doing a certain number of push-ups a day for better health does not lead toward a concrete goal unless I invent one, but it fits neatly under a theme like "better health". The Habit editor should let me point a habit at a theme (a "direction"), the way it already lets me point it at a goal, and both should be optional. When a habit already serves a goal, prefer inheriting that goal's theme but still allow a goalless habit to be attached to a theme on its own.
+
 
 
 
