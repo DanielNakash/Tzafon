@@ -73,6 +73,9 @@ fun HabitsScreen(
     // FR-HAB-8 — picked-date flows: the "Log which day?" sheet and, for a
     // quantitative habit, the follow-up AmountSheet keyed to that picked date.
     var pickDateFor by remember { mutableStateOf<HabitCardState?>(null) }
+    // FR-HAB-12.10 — when the expanded-row strip taps a frequency date, the
+    // picker opens with that date pre-selected in the confirm-gate shell.
+    var pickerPreselectDate by remember { mutableStateOf<String?>(null) }
     var amountForDate by remember { mutableStateOf<Pair<HabitCardState, String>?>(null) }
     var menu by remember { mutableStateOf(false) }
 
@@ -116,16 +119,17 @@ fun HabitsScreen(
                         },
                         onLogDate = { pickDateFor = card },
                         onEdit = { editing = card.habit },
-                        // FR-HAB-11.6 — expanded-row strip taps route to the same
-                        // sheets the "Log a date…" pill uses: quantitative → the
-                        // amount sheet keyed to that date; frequency → toggle
-                        // (M4 will replace this with the pre-selected picker).
+                        // FR-HAB-11.6 / FR-HAB-12.10 — expanded-row strip taps
+                        // route to the same sheets the "Log a date…" pill uses:
+                        // quantitative → the amount sheet keyed to that date;
+                        // frequency → open the confirm-gated picker with that
+                        // date pre-selected so the confirm row surfaces immediately.
                         onTapStripDay = { date ->
                             if (card.habit.kind == HabitKind.QUANTITATIVE) {
                                 amountForDate = card to date
                             } else {
-                                val existing = card.logs.firstOrNull { it.date == date && it.done }
-                                vm.logForDate(card.habit.id, date, done = existing == null)
+                                pickerPreselectDate = date
+                                pickDateFor = card
                             }
                         },
                     )
@@ -190,26 +194,99 @@ fun HabitsScreen(
     }
 
     // FR-HAB-8.2 — the "Log which day?" picker; future dates are disabled.
+    // FR-HAB-12 — for FREQUENCY habits the picker enters a select-then-confirm
+    // shape: tapping a date only selects it (highlighted) and reveals a confirm
+    // row; the write fires on the primary button. The QUANTITATIVE branch is
+    // unchanged (its confirm gate is AmountSheet).
     pickDateFor?.let { card ->
-        DenSheet(title = "Log which day?", onClose = { pickDateFor = null }) {
-            CalendarPicker(
-                value = null,
-                today = state.today,
-                maxDate = state.today,
-                loggedDates = card.logs.filter { it.done }.map { it.date }.toSet(),
-                onPick = { pickedDate ->
-                    pickDateFor = null
-                    val h = card.habit
-                    if (h.kind == HabitKind.QUANTITATIVE) {
-                        // FR-HAB-8.2.1 — quantitative branch defers to AmountSheet.
-                        amountForDate = card to pickedDate
+        val h = card.habit
+        val isFreq = h.kind == HabitKind.FREQUENCY
+        // Pre-selection carried in from an expanded-row strip tap (FR-HAB-12.10).
+        var selectedDate by remember(card.habit.id) {
+            mutableStateOf(if (isFreq) pickerPreselectDate else null)
+        }
+        val closeSheet: () -> Unit = {
+            pickDateFor = null
+            pickerPreselectDate = null
+        }
+        DenSheet(title = "Log which day?", onClose = closeSheet) {
+            // DenSheet's content slot is a Box, so siblings stack. Wrap in a
+            // Column so the confirm row sits *below* the calendar.
+            Column(Modifier.fillMaxWidth()) {
+                CalendarPicker(
+                    value = if (isFreq) selectedDate else null,
+                    today = state.today,
+                    maxDate = state.today,
+                    loggedDates = card.logs.filter { it.done }.map { it.date }.toSet(),
+                    confirmGated = isFreq,
+                    onPick = { pickedDate ->
+                        if (!isFreq) {
+                            // FR-HAB-8.2.1 — quantitative branch defers to AmountSheet.
+                            amountForDate = card to pickedDate
+                            closeSheet()
+                        } else {
+                            // FR-HAB-12.1 / FR-HAB-12.5 — tapping the currently-
+                            // selected date clears it, otherwise the tapped date
+                            // becomes the new selection. No write until confirm.
+                            selectedDate = if (selectedDate == pickedDate) null else pickedDate
+                        }
+                    },
+                )
+                // FR-HAB-12.2 — confirm row (frequency only, only while selected).
+                if (isFreq && selectedDate != null) {
+                    val date = selectedDate!!
+                    val alreadyLogged = card.logs.any { it.date == date && it.done }
+                    val label = if (alreadyLogged) {
+                        "Un-log ${Dates.fmtDate(date, state.today)}"
                     } else {
-                        // FR-HAB-8.3 — a second tap on an already-done day un-logs it.
-                        val existing = card.logs.firstOrNull { it.date == pickedDate && it.done }
-                        vm.logForDate(h.id, pickedDate, done = existing == null)
+                        "Log ${Dates.fmtDate(date, state.today)}"
                     }
-                },
-            )
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(top = 14.dp)
+                            .height(46.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Tz.colors.rust)
+                            .semantics { contentDescription = label }
+                            .pressable(label = label, role = Role.Button) {
+                                // FR-HAB-12.3 — the write fires here, not on
+                                // date-tap; then close & clear selection.
+                                vm.logForDate(h.id, date, done = !alreadyLogged)
+                                selectedDate = null
+                                closeSheet()
+                            },
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center,
+                    ) {
+                        Text(
+                            label,
+                            style = TextStyle(fontFamily = DenType.body, fontSize = 15.sp, fontWeight = FontWeight.SemiBold),
+                            color = androidx.compose.ui.graphics.Color.White,
+                        )
+                    }
+                    // FR-HAB-12.6 — "Cancel" clears selection and closes the sheet.
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp)
+                            .height(40.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .pressable(label = "Cancel", role = Role.Button) {
+                                selectedDate = null
+                                closeSheet()
+                            },
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center,
+                    ) {
+                        Text(
+                            "Cancel",
+                            style = TextStyle(fontFamily = DenType.body, fontSize = 14.sp, fontWeight = FontWeight.SemiBold),
+                            color = Tz.colors.muted,
+                        )
+                    }
+                }
+            }
         }
     }
 

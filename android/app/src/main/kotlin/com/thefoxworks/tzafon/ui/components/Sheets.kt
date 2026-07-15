@@ -102,6 +102,11 @@ fun CalendarPicker(
     // announces its log state to TalkBack ("Tap to log …" / "Tap to un-log …")
     // and logged days carry a small filled marker. Null for generic date pickers.
     loggedDates: Set<String>? = null,
+    // FR-HAB-12.7 — when true, cell announcements switch to "Tap to select …
+    // for logging/un-logging" and the currently-selected cell announces
+    // "…, selected for logging/un-logging. Double tap to confirm." — because
+    // the write does not happen on tap, but on the confirm button below.
+    confirmGated: Boolean = false,
 ) {
     val init = remember(value, today) { Dates.parse(value ?: today) }
     var viewYear by remember { mutableStateOf(init.year) }
@@ -192,10 +197,24 @@ fun CalendarPicker(
                                 .then(
                                     if (disabled) Modifier
                                     else Modifier.pressable(
-                                        // FR-HAB-9.3 — distinct log-state announcement per day.
-                                        label = if (loggedDates != null) {
-                                            if (logged) "Tap to un-log $c" else "Tap to log $c"
-                                        } else null,
+                                        // FR-HAB-9.3 / FR-HAB-12.7 — announcement
+                                        // varies by mode: direct-log picker reads
+                                        // "Tap to log/un-log", confirm-gated picker
+                                        // reads "Tap to select … for logging" and
+                                        // the currently-selected cell announces
+                                        // "…, selected for logging/un-logging.
+                                        // Double tap to confirm."
+                                        label = when {
+                                            confirmGated -> if (isSel) {
+                                                "$c, selected for ${if (logged) "un-logging" else "logging"}. Double tap to confirm."
+                                            } else {
+                                                "Tap to select $c for ${if (logged) "un-logging" else "logging"}"
+                                            }
+                                            loggedDates != null -> {
+                                                if (logged) "Tap to un-log $c" else "Tap to log $c"
+                                            }
+                                            else -> null
+                                        },
                                         role = Role.Button,
                                     ) { onPick(c) }
                                 ),
