@@ -161,6 +161,9 @@ fun HabitsScreen(
             onDelete = { vm.delete(it) },
             onClose = { creating = false; editing = null },
             goals = state.goals,
+            goalsById = state.goalsById,
+            activeThemes = state.activeThemes,
+            allThemes = state.allThemes,
             hasHistory = hasHistory,
         )
     }

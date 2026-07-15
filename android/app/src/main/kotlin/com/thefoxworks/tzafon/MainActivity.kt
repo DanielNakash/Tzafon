@@ -91,7 +91,7 @@ class VmFactory(private val container: AppContainer) : ViewModelProvider.Factory
         BacklogViewModel::class.java ->
             BacklogViewModel(container.taskRepository) as T
         HabitsViewModel::class.java ->
-            HabitsViewModel(container.habitRepository, container.settings, container.goalRepository) as T
+            HabitsViewModel(container.habitRepository, container.settings, container.goalRepository, container.themeRepository) as T
         DirectionsViewModel::class.java ->
             DirectionsViewModel(container.themeRepository, container.goalRepository, container.habitRepository, container.taskRepository) as T
         JourneyViewModel::class.java ->

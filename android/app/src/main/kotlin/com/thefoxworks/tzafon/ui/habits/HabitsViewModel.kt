@@ -8,6 +8,9 @@ import com.thefoxworks.tzafon.domain.habits.HabitMath
 import com.thefoxworks.tzafon.domain.model.Habit
 import com.thefoxworks.tzafon.domain.model.HabitLog
 import com.thefoxworks.tzafon.domain.model.HabitRepository
+import com.thefoxworks.tzafon.domain.model.Theme
+import com.thefoxworks.tzafon.domain.model.ThemeRepository
+import com.thefoxworks.tzafon.domain.model.ThemeState
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -45,6 +48,16 @@ data class HabitsUiState(
     /** for the editor's "serves a goal" pick (DM-HABIT-6) */
     val goals: List<com.thefoxworks.tzafon.domain.model.Goal> = emptyList(),
     val goalsById: Map<String, com.thefoxworks.tzafon.domain.model.Goal> = emptyMap(),
+    /**
+     * FR-HAB-10.3 — active themes are the only options togglable in the
+     * habit editor's direction picker (mirrors `FR-DIR-8.4`).
+     */
+    val activeThemes: List<Theme> = emptyList(),
+    /**
+     * FR-HAB-10.3 — full theme list resolves read-only annotated chips for
+     * habits already serving an upcoming/archived theme.
+     */
+    val allThemes: List<Theme> = emptyList(),
 )
 
 /** Habits (FR-HAB) — forgiving rate + cue + arc; no streaks, no scores. */
@@ -52,6 +65,7 @@ class HabitsViewModel(
     private val repo: HabitRepository,
     settings: SettingsStore,
     goalRepo: com.thefoxworks.tzafon.domain.model.GoalRepository,
+    themeRepo: ThemeRepository,
 ) : ViewModel() {
 
     val today: String get() = Dates.todayIso()
@@ -62,7 +76,8 @@ class HabitsViewModel(
             repo.observeLogs(),
             settings.weekStart,
             goalRepo.observeGoals(),
-        ) { habits, logs, weekStart, goals ->
+            themeRepo.observeThemes(),
+        ) { habits, logs, weekStart, goals, themes ->
             val today = Dates.todayIso()
             HabitsUiState(
                 today = today,
@@ -84,6 +99,8 @@ class HabitsViewModel(
                 },
                 goals = goals,
                 goalsById = goals.associateBy { it.id },
+                activeThemes = themes.filter { it.state == ThemeState.ACTIVE },
+                allThemes = themes,
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), HabitsUiState())
 

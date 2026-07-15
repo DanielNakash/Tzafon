@@ -5,6 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -23,14 +24,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.thefoxworks.tzafon.domain.model.Cue
+import com.thefoxworks.tzafon.domain.model.Goal
 import com.thefoxworks.tzafon.domain.model.Habit
 import com.thefoxworks.tzafon.domain.model.HabitKind
+import com.thefoxworks.tzafon.domain.model.Theme
+import com.thefoxworks.tzafon.domain.model.ThemeState
+import com.thefoxworks.tzafon.domain.themes.GoalLinkLogic
 import com.thefoxworks.tzafon.ui.components.CueSheet
 import com.thefoxworks.tzafon.ui.components.DenSheet
 import com.thefoxworks.tzafon.ui.components.SectionLabel
@@ -57,7 +66,22 @@ fun HabitEditorSheet(
     /** the DM-GOAL-4 rebound pre-fills the name ("make a habit of it") */
     presetName: String? = null,
     /** goals this habit may serve (DM-HABIT-6 / D2 — one) */
-    goals: List<com.thefoxworks.tzafon.domain.model.Goal> = emptyList(),
+    goals: List<Goal> = emptyList(),
+    /**
+     * FR-HAB-10.5 — goal-by-id map so the pre-fill can read the linked goal's
+     * `primaryThemeId` at open time and seed the direction picker with it.
+     */
+    goalsById: Map<String, Goal> = emptyMap(),
+    /**
+     * FR-HAB-10.3 — active themes are the only options togglable in the
+     * direction picker (mirrors `FR-DIR-8.4`).
+     */
+    activeThemes: List<Theme> = emptyList(),
+    /**
+     * FR-HAB-10.3 — full theme list so a habit already serving an
+     * upcoming/archived theme renders it as a read-only annotated chip.
+     */
+    allThemes: List<Theme> = emptyList(),
     /**
      * FR-HAB-7.4 — when the habit already has logged history, the `kind`
      * chooser is locked: switching would reinterpret past logs (a frequency
@@ -77,6 +101,23 @@ fun HabitEditorSheet(
     var cue by remember { mutableStateOf(initial?.cue) }
     var cueOpen by remember { mutableStateOf(false) }
     var confirmDelete by remember { mutableStateOf(false) }
+    // FR-HAB-10.2 — direction picker state driven by the same pure engine the
+    // goal editor uses; primary is a single-select radio slot, extraServes is
+    // an ordered "also serves" list.
+    // FR-HAB-10.5 — pre-fill (once, on open): if the habit has a goal and no
+    // theme of its own, seed primary from the linked goal's primaryThemeId.
+    val initialThemePrimary = remember(initial?.id) {
+        val ownPrimary = initial?.primaryThemeId
+        val ownExtras = initial?.themeIds ?: emptyList()
+        if (ownPrimary == null && ownExtras.isEmpty()) {
+            initial?.goalId?.let { gid -> goalsById[gid]?.primaryThemeId }
+        } else ownPrimary
+    }
+    var linkSel by remember(initial?.id) {
+        mutableStateOf(
+            GoalLinkLogic.fromGoal(initialThemePrimary, initial?.themeIds ?: emptyList()),
+        )
+    }
 
     if (cueOpen) {
         CueSheet(current = cue, onSave = { cue = it }, onClose = { cueOpen = false })
@@ -303,6 +344,75 @@ fun HabitEditorSheet(
                 }
             }
 
+            // FR-HAB-10 — "Serves a direction · optional": a primary
+            // single-select over active themes (plus "No direction"), and an
+            // "Also serves" multi-select over the remaining actives. Section
+            // hides only when there are no themes at all and the habit
+            // carries none (FR-HAB-10.6).
+            val hasAnyThemeLink = linkSel.primaryId != null || linkSel.extraServes.isNotEmpty()
+            if (activeThemes.isNotEmpty() || hasAnyThemeLink) {
+                SectionLabel("Serves a direction · optional", modifier = Modifier.padding(top = 16.dp))
+                FlowRow(
+                    Modifier
+                        .padding(top = 6.dp)
+                        .semantics { contentDescription = "Primary direction" },
+                    horizontalArrangement = Arrangement.spacedBy(7.dp),
+                    verticalArrangement = Arrangement.spacedBy(7.dp),
+                ) {
+                    DirectionChip(
+                        label = "No direction",
+                        selected = linkSel.primaryId == null,
+                        role = Role.RadioButton,
+                    ) { linkSel = GoalLinkLogic.tapOrphan(linkSel) }
+                    activeThemes.forEach { t ->
+                        DirectionChip(
+                            label = t.name,
+                            selected = linkSel.primaryId == t.id,
+                            role = Role.RadioButton,
+                        ) { linkSel = GoalLinkLogic.tapPrimary(linkSel, t.id) }
+                    }
+                }
+
+                // FR-HAB-10.3 — an "Also serves" row for the remaining active
+                // themes (excludes primary) plus read-only chips for any
+                // upcoming/archived theme the habit already carries.
+                val eligibleActive = activeThemes.filter { it.id != linkSel.primaryId }
+                val nonActiveServed = ((initial?.themeIds ?: emptyList()) +
+                    listOfNotNull(initial?.primaryThemeId))
+                    .filter { id ->
+                        id != linkSel.primaryId &&
+                            allThemes.any { it.id == id && it.state != ThemeState.ACTIVE }
+                    }
+                    .distinct()
+                if (eligibleActive.isNotEmpty() || nonActiveServed.isNotEmpty()) {
+                    SectionLabel("Also serves", modifier = Modifier.padding(top = 12.dp))
+                    FlowRow(
+                        Modifier
+                            .padding(top = 6.dp)
+                            .semantics { contentDescription = "Also serves directions" },
+                        horizontalArrangement = Arrangement.spacedBy(7.dp),
+                        verticalArrangement = Arrangement.spacedBy(7.dp),
+                    ) {
+                        eligibleActive.forEach { t ->
+                            DirectionChip(
+                                label = t.name,
+                                selected = t.id in linkSel.extraServes,
+                                role = Role.Switch,
+                            ) { linkSel = GoalLinkLogic.toggleExtra(linkSel, t.id) }
+                        }
+                        nonActiveServed.forEach { id ->
+                            val t = allThemes.first { it.id == id }
+                            val stateLabel = when (t.state) {
+                                ThemeState.UPCOMING -> "upcoming"
+                                ThemeState.ARCHIVED -> "archived"
+                                ThemeState.ACTIVE -> "active"
+                            }
+                            DirectionReadOnlyChip("${t.name} · $stateLabel")
+                        }
+                    }
+                }
+            }
+
             SectionLabel("Cue · when will you do it?", modifier = Modifier.padding(top = 16.dp))
             Row(
                 Modifier
@@ -339,6 +449,10 @@ fun HabitEditorSheet(
                 enabled = name.isNotBlank(),
                 modifier = Modifier.padding(top = 18.dp),
             ) {
+                // FR-HAB-10.4 — persist both the primary direction and the
+                // full serve set from the editor's LinkSelection (the v2.6.0
+                // save silently dropped themeIds and inherited primaryThemeId
+                // unchanged).
                 onSave(
                     Habit(
                         id = initial?.id ?: "",
@@ -348,7 +462,8 @@ fun HabitEditorSheet(
                         unit = unit.trim().takeIf { it.isNotBlank() && kind == HabitKind.QUANTITATIVE },
                         targetDays = targetDays.takeIf { kind == HabitKind.QUANTITATIVE },
                         cue = cue,
-                        primaryThemeId = initial?.primaryThemeId,
+                        primaryThemeId = linkSel.primaryId,
+                        themeIds = linkSel.themeIds(),
                         goalId = goalId,
                         startedAt = initial?.startedAt ?: 0,
                         createdAt = initial?.createdAt ?: 0,
@@ -414,6 +529,59 @@ private fun Stepper(value: Int, range: IntRange, label: String, onChange: (Int) 
         Text(
             "GENTLE BEATS PERFECT",
             style = TextStyle(fontFamily = DenType.mono, fontSize = 9.5.sp),
+            color = Tz.colors.faint,
+        )
+    }
+}
+
+/**
+ * FR-HAB-10.1 — the primary/serves-also chip shape used by the habit editor's
+ * direction picker. Selection state uses the theme accent; unselected chips
+ * carry the app's neutral outline. Announces itself with the caller-supplied
+ * role (radio for primary, switch for serves-also) so TalkBack matches the
+ * goal editor's picker semantics.
+ */
+@Composable
+private fun DirectionChip(
+    label: String,
+    selected: Boolean,
+    role: Role,
+    onClick: () -> Unit,
+) {
+    Box(
+        Modifier
+            .clip(RoundedCornerShape(999.dp))
+            .background(if (selected) Tz.colors.rust else Color.Transparent)
+            .border(1.dp, if (selected) Tz.colors.rust else Tz.colors.line, RoundedCornerShape(999.dp))
+            .semantics { this.selected = selected }
+            .pressable(label = label, role = role, onClick = onClick)
+            .padding(horizontal = 11.dp, vertical = 6.dp),
+    ) {
+        Text(
+            label,
+            style = TextStyle(fontFamily = DenType.mono, fontSize = 10.sp, letterSpacing = 0.3.sp),
+            color = if (selected) Color.White else Tz.colors.muted,
+        )
+    }
+}
+
+/**
+ * FR-HAB-10.3 — a habit already serving an upcoming/archived theme renders
+ * the theme as a read-only annotated chip (not togglable). Mirrors the
+ * goal editor's ReadOnlyChip.
+ */
+@Composable
+private fun DirectionReadOnlyChip(label: String) {
+    Box(
+        Modifier
+            .clip(RoundedCornerShape(999.dp))
+            .background(Tz.colors.line.a(0.30f))
+            .border(1.dp, Tz.colors.line, RoundedCornerShape(999.dp))
+            .padding(horizontal = 11.dp, vertical = 6.dp),
+    ) {
+        Text(
+            label,
+            style = TextStyle(fontFamily = DenType.mono, fontSize = 10.sp, letterSpacing = 0.3.sp),
             color = Tz.colors.faint,
         )
     }
