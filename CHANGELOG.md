@@ -9,6 +9,33 @@ to the versioned requirements documents in the repo.
 
 ---
 
+## [2.7.0] — 2026-07-15
+
+### Added
+- **Point a habit at a direction, not only a goal** (`FR-HAB-10`) — the Habit editor gains a
+  **Serves a direction · optional** section that mirrors the goal editor: pick a **primary
+  theme** (or *No direction*), then optionally add one or more **Also serves** themes. Habits
+  that fit a direction ("more push-ups a day, for better health") but don't map to a concrete
+  goal now belong somewhere — Directions attributes them to the theme directly. Both the goal
+  link and the theme link are independent and optional.
+- **Signing in is now required** (`FR-AUTH-1`) — the app enters through the Welcome view when
+  signed out; the existing Google sign-in navigates to Today on success. Signing out from
+  Settings returns you to Welcome. The old cold-start `welcomeSeen` flag is retired: the
+  auth state itself is the gate.
+- **Rolling 7-day rhythm strip on habit cards** (`FR-HAB-11`) — every habit card, both
+  collapsed and expanded, now shows a **last-7-days rhythm glance** so the recent shape of
+  the habit is scannable without expanding. On the expanded card the strip is **horizontally
+  scrollable** (rolling 28 days, pinned to today, week separators every 7 cells) so you can
+  pan back and read earlier values. Frequency days render as filled/empty cells, quantitative
+  days as proportional bars against target. The old expanded-row `WeekDots` / `QuantBars`
+  are replaced (one visualisation, not two); the `THIS WEEK` text stat stays.
+- **Confirm gate on the "Log a date…" picker for yes/no habits** (`FR-HAB-12`) — the picker
+  now matches the quantitative flow. Tapping a date **selects** it (highlighted, not written);
+  a rust **Log ${date}** button (or **Un-log ${date}** on an already-logged day) and a Cancel
+  row appear below the calendar. The write only fires on confirm; tapping a different date
+  swaps the selection, tapping the selected date clears it, Cancel dismisses. TalkBack
+  announcements switch from *"Tap to log …"* to *"Tap to select … for logging"* accordingly.
+
 ## [2.6.0] — 2026-07-14
 
 ### Added
@@ -182,6 +209,7 @@ the new name **Tzafon**. Local-first persistence (Room) behind repository interf
 - **Cloud sync (behind the seam)** — Firebase Auth (Google sign-in) and offline-first
   Firestore sync, kept behind the repository interfaces (`M9b`).
 
+[2.7.0]: https://github.com/DanielNakash/Tzafon/releases/tag/v2.7.0
 [2.6.0]: https://github.com/DanielNakash/Tzafon/releases/tag/v2.6.0
 [2.5.0]: https://github.com/DanielNakash/Tzafon/releases/tag/v2.5.0
 [2.4.0]: https://github.com/DanielNakash/Tzafon/releases/tag/v2.4.0

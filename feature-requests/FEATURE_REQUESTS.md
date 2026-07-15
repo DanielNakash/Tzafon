@@ -201,41 +201,41 @@ target: 2.6.0
 Please add RTL support also to the tasks in the Backlog View.
 
 ## FR-2026-07-15-a
-status: groomed
+status: implemented
 target: 2.7.0
 requested: 2026-07-15
-implemented: (auto)
-requirements: (auto)
+implemented: 2.7.0 / a72633b
+requirements: FR-HAB-10
 Allow linking a Habit directly to a Theme, not only to a Goal. In several cases a habit cannot be tied to a specific, well-defined goal — for example, doing a certain number of push-ups a day for better health does not lead toward a concrete goal unless I invent one, but it fits neatly under a theme like "better health". The Habit editor should let me point a habit at a theme (a "direction"), the way it already lets me point it at a goal, and both should be optional. When a habit already serves a goal, prefer inheriting that goal's theme but still allow a goalless habit to be attached to a theme on its own.
 
 ## FR-2026-07-15-b
-status: groomed
+status: implemented
 target: 2.7.0
 requested: 2026-07-15
-implemented: (auto)
-requirements: (auto)
+implemented: 2.7.0 / da1be74
+requirements: FR-AUTH-1
 Using the app shall require logging in.
 On first opening the app, the welcome view shall be shown with the Google SSO button.
 Once login is complete, the app takes the user to the Today View.
 In the Settings View the user may log out. If they log out, they're taken to the welcome view and they may log back in or log in with another account, using the same Google SSO button.
 
 ## FR-2026-07-15-c
-status: groomed
+status: implemented
 target: 2.7.0
 requested: 2026-07-15
-implemented: (auto)
-requirements: (auto)
+implemented: 2.7.0 / 3c094c9
+requirements: FR-HAB-11
 I want to change how a habit's recent activity is shown in the Habits View.
 Already in the collapsed card it should be possible to glance at the activity logged in the last 7 days, so I can see a habit's recent rhythm without expanding it. The same last-7-days glance should also be visible in the expanded card.
 In the expanded card, it should additionally be possible to pan/scroll sideways across the shown days to reach earlier dates and see their values.
 Note that quantitative habits already have a "THIS WEEK" section, so that section will have to be adapted and merged with this new last-7-days / scrollable-history capability rather than duplicating it.
 
 ## FR-2026-07-15-d
-status: groomed
+status: implemented
 target: 2.7.0
 requested: 2026-07-15
-implemented: (auto)
-requirements: (auto)
+implemented: 2.7.0 / 2f58000
+requirements: FR-HAB-12
 Change the "Log a date" confirmation behavior so that yes/no habits behave more like quantity habits.
 Today, when I press "Log a date" for a quantity habit, the app asks me for the quantity and shows a confirmation button before anything is recorded. But for a yes/no habit, the date I tap is marked immediately, which I don't think is the right behavior.
 Instead, for a yes/no habit the chosen date should be colored/marked differently to show it has been selected (not yet logged), and there should be a confirmation button. While in this selected-but-unconfirmed state, the user should be able to confirm the log, choose a different date instead, or cancel the selection entirely.
