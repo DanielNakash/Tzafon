@@ -65,7 +65,7 @@ class HabitEditTest {
     fun collapsedRow_exposesExplicitEditAffordance() {
         rule.setContent {
             TzafonTheme {
-                HabitCard(card = card(), servesGoal = null, onLog = {}, onLogDate = {}, onEdit = {})
+                HabitCard(card = card(), today = com.thefoxworks.tzafon.domain.dates.Dates.todayIso(), servesGoal = null, onLog = {}, onLogDate = {}, onEdit = {}, onTapStripDay = {})
             }
         }
 
@@ -80,7 +80,7 @@ class HabitEditTest {
         var edits = 0
         rule.setContent {
             TzafonTheme {
-                HabitCard(card = card(), servesGoal = null, onLog = {}, onLogDate = {}, onEdit = { edits++ })
+                HabitCard(card = card(), today = com.thefoxworks.tzafon.domain.dates.Dates.todayIso(), servesGoal = null, onLog = {}, onLogDate = {}, onEdit = { edits++ }, onTapStripDay = {})
             }
         }
 
@@ -97,7 +97,7 @@ class HabitEditTest {
         var logs = 0
         rule.setContent {
             TzafonTheme {
-                HabitCard(card = card(), servesGoal = null, onLog = { logs++ }, onLogDate = {}, onEdit = { edits++ })
+                HabitCard(card = card(), today = com.thefoxworks.tzafon.domain.dates.Dates.todayIso(), servesGoal = null, onLog = { logs++ }, onLogDate = {}, onEdit = { edits++ }, onTapStripDay = {})
             }
         }
 
@@ -114,7 +114,7 @@ class HabitEditTest {
         var logs = 0
         rule.setContent {
             TzafonTheme {
-                HabitCard(card = card(), servesGoal = null, onLog = { logs++ }, onLogDate = {}, onEdit = { edits++ })
+                HabitCard(card = card(), today = com.thefoxworks.tzafon.domain.dates.Dates.todayIso(), servesGoal = null, onLog = { logs++ }, onLogDate = {}, onEdit = { edits++ }, onTapStripDay = {})
             }
         }
 
@@ -129,7 +129,7 @@ class HabitEditTest {
     fun expandedBody_hasEditAffordance() {
         rule.setContent {
             TzafonTheme {
-                HabitCard(card = card(), servesGoal = null, onLog = {}, onLogDate = {}, onEdit = {})
+                HabitCard(card = card(), today = com.thefoxworks.tzafon.domain.dates.Dates.todayIso(), servesGoal = null, onLog = {}, onLogDate = {}, onEdit = {}, onTapStripDay = {})
             }
         }
 

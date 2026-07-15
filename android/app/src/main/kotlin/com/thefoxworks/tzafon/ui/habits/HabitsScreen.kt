@@ -52,8 +52,6 @@ import com.thefoxworks.tzafon.ui.theme.Tz
 import com.thefoxworks.tzafon.ui.theme.DenType
 import com.thefoxworks.tzafon.ui.theme.a
 import com.thefoxworks.tzafon.ui.theme.contentDir
-import kotlin.math.max
-import kotlin.math.roundToInt
 
 /**
  * Habits (FR-HAB, design: HabitsScreen) — each card: cue front and centre,
@@ -104,6 +102,7 @@ fun HabitsScreen(
                 items(state.cards, key = { it.habit.id }) { card ->
                     HabitCard(
                         card = card,
+                        today = state.today,
                         servesGoal = state.goalsById[card.habit.goalId]?.title,
                         onLog = {
                             // FR-HAB-9.1 — the today pill now un-logs directly when
@@ -117,6 +116,18 @@ fun HabitsScreen(
                         },
                         onLogDate = { pickDateFor = card },
                         onEdit = { editing = card.habit },
+                        // FR-HAB-11.6 — expanded-row strip taps route to the same
+                        // sheets the "Log a date…" pill uses: quantitative → the
+                        // amount sheet keyed to that date; frequency → toggle
+                        // (M4 will replace this with the pre-selected picker).
+                        onTapStripDay = { date ->
+                            if (card.habit.kind == HabitKind.QUANTITATIVE) {
+                                amountForDate = card to date
+                            } else {
+                                val existing = card.logs.firstOrNull { it.date == date && it.done }
+                                vm.logForDate(card.habit.id, date, done = existing == null)
+                            }
+                        },
                     )
                 }
 
@@ -234,10 +245,12 @@ fun HabitsScreen(
 @Composable
 internal fun HabitCard(
     card: HabitCardState,
+    today: String,
     servesGoal: String?,
     onLog: () -> Unit,
     onLogDate: () -> Unit,
     onEdit: () -> Unit,
+    onTapStripDay: (String) -> Unit,
 ) {
     val h = card.habit
     val accent = Tz.colors.green // per-theme accents arrive with M6
@@ -300,6 +313,23 @@ internal fun HabitCard(
                 loggedToday = card.loggedToday,
                 accent = accent,
                 onLog = onLog,
+            )
+        }
+
+        // ── FR-HAB-11 collapsed rhythm strip: 7-day rolling read-out under
+        //     the header. Non-interactive here (FR-HAB-11.6).
+        Row(
+            Modifier.fillMaxWidth().padding(start = 14.dp, end = 14.dp, bottom = 11.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            RhythmStrip(
+                today = today,
+                startedAt = h.startedAt,
+                logs = card.logs,
+                kind = h.kind,
+                target = h.target,
+                accent = accent,
+                interactive = false,
             )
         }
 
@@ -422,12 +452,25 @@ internal fun HabitCard(
                             modifier = Modifier.padding(top = 2.dp),
                         )
                     }
-                    if (!isQuant) {
-                        WeekDots(done = card.week.doneDays, total = h.target.toInt(), accent = accent)
-                    }
                 }
-                if (isQuant) {
-                    QuantBars(amounts = card.week.amounts, target = h.target, accent = accent)
+                // ── FR-HAB-11 expanded rhythm strip: replaces WeekDots/QuantBars.
+                //     Rolling 7-day window anchored on today, scrollable back
+                //     through history (FR-HAB-11.5); cell taps route via
+                //     onTapStripDay (FR-HAB-11.6).
+                Row(
+                    Modifier.fillMaxWidth().padding(top = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    RhythmStrip(
+                        today = today,
+                        startedAt = h.startedAt,
+                        logs = card.logs,
+                        kind = h.kind,
+                        target = h.target,
+                        accent = accent,
+                        interactive = true,
+                        onTapDay = onTapStripDay,
+                    )
                 }
 
                 // ── log today (full-width, the same affordance as collapsed) ──
@@ -612,52 +655,6 @@ private fun CollapsedLogPill(
             ),
             color = accent,
         )
-    }
-}
-
-/** Week dots for a frequency habit — target circles, done ones filled. */
-@Composable
-private fun WeekDots(done: Int, total: Int, accent: androidx.compose.ui.graphics.Color) {
-    Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-        repeat(total.coerceIn(1, 7)) { i ->
-            Box(
-                Modifier.size(22.dp).clip(RoundedCornerShape(7.dp))
-                    .background(if (i < done) accent else Tz.colors.ink.a(0.08f)),
-                contentAlignment = Alignment.Center,
-            ) {
-                if (i < done) TzIcons.Check(13.dp, androidx.compose.ui.graphics.Color.White)
-            }
-        }
-    }
-}
-
-/** Seven daily bars for a quantitative habit, week-start order. */
-@Composable
-private fun QuantBars(amounts: List<Double>, target: Double, accent: androidx.compose.ui.graphics.Color) {
-    val scale = max(amounts.maxOrNull() ?: 0.0, target) * 1.15
-    Row(
-        Modifier.fillMaxWidth().padding(top = 10.dp),
-        horizontalArrangement = Arrangement.spacedBy(5.dp),
-        verticalAlignment = Alignment.Bottom,
-    ) {
-        val days = listOf("S", "M", "T", "W", "T", "F", "S")
-        amounts.forEachIndexed { i, v ->
-            Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-                Box(
-                    Modifier
-                        .fillMaxWidth()
-                        .height(max(3.0, v / scale * 30.0).dp)
-                        .clip(RoundedCornerShape(2.dp))
-                        .background(if (v > 0) accent else Tz.colors.ink.a(0.1f)),
-                )
-                Text(
-                    days[i % 7],
-                    style = TextStyle(fontFamily = DenType.mono, fontSize = 8.sp),
-                    color = Tz.colors.faint,
-                    modifier = Modifier.padding(top = 3.dp),
-                )
-            }
-        }
     }
 }
 
