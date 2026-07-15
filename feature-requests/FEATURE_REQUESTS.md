@@ -208,8 +208,16 @@ implemented: (auto)
 requirements: (auto)
 Allow linking a Habit directly to a Theme, not only to a Goal. In several cases a habit cannot be tied to a specific, well-defined goal — for example, doing a certain number of push-ups a day for better health does not lead toward a concrete goal unless I invent one, but it fits neatly under a theme like "better health". The Habit editor should let me point a habit at a theme (a "direction"), the way it already lets me point it at a goal, and both should be optional. When a habit already serves a goal, prefer inheriting that goal's theme but still allow a goalless habit to be attached to a theme on its own.
 
-
-
+## FR-2026-07-15-b
+status: groomed
+target: 2.7.0
+requested: 2026-07-15
+implemented: (auto)
+requirements: (auto)
+Using the app shall require logging in.
+On first opening the app, the welcome view shall be shown with the Google SSO button.
+Once login is complete, the app takes the user to the Today View.
+In the Settings View the user may log out. If they log out, they're taken to the welcome view and they may log back in or log in with another account, using the same Google SSO button.
 
 
 
