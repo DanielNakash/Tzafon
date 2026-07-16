@@ -393,21 +393,26 @@ internal fun HabitCard(
             )
         }
 
-        // ── FR-HAB-11 collapsed rhythm strip: 7-day rolling read-out under
-        //     the header. Non-interactive here (FR-HAB-11.6).
-        Row(
-            Modifier.fillMaxWidth().padding(start = 14.dp, end = 14.dp, bottom = 11.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            RhythmStrip(
-                today = today,
-                startedAt = h.startedAt,
-                logs = card.logs,
-                kind = h.kind,
-                target = h.target,
-                accent = accent,
-                interactive = false,
-            )
+        // ── FR-HAB-11.2 collapsed rhythm strip: 7-day rolling read-out under
+        //     the header. Non-interactive (FR-HAB-11.6). Shown ONLY while
+        //     collapsed — when expanded the scrollable strip in the rhythm
+        //     section is the sole rhythm surface, so this would be a redundant
+        //     duplicate (FR-HAB-11.2 refinement, 2026-07-16).
+        if (!expanded) {
+            Row(
+                Modifier.fillMaxWidth().padding(start = 14.dp, end = 14.dp, bottom = 11.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                RhythmStrip(
+                    today = today,
+                    startedAt = h.startedAt,
+                    logs = card.logs,
+                    kind = h.kind,
+                    target = h.target,
+                    accent = accent,
+                    interactive = false,
+                )
+            }
         }
 
         if (expanded) {

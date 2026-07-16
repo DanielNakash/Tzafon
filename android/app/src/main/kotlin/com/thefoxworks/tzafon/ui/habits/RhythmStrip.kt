@@ -61,7 +61,13 @@ internal fun RhythmStrip(
     modifier: Modifier = Modifier,
     onTapDay: (String) -> Unit = {},
 ) {
-    val startIso = remember(startedAt) { epochToIsoOrNull(startedAt) }
+    // FR-HAB-11.5a — the "before this habit started" placeholder is bounded by
+    // the *effective* start (earlier of creation time and first logged date), so
+    // dates back-logged via "Log a date…" (FR-HAB-8) — which legitimately precede
+    // `startedAt` — still render their logged value instead of a muted placeholder.
+    val startIso = remember(startedAt, logs) {
+        effectiveStartIso(epochToIsoOrNull(startedAt), logs)
+    }
     val cells = remember(today, logs, kind, target, startedAt, interactive) {
         val daysBack = if (interactive) EXPANDED_DAYS - 1 else COLLAPSED_DAYS - 1
         (daysBack downTo 0).map { offset ->
@@ -246,6 +252,20 @@ internal fun rhythmCellState(
             RhythmCellState.Quant(fillFraction = frac)
         }
     }
+}
+
+/**
+ * FR-HAB-11.5a — the habit's effective start: the earlier of its creation
+ * date and its first logged date. Days before this render as the "before
+ * this habit started" placeholder; a back-logged date (a log earlier than
+ * `createdIso`) pulls the boundary back so it renders as real activity, not
+ * a placeholder. Null (no creation date, no logs) means "no floor" — every
+ * day in the window renders normally. Pure/ISO-only so it is unit-testable
+ * without a timezone dependency.
+ */
+internal fun effectiveStartIso(createdIso: String?, logs: List<HabitLog>): String? {
+    val firstLog = logs.minOfOrNull { it.date }
+    return listOfNotNull(createdIso, firstLog).minOrNull()
 }
 
 private fun epochToIsoOrNull(epochMs: Long): String? {
