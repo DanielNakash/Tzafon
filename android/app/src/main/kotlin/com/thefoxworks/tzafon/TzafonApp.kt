@@ -20,6 +20,9 @@ import com.thefoxworks.tzafon.data.repo.RoomThemeRepository
 import com.thefoxworks.tzafon.data.settings.SettingsStore
 import com.thefoxworks.tzafon.data.sync.FirestoreSync
 import com.thefoxworks.tzafon.data.sync.SyncSpec
+import com.thefoxworks.tzafon.data.transfer.DataExporter
+import com.thefoxworks.tzafon.data.transfer.DataImporter
+import com.thefoxworks.tzafon.data.transfer.RoomDataTransferRepository
 import com.thefoxworks.tzafon.domain.model.AuthRepository
 import com.thefoxworks.tzafon.domain.model.GoalRepository
 import com.thefoxworks.tzafon.domain.model.HabitRepository
@@ -103,6 +106,38 @@ class AppContainer(app: Application) {
      * reads it for the horizon marker. Deliberately not persisted.
      */
     val sessionHorizonDays = MutableStateFlow(Recurrence.HORIZON_DAYS)
+
+    // ── DM-EXPORT-1 / FR-DATA-1/2 — user data transfer (export / import) ──
+    val dataExporter: DataExporter by lazy {
+        DataExporter(
+            taskRepository = taskRepository,
+            habitRepository = habitRepository,
+            goalRepository = goalRepository,
+            themeRepository = themeRepository,
+            reviewRepository = reviewRepository,
+            appVersion = BuildConfig.VERSION_NAME,
+            appVersionCode = BuildConfig.VERSION_CODE,
+        )
+    }
+
+    val dataTransferRepository by lazy {
+        RoomDataTransferRepository(
+            db = db,
+            taskDao = db.taskDao(),
+            seriesDao = db.seriesDao(),
+            habitDao = db.habitDao(),
+            goalDao = db.goalDao(),
+            themeDao = db.themeDao(),
+            reviewDao = db.reviewDao(),
+        )
+    }
+
+    val dataImporter: DataImporter by lazy {
+        DataImporter(
+            transfer = dataTransferRepository,
+            supportedFormatVersion = com.thefoxworks.tzafon.data.transfer.EXPORT_FORMAT_VERSION,
+        )
+    }
 }
 
 class TzafonApp : Application() {

@@ -9,6 +9,21 @@ to the versioned requirements documents in the repo.
 
 ---
 
+## [2.8.0] — 2026-07-18
+
+### Added
+- **Export and re-import your Tzafon data** (`FR-DATA-1`, `FR-DATA-2`, `DM-EXPORT-1`) — Settings gains
+  a **Your data** section with **Export data** and **Import data**. Export writes a pretty-printed,
+  UTF-8 JSON file (default name `tzafon-backup-<date>.json`) via the Android file picker, containing
+  every task, series, habit, habit log, goal, theme, review, and contribution — no streaks, no
+  cached derived counts, only the domain the app owns. Import validates the file up-front (a foreign
+  file, a truncated one, or a file from a newer Tzafon is rejected with a precise, non-technical
+  message and nothing is written). When the app already has data, a "How should conflicts be
+  handled?" dialog offers **Backup wins** (restore this backup exactly) or **Current wins**
+  (fill in only what's missing) — one choice, applied to every matching row. The apply is atomic:
+  a mid-flight failure rolls the whole restore back, never a half-imported store. A persistent
+  caution on the Export row reminds you the file is plaintext — store it somewhere you trust.
+
 ## [2.7.0] — 2026-07-15
 
 ### Added
@@ -209,6 +224,7 @@ the new name **Tzafon**. Local-first persistence (Room) behind repository interf
 - **Cloud sync (behind the seam)** — Firebase Auth (Google sign-in) and offline-first
   Firestore sync, kept behind the repository interfaces (`M9b`).
 
+[2.8.0]: https://github.com/DanielNakash/Tzafon/releases/tag/v2.8.0
 [2.7.0]: https://github.com/DanielNakash/Tzafon/releases/tag/v2.7.0
 [2.6.0]: https://github.com/DanielNakash/Tzafon/releases/tag/v2.6.0
 [2.5.0]: https://github.com/DanielNakash/Tzafon/releases/tag/v2.5.0

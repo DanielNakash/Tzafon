@@ -43,6 +43,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.thefoxworks.tzafon.data.settings.SettingsStore
+import com.thefoxworks.tzafon.data.transfer.DataExporter
+import com.thefoxworks.tzafon.data.transfer.DataImporter
 import com.thefoxworks.tzafon.domain.model.AuthRepository
 import com.thefoxworks.tzafon.ui.components.DenSheet
 import com.thefoxworks.tzafon.ui.components.FoxLogo
@@ -68,6 +70,10 @@ import kotlinx.coroutines.launch
 fun SettingsScreen(
     settings: SettingsStore,
     auth: AuthRepository,
+    /** FR-DATA-1 exporter (M1). May be null in narrow previews only. */
+    exporter: DataExporter? = null,
+    /** FR-DATA-2 importer (M2). May be null in narrow previews only. */
+    importer: DataImporter? = null,
     onClose: () -> Unit,
     /**
      * FR-AUTH-1.4 — after `signOut()` completes, the root nav pops Settings
@@ -262,6 +268,15 @@ fun SettingsScreen(
                         .border(1.dp, Tz.colors.line, RoundedCornerShape(6.dp)),
                 )
                 TzIcons.Chevron(16.dp, Tz.colors.faint)
+            }
+
+            // ── your data (FR-DATA-1 / FR-DATA-2) ──
+            if (exporter != null && importer != null) {
+                YourDataSection(
+                    exporter = exporter,
+                    importer = importer,
+                    modifier = Modifier.padding(top = 20.dp),
+                )
             }
 
             Text(

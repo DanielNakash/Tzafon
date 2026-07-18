@@ -325,6 +325,8 @@ private fun TzafonMainNav(container: AppContainer, initialUser: TzafonUser?) {
                 SettingsScreen(
                     settings = container.settings,
                     auth = container.authRepository,
+                    exporter = container.dataExporter,
+                    importer = container.dataImporter,
                     onClose = { nav.popBackStack() },
                     onSignedOut = {
                         // FR-AUTH-1.4 — sign-out returns to Welcome and clears

@@ -241,10 +241,10 @@ Today, when I press "Log a date" for a quantity habit, the app asks me for the q
 Instead, for a yes/no habit the chosen date should be colored/marked differently to show it has been selected (not yet logged), and there should be a confirmation button. While in this selected-but-unconfirmed state, the user should be able to confirm the log, choose a different date instead, or cancel the selection entirely.
 
 ## FR-2026-07-18-a
-status: groomed
+status: implemented
 target: 2.8.0
 requested: 2026-07-18
-implemented: (auto)
+implemented: 2.8.0 / 89af11c
 requirements: DM-EXPORT-1, FR-DATA-1, FR-DATA-2
 
 Enable exporting the user's data. On one hand it has to be in a format that is readily readable — not proprietary, coded or encrypted. On the other hand it has to have some structure and preserve the existing relationships between the different objects. The goal is twofold: (1) let the user take their data and do whatever they want with it, and (2) import the data back in case of a data-loss event (i.e. a backup/restore). Preserving the privacy of the exported file is the user's responsibility. App preferences are out of scope. When importing into a non-empty app, ask the user how to treat conflicts, offering two options: "Backup wins" (the backup entry overwrites the existing entry) and "Current wins" (the backup entry is skipped). The export and import options shall live in the Settings view.
