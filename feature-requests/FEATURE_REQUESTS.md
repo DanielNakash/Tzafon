@@ -249,5 +249,22 @@ requirements: DM-EXPORT-1, FR-DATA-1, FR-DATA-2
 
 Enable exporting the user's data. On one hand it has to be in a format that is readily readable — not proprietary, coded or encrypted. On the other hand it has to have some structure and preserve the existing relationships between the different objects. The goal is twofold: (1) let the user take their data and do whatever they want with it, and (2) import the data back in case of a data-loss event (i.e. a backup/restore). Preserving the privacy of the exported file is the user's responsibility. App preferences are out of scope. When importing into a non-empty app, ask the user how to treat conflicts, offering two options: "Backup wins" (the backup entry overwrites the existing entry) and "Current wins" (the backup entry is skipped). The export and import options shall live in the Settings view.
 
+## FR-2026-07-19-a
+status: groomed
+target: 2.9.0
+If a "slipped task" is one that is hidden in the Planning View, it should also be ignored and not mentioned in the "slipped tasks" mention shown in the Today View.
+For example, if I have a daily task, and I didn't do the task yesterday, then:
+* It should not appear in Planning View (already implemented)
+* It should not be included in the count of "slipped tasks" in Today View (the part to be done)
 
+## FR-2026-07-19-b
+status: groomed
+target: 2.9.0
+Bugs fixes: When editing a cue to be set at a time:
+* The text box for the time doesn't allow typing a colon, so it's not clear if and how time is accepted by this field. This needs to be fixed.
+* Additionally, the condition for approval is having a text for describing the cue, rather than having an actual time. This also needs to be fixed.
 
+## FR-2026-07-19-c
+status: groomed
+target: 2.9.0
+The text for a goal's steps is not right aligned for RTL language.
