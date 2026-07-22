@@ -38,6 +38,18 @@ if [ "$NEW_COUNT" -eq 0 ]; then
   exit 0
 fi
 
+# --- (a2) Release serialization guard (mirrors run-builder.sh §3). Never land a groom commit on
+#     main while a built release is still awaiting the owner's merge: the release branch was cut
+#     from an earlier main, so anything committed after it makes /promote's fast-forward impossible
+#     and forces a manual rebase. This is what stalled the v2.8.0 → v2.9.0 handoff. "Merged" == the
+#     highest version tag is an ancestor of main. Logged once per stall, not once per hourly run. ---
+HIGH_TAG="$(git tag --list 'v*' | sort -V | tail -n1)"
+if [ -n "$HIGH_TAG" ] && ! git merge-base --is-ancestor "$HIGH_TAG" main 2>/dev/null; then
+  BLOCKED="GROOM  blocked  unmerged-release $HIGH_TAG (awaiting owner merge)"
+  tail -n1 "$LOG" | grep -qF "$BLOCKED" || echo "$ISO  $BLOCKED" >> "$LOG"
+  exit 0
+fi
+
 # --- (b) New work found → wake the AI groomer. ---
 echo "$ISO  GROOM  start   new-requests-found" >> "$LOG"
 "$HOME/.local/bin/claude" -p "/groom-requests" \
