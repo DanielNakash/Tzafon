@@ -268,3 +268,10 @@ Bugs fixes: When editing a cue to be set at a time:
 status: groomed
 target: 2.9.0
 The text for a goal's steps is not right aligned for RTL language.
+
+## FR-2026-07-22-a
+status: groomed
+target: 2.9.0
+Bug fix: When trying to update the date of a recurring task, the change doesn't take effect.
+Example: A task called "Cleaning" set to happen once every two days, and is set to 1.12, 3.12, 5.12, etc.
+I missed the 3.12 occurance and I want to update it (and all the following tasks) one day forward, so they'll be on 4.12, 6.12, 8.12 etc.. Trying to change the date from 3.12 to 4.12 and saving does nothing at the moment (which is the bug to fixed).
