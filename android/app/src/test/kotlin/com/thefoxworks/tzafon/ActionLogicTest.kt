@@ -88,6 +88,56 @@ class ActionLogicTest {
         assertEquals(2, ActionLogic.slippedCount(tasks, today))
     }
 
+    // ── FR-TODAY-8: slippage count = planning overdue size ────
+
+    @Test
+    fun `FR-TODAY-8 slippedCount hides recurring slips whose series has today occurrence`() {
+        val tasks = listOf(
+            task("S__slip", toDo = "2026-07-03", seriesId = "S"),
+            task("S__today", toDo = today, seriesId = "S"),
+            task("oneoff", toDo = "2026-07-02"),
+        )
+        // one-off overdue counts; the slipped S occurrence is hidden by the series rule
+        assertEquals(1, ActionLogic.slippedCount(tasks, today))
+    }
+
+    @Test
+    fun `FR-TODAY-8 slippedCount today-occurrence state does not matter`() {
+        for (todayState in listOf(TaskState.OPEN, TaskState.DONE, TaskState.CLOSED)) {
+            val tasks = listOf(
+                task("S__slip", toDo = "2026-07-03", seriesId = "S"),
+                task("S__today", toDo = today, state = todayState, seriesId = "S"),
+            )
+            assertEquals("hidden regardless of state=$todayState", 0, ActionLogic.slippedCount(tasks, today))
+        }
+    }
+
+    @Test
+    fun `FR-TODAY-8 slippedCount equals planning overdue size on a mixed fixture`() {
+        val tasks = listOf(
+            // one-off overdue — counts
+            task("oneoffA", toDo = "2026-07-01"),
+            task("oneoffB", toDo = "2026-07-04"),
+            // series with today occurrence Open → slip hidden
+            task("A__slip", toDo = "2026-07-03", seriesId = "A"),
+            task("A__today", toDo = today, seriesId = "A"),
+            // series with today occurrence Done → slip hidden
+            task("B__slip", toDo = "2026-07-02", seriesId = "B"),
+            task("B__today", toDo = today, state = TaskState.DONE, seriesId = "B"),
+            // series with no today occurrence → slip visible
+            task("C__slip", toDo = "2026-07-02", seriesId = "C"),
+            task("C__tomorrow", toDo = "2026-07-06", seriesId = "C"),
+            // noise: today, inbox, done
+            task("todayTask", toDo = today),
+            task("inbox"),
+            task("doneNoise", toDo = "2026-07-04", state = TaskState.DONE),
+        )
+        val count = ActionLogic.slippedCount(tasks, today)
+        val planning = ActionLogic.planningGroups(tasks, today, rangeDays = 7)
+        assertEquals(planning.overdue.size, count)
+        assertEquals(3, count) // oneoffA, oneoffB, C__slip
+    }
+
     @Test
     fun `overload fires at the static threshold`() {
         assertFalse(ActionLogic.isOverloaded(7))

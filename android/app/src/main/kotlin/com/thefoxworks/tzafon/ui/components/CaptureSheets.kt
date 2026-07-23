@@ -41,6 +41,14 @@ import com.thefoxworks.tzafon.ui.theme.a
 import com.thefoxworks.tzafon.ui.theme.contentDir
 
 /**
+ * FR-CUE-1.4 — canonical HH:mm gate for the AT_TIME variant of CueSheet.
+ * Accepts 00:00..23:59, zero-padded, with the colon required. Leading/trailing
+ * whitespace is trimmed before matching, mirroring the sheet's onSave.
+ */
+private val HH_MM_REGEX = Regex("""^([01]\d|2[0-3]):[0-5]\d$""")
+fun isValidHhMm(s: String): Boolean = HH_MM_REGEX.matches(s.trim())
+
+/**
  * DM-CUE — "When X, I will do Y", always one line, never a wizard.
  * Shared by the task editor (DM-TASK-4) and the habit editor (DM-HABIT-1).
  */
@@ -122,11 +130,18 @@ fun CueSheet(
                     TzIcons.Clock(16.dp, Tz.colors.muted)
                     BasicTextField(
                         value = time,
-                        onValueChange = { if (it.length <= 5) time = it },
+                        // FR-CUE-1.2 — accept digits + colon only; cap at HH:mm's five characters.
+                        onValueChange = { raw ->
+                            val cleaned = raw.filter { c -> c.isDigit() || c == ':' }
+                            if (cleaned.length <= 5) time = cleaned
+                        },
                         textStyle = TextStyle(fontFamily = DenType.mono, fontSize = 15.sp, color = Tz.colors.ink),
                         cursorBrush = SolidColor(Tz.colors.rust),
                         singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        // FR-CUE-1.1 — Text IME so the colon key is surfaced on every keyboard
+                        // (Compose 1.11.0 has no KeyboardType.Time; the char filter above and
+                        // isValidHhMm below enforce the HH:mm shape).
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
                         decorationBox = { inner ->
                             Box {
                                 if (time.isEmpty()) {
@@ -149,9 +164,13 @@ fun CueSheet(
                 }
             }
 
+            // FR-CUE-1.5 — save button requires a valid HH:mm on AT_TIME, in
+            // addition to the label. AFTER_ROUTINE / AT_PLACE gate on label only.
+            val canSave = label.isNotBlank() &&
+                (type != CueType.AT_TIME || isValidHhMm(time))
             SheetPrimaryButton(
                 label = "Set the cue",
-                enabled = label.isNotBlank(),
+                enabled = canSave,
                 modifier = Modifier.padding(top = 16.dp),
             ) {
                 onSave(Cue(type, label.trim(), time.trim().takeIf { it.isNotBlank() }))

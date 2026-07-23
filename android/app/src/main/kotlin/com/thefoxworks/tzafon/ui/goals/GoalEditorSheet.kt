@@ -14,6 +14,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -24,11 +25,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.layout.FlowRow
@@ -48,6 +51,7 @@ import com.thefoxworks.tzafon.ui.theme.Tz
 import com.thefoxworks.tzafon.ui.theme.DenType
 import com.thefoxworks.tzafon.ui.theme.a
 import com.thefoxworks.tzafon.ui.theme.contentDir
+import com.thefoxworks.tzafon.ui.theme.isRtl
 
 /**
  * Create / edit a goal (DM-GOAL-1): three types, honest starting progress,
@@ -152,28 +156,34 @@ fun GoalEditorSheet(
                     SectionLabel("Steps · first one's free", modifier = Modifier.padding(top = 14.dp))
                     Column(Modifier.padding(top = 4.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         steps.forEachIndexed { i, s ->
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            ) {
-                                Box(
-                                    Modifier.size(16.dp).clip(RoundedCornerShape(5.dp))
-                                        .let {
-                                            if (s.done) it.background(Tz.colors.rust)
-                                            else it.border(1.5.dp, Tz.colors.ink.a(0.28f), RoundedCornerShape(5.dp))
+                            // FR-DESIGN-3.6 — flip the editor row's start/end for RTL
+                            // labels so the remove-button lands at the leading (visual
+                            // left) edge and the label anchors to the reading margin.
+                            val dir = if (s.label.isRtl()) LayoutDirection.Rtl else LocalLayoutDirection.current
+                            CompositionLocalProvider(LocalLayoutDirection provides dir) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                ) {
+                                    Box(
+                                        Modifier.size(16.dp).clip(RoundedCornerShape(5.dp))
+                                            .let {
+                                                if (s.done) it.background(Tz.colors.rust)
+                                                else it.border(1.5.dp, Tz.colors.ink.a(0.28f), RoundedCornerShape(5.dp))
+                                            }
+                                            .pressable { steps[i] = s.copy(done = !s.done) },
+                                        contentAlignment = Alignment.Center,
+                                    ) { if (s.done) TzIcons.Check(11.dp, Color.White) }
+                                    Text(
+                                        s.label,
+                                        style = TextStyle(fontFamily = DenType.body, fontSize = 13.5.sp).contentDir(),
+                                        color = Tz.colors.ink,
+                                        modifier = Modifier.weight(1f),
+                                    )
+                                    if (steps.size > 1) {
+                                        Box(Modifier.pressable { steps.removeAt(i) }.padding(3.dp)) {
+                                            TzIcons.X(12.dp, Tz.colors.faint)
                                         }
-                                        .pressable { steps[i] = s.copy(done = !s.done) },
-                                    contentAlignment = Alignment.Center,
-                                ) { if (s.done) TzIcons.Check(11.dp, Color.White) }
-                                Text(
-                                    s.label,
-                                    style = TextStyle(fontFamily = DenType.body, fontSize = 13.5.sp),
-                                    color = Tz.colors.ink,
-                                    modifier = Modifier.weight(1f),
-                                )
-                                if (steps.size > 1) {
-                                    Box(Modifier.pressable { steps.removeAt(i) }.padding(3.dp)) {
-                                        TzIcons.X(12.dp, Tz.colors.faint)
                                     }
                                 }
                             }

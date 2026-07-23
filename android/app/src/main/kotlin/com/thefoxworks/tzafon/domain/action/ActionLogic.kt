@@ -37,9 +37,30 @@ object ActionLogic {
     fun todayOrder(tasks: List<Task>): List<Task> =
         tasks.sortedWith(compareBy({ it.sortOrder }, { it.createdAt }))
 
-    /** FR-TODAY-4 — count for the calm slippage banner. */
+    /** FR-TODAY-4 — count for the calm slippage banner.
+     *
+     * FR-TODAY-8: applies the same series-hide rule Planning uses (FR-PLAN-5),
+     * so a slipped recurring occurrence whose series has an occurrence dated
+     * today drops out of the count — Today's banner and Planning's overdue
+     * bucket resolve to the same integer by construction. */
     fun slippedCount(tasks: List<Task>, today: String): Int =
-        tasks.count { it.state == TaskState.OPEN && (it.toDoDate ?: today) < today }
+        slippedOverdue(tasks, today).size
+
+    /** FR-TODAY-8 / FR-PLAN-5 — the shared "what belongs in Planning's overdue"
+     *  predicate. Open tasks with a past toDoDate, minus recurring slips whose
+     *  series has an occurrence dated today (any state). One-offs are never
+     *  hidden. */
+    internal fun slippedOverdue(tasks: List<Task>, today: String): List<Task> {
+        val seriesDueToday = tasks
+            .filter { it.seriesId != null && it.toDoDate == today }
+            .map { it.seriesId }
+            .toSet()
+        return tasks.filter {
+            it.state == TaskState.OPEN &&
+                it.toDoDate != null &&
+                it.toDoDate < today
+        }.filterNot { it.seriesId != null && it.seriesId in seriesDueToday }
+    }
 
     /** FR-TODAY-5 — supportive, never punitive; fires on open count only. */
     fun isOverloaded(openTodayCount: Int): Boolean = openTodayCount >= OVERLOAD_THRESHOLD
@@ -90,16 +111,9 @@ object ActionLogic {
         val rangeEnd = Dates.addDays(today, rangeDays)
 
         // FR-PLAN-5 — a slipped recurring occurrence is hidden from overdue once the
-        // series has an occurrence dated today (regardless of that occurrence's state):
-        // the "next one is already on the desk" case is a non-decision, not a slip.
-        // One-off tasks (seriesId == null) are never hidden by this filter.
-        val seriesDueToday = tasks
-            .filter { it.seriesId != null && it.toDoDate == today }
-            .map { it.seriesId }
-            .toSet()
-        val overdue = open.filter { (it.toDoDate ?: "") < today && it.toDoDate != null }
-            .filterNot { it.seriesId != null && it.seriesId in seriesDueToday }
-            .sortedBy { it.toDoDate }
+        // series has an occurrence dated today (regardless of that occurrence's state).
+        // FR-TODAY-8 — the same predicate feeds Today's slippage banner (slippedCount).
+        val overdue = slippedOverdue(tasks, today).sortedBy { it.toDoDate }
         val inRange = open.filter { it.toDoDate != null && it.toDoDate >= today && it.toDoDate <= rangeEnd }
         val dated = inRange
             .groupBy { Dates.groupFor(it.toDoDate!!, today) }

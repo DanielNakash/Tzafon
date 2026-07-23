@@ -13,14 +13,17 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.thefoxworks.tzafon.domain.model.Goal
@@ -35,6 +38,7 @@ import com.thefoxworks.tzafon.ui.theme.Tz
 import com.thefoxworks.tzafon.ui.theme.DenType
 import com.thefoxworks.tzafon.ui.theme.a
 import com.thefoxworks.tzafon.ui.theme.contentDir
+import com.thefoxworks.tzafon.ui.theme.isRtl
 
 /**
  * The design GoalCard (FR-DIR-4): type tag, endowed bar, steps with
@@ -150,28 +154,34 @@ fun GoalCard(
                 }
                 Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
                     goal.steps.forEachIndexed { i, s ->
-                        Row(
-                            Modifier.pressable { onToggleStep(i) },
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(5.dp),
-                        ) {
-                            Box(
-                                Modifier.size(14.dp).clip(RoundedCornerShape(4.dp)).let {
-                                    if (s.done) it.background(accent)
-                                    else it.border(1.5.dp, Tz.colors.ink.a(0.28f), RoundedCornerShape(4.dp))
-                                },
-                                contentAlignment = Alignment.Center,
+                        // FR-DESIGN-3.6 — Hebrew/Arabic step labels flip the row's
+                        // start/end so the checkbox sits on the trailing (right) edge
+                        // and the glyphs anchor to the reading margin.
+                        val dir = if (s.label.isRtl()) LayoutDirection.Rtl else LocalLayoutDirection.current
+                        CompositionLocalProvider(LocalLayoutDirection provides dir) {
+                            Row(
+                                Modifier.pressable { onToggleStep(i) },
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(5.dp),
                             ) {
-                                if (s.done) TzIcons.Check(10.dp, Color.White)
+                                Box(
+                                    Modifier.size(14.dp).clip(RoundedCornerShape(4.dp)).let {
+                                        if (s.done) it.background(accent)
+                                        else it.border(1.5.dp, Tz.colors.ink.a(0.28f), RoundedCornerShape(4.dp))
+                                    },
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    if (s.done) TzIcons.Check(10.dp, Color.White)
+                                }
+                                Text(
+                                    s.label,
+                                    style = TextStyle(
+                                        fontFamily = DenType.body, fontSize = 12.sp,
+                                        textDecoration = if (s.done) TextDecoration.LineThrough else TextDecoration.None,
+                                    ).contentDir(),
+                                    color = if (s.done) Tz.colors.muted else Tz.colors.ink,
+                                )
                             }
-                            Text(
-                                s.label,
-                                style = TextStyle(
-                                    fontFamily = DenType.body, fontSize = 12.sp,
-                                    textDecoration = if (s.done) TextDecoration.LineThrough else TextDecoration.None,
-                                ).contentDir(),
-                                color = if (s.done) Tz.colors.muted else Tz.colors.ink,
-                            )
                         }
                     }
                 }

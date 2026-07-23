@@ -9,6 +9,36 @@ to the versioned requirements documents in the repo.
 
 ---
 
+## [2.9.0] — 2026-07-23
+
+### Changed
+- **Today's "slipped past" count matches Planning's overdue list** (`FR-TODAY-8`) — the calm
+  banner on Today ("N tasks slipped past — tidy them up in Planning") now applies the same
+  same-series hide rule Planning uses (`FR-PLAN-5`), so a slipped recurring occurrence whose
+  next occurrence is already today drops out of the count. The banner and Planning's overdue
+  section resolve to the same integer by construction — no more "the banner promised 3 but
+  Planning only shows 1".
+- **Goal step rows respect content direction on the goal card and in the editor**
+  (`FR-DESIGN-3.6`) — a Hebrew or Arabic step label now lays out right-to-left at the row
+  level: the checkbox anchors to the trailing (right) edge and the label reads from the right
+  reading margin. Mixed goals stay per-row-independent — an English step in the same list
+  keeps its LTR layout. Applies to both the read-view step row and the editable-step row.
+
+### Fixed
+- **The AT_TIME cue accepts a colon and requires a valid time to save** (`FR-CUE-1`) — the
+  time field in the cue sheet (used by both the Task editor and the Habit editor) now uses a
+  text IME so the **colon** key is available on every keyboard, and only digits or a colon
+  are accepted. The **Set the cue** button now stays disabled until a valid `HH:mm` time is
+  entered (`00:00`–`23:59`, zero-padded) — so an AT_TIME cue can no longer be saved without
+  the one field a time-driven reminder actually needs.
+- **A date change on a recurring occurrence with "This & future" or "All" now takes effect**
+  (`FR-REC-6`) — editing a recurring task's date (e.g. shifting "Cleaning" every 2 days from
+  1.12 / 3.12 / 5.12 … onto 4.12 / 6.12 / 8.12 …) previously silently dropped the new date;
+  the series was re-enumerated from the *original* occurrence date. The FORWARD and ALL save
+  paths now honour the typed date as the series' new anchor, so the phase shift the user
+  typed is the phase shift the series adopts. The per-occurrence override branch ("This one")
+  is unchanged; the recurrence engine is unchanged.
+
 ## [2.8.0] — 2026-07-18
 
 ### Added
@@ -224,6 +254,7 @@ the new name **Tzafon**. Local-first persistence (Room) behind repository interf
 - **Cloud sync (behind the seam)** — Firebase Auth (Google sign-in) and offline-first
   Firestore sync, kept behind the repository interfaces (`M9b`).
 
+[2.9.0]: https://github.com/DanielNakash/Tzafon/releases/tag/v2.9.0
 [2.8.0]: https://github.com/DanielNakash/Tzafon/releases/tag/v2.8.0
 [2.7.0]: https://github.com/DanielNakash/Tzafon/releases/tag/v2.7.0
 [2.6.0]: https://github.com/DanielNakash/Tzafon/releases/tag/v2.6.0

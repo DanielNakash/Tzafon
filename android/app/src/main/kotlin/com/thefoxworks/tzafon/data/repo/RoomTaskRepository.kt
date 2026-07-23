@@ -190,19 +190,28 @@ class RoomTaskRepository(
             return
         }
 
-        val chosen = existing.occurrenceDate ?: existing.toDoDate ?: today
-        val anchor = if (scope == EditScope.FORWARD) chosen else series.startDate
+        // FR-REC-6 — the original occurrence date bounds the "delete from here"
+        // prune; a user-typed toDoDate becomes the new rule anchor so the series'
+        // phase actually shifts. The two dates are deliberately separate.
+        val originalOccurrenceDate = existing.occurrenceDate ?: existing.toDoDate ?: today
+        val newAnchor = draft.toDoDate ?: originalOccurrenceDate
         val updated = series.copy(
             title = draft.title.trim(),
             description = draft.description,
             rule = rec.rule,
-            ruleAnchor = anchor,
-            startDate = series.startDate, // ALL keeps original start; FORWARD anchors at chosen
+            // FR-REC-6.1/6.3 — anchor at the user's new date so the rule
+            // re-enumerates from the shifted phase.
+            ruleAnchor = newAnchor,
+            // FR-REC-6.3 — ALL rewrites startDate to the new anchor (its
+            // pre-anchor open non-settled rows are cleared by the loop below).
+            // FORWARD keeps the historical startDate so past occurrences
+            // remain rule-consistent with when they were generated.
+            startDate = if (scope == EditScope.ALL) newAnchor else series.startDate,
             endDate = rec.endDate,
             dueMode = rec.dueMode,
             dueRule = if (rec.dueMode == DueMode.RECURRING) rec.dueRule else null,
             dueSingular = if (rec.dueMode == DueMode.SINGULAR) draft.dueDate else null,
-            generatedThrough = anchor,
+            generatedThrough = newAnchor,
             cue = draft.cue,
             themeId = draft.themeId,
             habitId = draft.habitId,
@@ -212,11 +221,13 @@ class RoomTaskRepository(
 
         // remove auto-generated, still-open occurrences the new rule replaces;
         // keep overridden/settled ones but refresh their text and links —
-        // DM-HABIT-8: an ALL-scope link change applies to past occurrences too
+        // DM-HABIT-8: an ALL-scope link change applies to past occurrences too.
+        // FR-REC-6.2 — prune cutoff stays at the ORIGINAL occurrence date so a
+        // backward date-shift still clears the edited slot.
         val occ = taskDao.occurrencesOf(series.id).map { it.toDomain() }
         val settled = { t: Task -> t.state != TaskState.OPEN }
         for (o in occ) {
-            val inRange = scope == EditScope.ALL || (o.occurrenceDate ?: "") >= chosen
+            val inRange = scope == EditScope.ALL || (o.occurrenceDate ?: "") >= originalOccurrenceDate
             if (inRange && !o.overridden && !settled(o)) {
                 taskDao.delete(o.id)
             } else if (inRange) {
@@ -235,7 +246,7 @@ class RoomTaskRepository(
         }
 
         val remaining = occ.filter { o ->
-            (if (scope == EditScope.ALL) false else (o.occurrenceDate ?: "") < chosen) || o.overridden || settled(o)
+            (if (scope == EditScope.ALL) false else (o.occurrenceDate ?: "") < originalOccurrenceDate) || o.overridden || settled(o)
         }
         generate(
             updated,
