@@ -252,7 +252,7 @@ Enable exporting the user's data. On one hand it has to be in a format that is r
 ## FR-2026-07-19-a
 status: implemented
 target: 2.9.0
-implemented: 2.9.0 / (pending)
+implemented: 2.9.0 / 70aeb8b
 requirements: FR-TODAY-8
 If a "slipped task" is one that is hidden in the Planning View, it should also be ignored and not mentioned in the "slipped tasks" mention shown in the Today View.
 For example, if I have a daily task, and I didn't do the task yesterday, then:
@@ -262,7 +262,7 @@ For example, if I have a daily task, and I didn't do the task yesterday, then:
 ## FR-2026-07-19-b
 status: implemented
 target: 2.9.0
-implemented: 2.9.0 / (pending)
+implemented: 2.9.0 / 70aeb8b
 requirements: FR-CUE-1
 Bugs fixes: When editing a cue to be set at a time:
 * The text box for the time doesn't allow typing a colon, so it's not clear if and how time is accepted by this field. This needs to be fixed.
@@ -271,14 +271,14 @@ Bugs fixes: When editing a cue to be set at a time:
 ## FR-2026-07-19-c
 status: implemented
 target: 2.9.0
-implemented: 2.9.0 / (pending)
+implemented: 2.9.0 / 70aeb8b
 requirements: FR-DESIGN-3.6
 The text for a goal's steps is not right aligned for RTL language.
 
 ## FR-2026-07-22-a
 status: implemented
 target: 2.9.0
-implemented: 2.9.0 / (pending)
+implemented: 2.9.0 / 70aeb8b
 requirements: FR-REC-6
 Bug fix: When trying to update the date of a recurring task, the change doesn't take effect.
 Example: A task called "Cleaning" set to happen once every two days, and is set to 1.12, 3.12, 5.12, etc.
