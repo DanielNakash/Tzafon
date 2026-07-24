@@ -160,7 +160,7 @@ fun GoalCard(
                         val dir = if (s.label.isRtl()) LayoutDirection.Rtl else LocalLayoutDirection.current
                         CompositionLocalProvider(LocalLayoutDirection provides dir) {
                             Row(
-                                Modifier.pressable { onToggleStep(i) },
+                                Modifier.fillMaxWidth().pressable { onToggleStep(i) },
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(5.dp),
                             ) {
@@ -180,6 +180,7 @@ fun GoalCard(
                                         textDecoration = if (s.done) TextDecoration.LineThrough else TextDecoration.None,
                                     ).contentDir(),
                                     color = if (s.done) Tz.colors.muted else Tz.colors.ink,
+                                    modifier = Modifier.weight(1f),
                                 )
                             }
                         }

@@ -49,6 +49,16 @@ private val HH_MM_REGEX = Regex("""^([01]\d|2[0-3]):[0-5]\d$""")
 fun isValidHhMm(s: String): Boolean = HH_MM_REGEX.matches(s.trim())
 
 /**
+ * FR-CUE-2 — per-trigger save gate for CueSheet. AT_TIME requires only a valid
+ * HH:mm (the time is the load-bearing field; label may be empty). AFTER_ROUTINE
+ * and AT_PLACE continue to require a non-blank label. Refines FR-CUE-1.5.
+ */
+fun canSaveCue(type: CueType, label: String, time: String): Boolean = when (type) {
+    CueType.AT_TIME -> isValidHhMm(time)
+    CueType.AFTER_ROUTINE, CueType.AT_PLACE -> label.isNotBlank()
+}
+
+/**
  * DM-CUE — "When X, I will do Y", always one line, never a wizard.
  * Shared by the task editor (DM-TASK-4) and the habit editor (DM-HABIT-1).
  */
@@ -164,10 +174,8 @@ fun CueSheet(
                 }
             }
 
-            // FR-CUE-1.5 — save button requires a valid HH:mm on AT_TIME, in
-            // addition to the label. AFTER_ROUTINE / AT_PLACE gate on label only.
-            val canSave = label.isNotBlank() &&
-                (type != CueType.AT_TIME || isValidHhMm(time))
+            // FR-CUE-2 — per-trigger save gate (see canSaveCue).
+            val canSave = canSaveCue(type, label, time)
             SheetPrimaryButton(
                 label = "Set the cue",
                 enabled = canSave,

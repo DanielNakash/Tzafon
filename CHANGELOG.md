@@ -9,6 +9,31 @@ to the versioned requirements documents in the repo.
 
 ---
 
+## [2.10.0] — 2026-07-24
+
+### Changed
+- **Goal-card step rows visibly right-align on Hebrew/Arabic labels** (`FR-DESIGN-3.7`) —
+  the row now fills the card's width and the label carries its own weight, so under the
+  per-label RTL wrapper introduced in v2.9.0 (`FR-DESIGN-3.6`) the checkbox actually lands
+  at the **right edge** of the card and the glyphs anchor to the reading margin. Mixed
+  goals continue to render per-row-independently — an English step in the same list still
+  lays out LTR — and the whole row is now a togglable target. The editor is unchanged.
+
+### Fixed
+- **AT_TIME cues can be saved without a label** (`FR-CUE-2`) — the "Set the cue" button on
+  the AT A TIME variant of the cue sheet now gates on a valid `HH:mm` alone; the label is
+  optional, matching the fact that the time is the load-bearing field on a time-driven
+  reminder. AFTER A ROUTINE and AT A PLACE continue to require a label (those triggers
+  have no other identifying field). The saved label-less cue and its notification degrade
+  cleanly to just the time.
+- **AT_TIME reminders fire *at* the set time on Android 12+** (`FR-NOTIF-4`) — a new
+  **Precise cue timing** row under Settings → Reminders surfaces the Android
+  exact-alarm special-access state and hands the user into the standard OS grant page
+  with one tap. On grant, today's already-scheduled alarms are immediately refreshed onto
+  the exact path, so a cue set to `08:30` fires at `08:30` — not whenever the OS next
+  wakes. When the grant is missing, reminders continue to fire as before (imprecise
+  fallback); the app never requires the grant to deliver at all.
+
 ## [2.9.0] — 2026-07-23
 
 ### Changed
@@ -254,6 +279,7 @@ the new name **Tzafon**. Local-first persistence (Room) behind repository interf
 - **Cloud sync (behind the seam)** — Firebase Auth (Google sign-in) and offline-first
   Firestore sync, kept behind the repository interfaces (`M9b`).
 
+[2.10.0]: https://github.com/DanielNakash/Tzafon/releases/tag/v2.10.0
 [2.9.0]: https://github.com/DanielNakash/Tzafon/releases/tag/v2.9.0
 [2.8.0]: https://github.com/DanielNakash/Tzafon/releases/tag/v2.8.0
 [2.7.0]: https://github.com/DanielNakash/Tzafon/releases/tag/v2.7.0

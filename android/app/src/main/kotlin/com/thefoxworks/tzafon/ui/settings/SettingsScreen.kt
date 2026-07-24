@@ -2,7 +2,12 @@ package com.thefoxworks.tzafon.ui.settings
 
 import android.Manifest
 import android.app.Activity
+import android.app.AlarmManager
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.os.Build
+import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.animateDpAsState
@@ -41,13 +46,18 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.thefoxworks.tzafon.data.settings.SettingsStore
 import com.thefoxworks.tzafon.data.transfer.DataExporter
 import com.thefoxworks.tzafon.data.transfer.DataImporter
 import com.thefoxworks.tzafon.domain.model.AuthRepository
+import com.thefoxworks.tzafon.notify.TopUpWorker
 import com.thefoxworks.tzafon.ui.components.DenSheet
+import com.thefoxworks.tzafon.ui.components.Dot
 import com.thefoxworks.tzafon.ui.components.FoxLogo
+import com.thefoxworks.tzafon.ui.components.PillButton
 import com.thefoxworks.tzafon.ui.components.RustHeader
 import com.thefoxworks.tzafon.ui.components.SectionLabel
 import com.thefoxworks.tzafon.ui.components.TzIcons
@@ -195,6 +205,14 @@ fun SettingsScreen(
                         }
                     },
                 )
+            }
+
+            // FR-NOTIF-4 — Precise cue timing. On Android 12+, exact-alarm is a
+            // user-toggled special access; without it we silently fall back to
+            // setAndAllowWhileIdle and cues fire late. Show the state and a
+            // one-tap route into the OS grant page so AT_TIME cues fire on time.
+            if (Build.VERSION.SDK_INT >= 31 && remindersOn) {
+                PreciseCueTimingRow(modifier = Modifier.padding(top = 8.dp))
             }
 
             // ── sounds (FR-AUDIO-1.5 / FR-AUDIO-1.6 — default ON, calm copy) ──
@@ -440,6 +458,87 @@ private fun AccountCard(auth: AuthRepository, scope: CoroutineScope, onSignedOut
                 style = TextStyle(fontFamily = DenType.body, fontSize = 12.sp, lineHeight = 16.sp),
                 color = Tz.colors.due,
                 modifier = Modifier.padding(top = 8.dp),
+            )
+        }
+    }
+}
+
+/**
+ * FR-NOTIF-4 — surfaces the Android 12+ `SCHEDULE_EXACT_ALARM` special-access
+ * state and hands the user into the OS grant page. Once granted, immediately
+ * re-runs the top-up so alarms scheduled before the grant get refreshed onto
+ * the exact path (see FR-NOTIF-4.5).
+ */
+@Composable
+private fun PreciseCueTimingRow(modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    val alarms = remember(context) { context.getSystemService(Context.ALARM_SERVICE) as AlarmManager }
+    var granted by remember { mutableStateOf(alarms.canScheduleExactAlarms()) }
+
+    // Re-read the grant on resume — user may have flipped it in OS Settings.
+    // FR-NOTIF-4.5: on a fresh grant, kick the top-up so today's cues refresh
+    // from setAndAllowWhileIdle → setExactAndAllowWhileIdle.
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        val now = alarms.canScheduleExactAlarms()
+        if (now && !granted) TopUpWorker.runNow(context.applicationContext)
+        granted = now
+    }
+
+    Row(
+        modifier.fillMaxWidth()
+            .clip(RoundedCornerShape(13.dp))
+            .background(Tz.colors.card)
+            .border(1.dp, Tz.colors.line, RoundedCornerShape(13.dp))
+            .padding(horizontal = 14.dp, vertical = 13.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        TzIcons.Clock(17.dp, Tz.colors.rust)
+        Column(Modifier.weight(1f)) {
+            Text(
+                "Precise cue timing",
+                style = TextStyle(fontFamily = DenType.body, fontSize = 15.sp),
+                color = Tz.colors.ink,
+            )
+            Text(
+                "Lets an “08:30” cue fire at 08:30 — not whenever Android next wakes.",
+                style = TextStyle(fontFamily = DenType.body, fontSize = 12.5.sp),
+                color = Tz.colors.muted,
+                modifier = Modifier.padding(top = 1.dp),
+            )
+        }
+        if (granted) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                modifier = Modifier.semantics { contentDescription = "Precise cue timing: Granted" },
+            ) {
+                Dot(Tz.colors.green, 8.dp)
+                Text(
+                    "Granted",
+                    style = TextStyle(fontFamily = DenType.mono, fontSize = 11.sp, letterSpacing = 0.4.sp),
+                    color = Tz.colors.muted,
+                )
+            }
+        } else {
+            PillButton(
+                label = "Set up",
+                color = Tz.colors.rust,
+                onClick = {
+                    val pkgUri = Uri.parse("package:${context.packageName}")
+                    val primary = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
+                        .setData(pkgUri)
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    val fallback = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                        .setData(pkgUri)
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    try {
+                        context.startActivity(primary)
+                    } catch (_: Throwable) {
+                        // Some OEM ROMs don't ship the exact-alarm settings page.
+                        try { context.startActivity(fallback) } catch (_: Throwable) { /* give up quietly */ }
+                    }
+                },
             )
         }
     }

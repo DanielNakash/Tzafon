@@ -285,9 +285,10 @@ Example: A task called "Cleaning" set to happen once every two days, and is set 
 I missed the 3.12 occurance and I want to update it (and all the following tasks) one day forward, so they'll be on 4.12, 6.12, 8.12 etc.. Trying to change the date from 3.12 to 4.12 and saving does nothing at the moment (which is the bug to fixed).
 
 ## FR-2026-07-23-a
-status: groomed
+status: implemented
 target: 2.10.0
 requested: 2026-07-23
+implemented: 2.10.0 / (pending)
 requirements: FR-DESIGN-3.7
 When editing a goal the steps are correctly aligned to the right when a step's text is in Hebrew. However, while not in edit mode, for example while seen under a theme in the Directions View, it is again aligned to the left.
 How it should be:
@@ -295,9 +296,10 @@ How it should be:
 * Steps that start with LTR text (e.g. English) shall have the checkbox and the text aligned to the left (as it is now).
 
 ## FR-2026-07-23-b
-status: groomed
+status: implemented
 target: 2.10.0
 requested: 2026-07-23
+implemented: 2.10.0 / (pending)
 requirements: FR-CUE-2, FR-NOTIF-4
 This is regarding the case of setting the cue type to be "at a time":
 * In this use case the text field describing the cue shall be allowed to be left empty.
