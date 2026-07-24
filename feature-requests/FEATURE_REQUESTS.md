@@ -283,3 +283,22 @@ requirements: FR-REC-6
 Bug fix: When trying to update the date of a recurring task, the change doesn't take effect.
 Example: A task called "Cleaning" set to happen once every two days, and is set to 1.12, 3.12, 5.12, etc.
 I missed the 3.12 occurance and I want to update it (and all the following tasks) one day forward, so they'll be on 4.12, 6.12, 8.12 etc.. Trying to change the date from 3.12 to 4.12 and saving does nothing at the moment (which is the bug to fixed).
+
+## FR-2026-07-23-a
+status: groomed
+target: 2.10.0
+requested: 2026-07-23
+requirements: FR-DESIGN-3.7
+When editing a goal the steps are correctly aligned to the right when a step's text is in Hebrew. However, while not in edit mode, for example while seen under a theme in the Directions View, it is again aligned to the left.
+How it should be:
+* Steps that start with RTL text (e.g. Hebrew) shall have the checkbox and the text aligned to the right.
+* Steps that start with LTR text (e.g. English) shall have the checkbox and the text aligned to the left (as it is now).
+
+## FR-2026-07-23-b
+status: groomed
+target: 2.10.0
+requested: 2026-07-23
+requirements: FR-CUE-2, FR-NOTIF-4
+This is regarding the case of setting the cue type to be "at a time":
+* In this use case the text field describing the cue shall be allowed to be left empty.
+* The time set in the cue is the time when a notification by the app shall be triggered for this task. Currently, this is not happening (I think that the notification is triggered, but at what seems to be either unrelated or erroneous time).
