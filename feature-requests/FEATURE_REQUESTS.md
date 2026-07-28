@@ -304,3 +304,51 @@ requirements: FR-CUE-2, FR-NOTIF-4
 This is regarding the case of setting the cue type to be "at a time":
 * In this use case the text field describing the cue shall be allowed to be left empty.
 * The time set in the cue is the time when a notification by the app shall be triggered for this task. Currently, this is not happening (I think that the notification is triggered, but at what seems to be either unrelated or erroneous time).
+
+## FR-2026-07-27-a
+status: groomed
+target: 2.11.0
+When a cue is set to be a time, the chosen time needs to be visible without needing to enter the edit view of the cue. This is true for:
+1. When editing a task
+2. When viewing a task, for example in Today View, but also in the other views that show tasks.
+
+## FR-2026-07-27-b
+status: groomed
+target: 2.11.0
+In the task edit view the item current order is:
+* Title, description, cue, serves (the goal and habit links), dates, recurrence.
+Please change the order to be as follows:
+* Title, description, serves (the goal and habit links), cue, dates, recurrence.
+
+## FR-2026-07-27-c
+status: groomed
+target: 2.11.0
+The export JSON file is readable, but the keys in the key value pairs are just a, b, c, etc.. It's possible to inffer what each key stands for, but the idea of the export is to by **easily** readable and understandable.
+All the keys in use in the export JSON file must be indicative of the content they hold. For example, instead of a, b, c, things like "task name", "recurrence type", "habit link" etc. - simple yet clear.
+
+## FR-2026-07-27-d
+status: groomed
+target: 2.11.0
+UX/UI fix: In all of the view (except for Settings and About) there's the navigation bar at the bottom and below it there are the android home, back, apps buttons.
+In the Settings view, the android apps cover the bottom part of whatever is shown at the bottom most part of the Settings view. The Settings view needs to be amended so that the android buttons are always visible, but are not hiding anything. 
+
+## FR-2026-07-27-e
+status: groomed
+target: 2.11.0
+UI fix: In all the views that include the hamburger menu icon on the top right it is located in exactly the same place, except for the All Tasks View. Please fix the All Tasks View to match all the others in this regard.
+
+## FR-2026-07-27-f
+status: groomed
+target: 2.11.0
+Bug fix: The issue handled by "implemented: 2.5.0 / 174507f" has resurfaced. The symptoms are the same.
+Additionally, I noticed that if:
+1. I start for example from Habits View
+2. Go to All Tasks
+3. Then to Backlog
+4. Repeat X times
+Then I'll have to press Habits 2*X times, each time alternating between All Tasks and Backlog, until finally getting to see Habits.
+Please identify the root cause and fix this issue.
+
+
+
+
