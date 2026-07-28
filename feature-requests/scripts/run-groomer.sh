@@ -20,7 +20,11 @@ source "$REPO/feature-requests/scripts/_lib.sh"
 # token in this file (see feature-requests/.env.example). Without it: "Not logged in".
 [ -f "$REPO/feature-requests/.env" ] && source "$REPO/feature-requests/.env"
 
-# --- (0) Serialize: never overlap with a builder run or another groomer (stale-lock aware). ---
+# --- (0) Account gate: only the pinned Claude account may drive the pipeline. Runs before the
+#     lock so a wrong-account invocation never takes the mutex. Fails closed. ---
+zsh "$REPO/feature-requests/scripts/assert-account.sh" "GROOM" || exit 0
+
+# --- (0b) Serialize: never overlap with a builder run or another groomer (stale-lock aware). ---
 acquire_lock "$LOCK" "GROOM" || exit 0
 trap 'rmdir "$LOCK" 2>/dev/null' EXIT
 

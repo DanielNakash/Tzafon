@@ -22,7 +22,11 @@ source "$REPO/feature-requests/scripts/_lib.sh"
 # Automation credentials (git-ignored) — headless auth token, see feature-requests/.env.example.
 [ -f "$REPO/feature-requests/.env" ] && source "$REPO/feature-requests/.env"
 
-# --- (0) Serialize: one pipeline job at a time (stale-lock aware). ---
+# --- (0) Account gate: only the pinned Claude account may drive the pipeline. Runs before the
+#     lock so a wrong-account invocation never takes the mutex. Fails closed. ---
+zsh "$REPO/feature-requests/scripts/assert-account.sh" "BUILD" || exit 0
+
+# --- (0b) Serialize: one pipeline job at a time (stale-lock aware). ---
 acquire_lock "$LOCK" "BUILD" || exit 0
 trap 'rmdir "$LOCK" 2>/dev/null' EXIT
 

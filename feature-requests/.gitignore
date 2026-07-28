@@ -3,3 +3,4 @@ releases/
 PIPELINE_LOG.md
 .pipeline.lock/
 .env
+.pipeline-account

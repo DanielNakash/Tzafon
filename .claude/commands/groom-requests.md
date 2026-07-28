@@ -7,6 +7,14 @@ Run from the repo root (`/Users/danielnakash/LocalWorkshop/Tzafon`).
 
 ## Steps
 
+0. **Account gate — do this first, before reading anything else.** Run
+   `zsh feature-requests/scripts/assert-account.sh GROOM` from the repo root. If it exits
+   non-zero, **stop immediately** and report the reason it printed. The pipeline is pinned to one
+   Claude account; a non-zero exit means this session is not it. Do **not** re-pin, edit
+   `.pipeline-account`, edit `.env`, or work around the gate — only the owner does that, by running
+   `pin-account.sh` deliberately. (The launchd wrapper runs this same gate, so a scheduled run
+   normally never reaches this step; it matters when someone types `/groom-requests` by hand.)
+
 1. **Honor the switch.** Read `feature-requests/FEATURE_REQUESTS.md`. If it contains
    `pipeline: paused`, append a `GROOM skipped paused` line to `feature-requests/PIPELINE_LOG.md`
    and stop.

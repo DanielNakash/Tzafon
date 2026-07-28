@@ -13,6 +13,14 @@ reviews and merges. Never mark requests implemented unless the tag was created.
 
 ## Steps
 
+0. **Account gate — do this first, before reading anything else.** Run
+   `zsh feature-requests/scripts/assert-account.sh BUILD` from the repo root. If it exits
+   non-zero, **stop immediately** and report the reason it printed. The pipeline is pinned to one
+   Claude account; a non-zero exit means this session is not it. Do **not** re-pin, edit
+   `.pipeline-account`, edit `.env`, or work around the gate — only the owner does that, by running
+   `pin-account.sh` deliberately. (The launchd wrapper runs this same gate, so a scheduled run
+   normally never reaches this step; it matters when someone types `/build-next-version` by hand.)
+
 1. **Honor the switch.** Read `feature-requests/FEATURE_REQUESTS.md`. If `pipeline: paused`, log
    `BUILD skipped paused` to `PIPELINE_LOG.md` and stop.
 
