@@ -110,6 +110,78 @@ internal val REFERENCE_ROUTES = setOf("alltasks", "backlog")
 internal fun isReferenceView(currentRoute: String?): Boolean = currentRoute in REFERENCE_ROUTES
 
 /**
+ * FR-NAV-11.2 / FR-NAV-11.8 — the popUpTo target when opening a reference view.
+ * Walk from the top of the current back-stack down until we find a route that is
+ * NOT a reference view — that's the tab base we want the new reference view to
+ * sit directly on top of. Falls back to Today's route as a last-resort anchor
+ * (the always-present base tab in the graph). This keeps repeated lateral
+ * `alltasks ↔ backlog` hops from accumulating: each hop pops back to the entry
+ * tab first, then pushes exactly one reference view on top of it.
+ */
+internal fun refPopUpTarget(currentStack: List<String>, todayRoute: String): String {
+    for (route in currentStack.asReversed()) {
+        if (route !in REFERENCE_ROUTES) return route
+    }
+    return todayRoute
+}
+
+/**
+ * FR-NAV-11 — pure simulation of `goTab` / `goRef` against a list-based
+ * back-stack model, mirroring the invariants the real `NavController` calls
+ * enforce. Kept in `main/` so `NavReferenceLeakTest` can pin the invariant
+ * without a Compose / instrumented runtime. Not called from production code.
+ *
+ * Invariants pinned:
+ *  - `goTab(tab)` pops every reference view above the current tab base and
+ *    leaves the tab's route as the current top — FR-NAV-11.1.
+ *  - `goRef(route)` first pops back to the nearest non-reference route, then
+ *    pushes the reference view — FR-NAV-11.2 / FR-NAV-11.8, so lateral hops
+ *    don't accumulate on the stack.
+ *  - A `NavController.saveState/restoreState` bucket can never contain a
+ *    reference view when a tab tap fires — FR-NAV-11.3 falls out because
+ *    `goTab` clears reference views before the switch.
+ */
+internal sealed interface NavAction {
+    data class GoTab(val route: String) : NavAction
+    data class GoRef(val route: String) : NavAction
+}
+
+internal fun simulateNav(
+    startStack: List<String>,
+    actions: List<NavAction>,
+    todayRoute: String = "today",
+): List<String> {
+    var stack = startStack.toMutableList()
+    for (action in actions) {
+        when (action) {
+            is NavAction.GoTab -> {
+                // FR-NAV-11.1 — pop every reference view above the target tab base.
+                while (stack.isNotEmpty() && isReferenceView(stack.last())) {
+                    stack.removeAt(stack.lastIndex)
+                }
+                // popUpTo(TODAY){saveState=true} + restoreState=true in real code — the
+                // model normalizes to `[…, tab]` (no reference view above it).
+                val idx = stack.indexOf(action.route)
+                if (idx >= 0) {
+                    // Restore: bring the tab to the top.
+                    stack = stack.subList(0, idx + 1).toMutableList()
+                } else {
+                    stack.add(action.route)
+                }
+            }
+            is NavAction.GoRef -> {
+                // FR-NAV-11.2 / FR-NAV-11.8 — pop back to the nearest tab base, then push.
+                val target = refPopUpTarget(stack, todayRoute)
+                val idx = stack.indexOf(target)
+                if (idx >= 0) stack = stack.subList(0, idx + 1).toMutableList()
+                stack.add(action.route)
+            }
+        }
+    }
+    return stack.toList()
+}
+
+/**
  * FR-AUTH-1.10 — auth state has three phases: not-yet-emitted (loading),
  * signed-out, signed-in. Wrapping the Firebase flow so the first frame can
  * render a bare Den-themed splash instead of flashing Welcome to a user
@@ -163,13 +235,15 @@ private fun TzafonMainNav(container: AppContainer, initialUser: TzafonUser?) {
     val start = remember { authStartDestination(initialUser) }
 
     fun goTab(tab: Tab) {
-        // FR-NAV-9 — a reference view (All Tasks / Backlog) opened on top of a tab must be
-        // dropped from the stack BEFORE the tab switch. Otherwise the standard
-        // popUpTo(TODAY){saveState} + restoreState machinery stashes it under a tab's key
-        // and restores it on the next tab tap — the "reference-view leak" (FR-2026-07-12-d).
-        // Popping it first returns to a clean tab base; the normal save/restore switch then
-        // preserves genuine within-tab state (scroll, expanded rows — FR-NAV-9.2).
-        if (isReferenceView(nav.currentBackStackEntry?.destination?.route)) {
+        // FR-NAV-11.1 — pop EVERY reference view above the target tab base before
+        // the switch (the v2.5.0 `if` guard was only enough for the single-hop
+        // case). Combined with `goRef`'s pop-to-tab (FR-NAV-11.2), the
+        // `saveState`/`restoreState` bucket then can only ever contain the tab's
+        // own within-tab state (scroll, expanded rows) — never a leaked
+        // reference view (FR-NAV-11.3). A subsequent tab tap always lands on the
+        // tab's base, regardless of how many lateral `alltasks ↔ backlog` hops
+        // occurred first.
+        while (isReferenceView(nav.currentBackStackEntry?.destination?.route)) {
             nav.popBackStack()
         }
         nav.navigate(tab.route) {
@@ -179,11 +253,19 @@ private fun TzafonMainNav(container: AppContainer, initialUser: TzafonUser?) {
         }
     }
 
-    // FR-NAV-9.6 — one call shape for opening a reference view from anywhere.
-    // launchSingleTop avoids stacking a second copy of the same reference view
-    // (e.g. All Tasks → Backlog → All Tasks lateral hops, FR-NAV-9.7).
+    // FR-NAV-11.2 / FR-NAV-11.8 — open a reference view directly on top of the
+    // nearest tab base, not on top of another reference view. So `Habits →
+    // goRef(alltasks) → goRef(backlog)` yields `[Habits, backlog]` instead of
+    // `[Habits, alltasks, backlog]`, and repeated lateral hops cannot
+    // accumulate. The popUpTo target is computed off the live back-stack so it
+    // handles the "current top is itself a reference view" case correctly.
     fun goRef(route: String) {
-        nav.navigate(route) { launchSingleTop = true }
+        val currentRoutes = nav.currentBackStack.value.mapNotNull { it.destination.route }
+        val target = refPopUpTarget(currentRoutes, Tab.TODAY.route)
+        nav.navigate(route) {
+            popUpTo(target) { inclusive = false; saveState = false }
+            launchSingleTop = true
+        }
     }
 
     // presetToday: FR-TODAY-7 — a NEW task added from the Today view defaults its

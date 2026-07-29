@@ -306,40 +306,52 @@ This is regarding the case of setting the cue type to be "at a time":
 * The time set in the cue is the time when a notification by the app shall be triggered for this task. Currently, this is not happening (I think that the notification is triggered, but at what seems to be either unrelated or erroneous time).
 
 ## FR-2026-07-27-a
-status: groomed
+status: implemented
 target: 2.11.0
+implemented: 2.11.0 / (pending)
+requirements: FR-CUE-3
 When a cue is set to be a time, the chosen time needs to be visible without needing to enter the edit view of the cue. This is true for:
 1. When editing a task
 2. When viewing a task, for example in Today View, but also in the other views that show tasks.
 
 ## FR-2026-07-27-b
-status: groomed
+status: implemented
 target: 2.11.0
+implemented: 2.11.0 / (pending)
+requirements: FR-EDITOR-1
 In the task edit view the item current order is:
 * Title, description, cue, serves (the goal and habit links), dates, recurrence.
 Please change the order to be as follows:
 * Title, description, serves (the goal and habit links), cue, dates, recurrence.
 
 ## FR-2026-07-27-c
-status: groomed
+status: implemented
 target: 2.11.0
+implemented: 2.11.0 / (pending)
+requirements: FR-DATA-3
 The export JSON file is readable, but the keys in the key value pairs are just a, b, c, etc.. It's possible to inffer what each key stands for, but the idea of the export is to by **easily** readable and understandable.
 All the keys in use in the export JSON file must be indicative of the content they hold. For example, instead of a, b, c, things like "task name", "recurrence type", "habit link" etc. - simple yet clear.
 
 ## FR-2026-07-27-d
-status: groomed
+status: implemented
 target: 2.11.0
+implemented: 2.11.0 / (pending)
+requirements: FR-DESIGN-5
 UX/UI fix: In all of the view (except for Settings and About) there's the navigation bar at the bottom and below it there are the android home, back, apps buttons.
 In the Settings view, the android apps cover the bottom part of whatever is shown at the bottom most part of the Settings view. The Settings view needs to be amended so that the android buttons are always visible, but are not hiding anything. 
 
 ## FR-2026-07-27-e
-status: groomed
+status: implemented
 target: 2.11.0
+implemented: 2.11.0 / (pending)
+requirements: FR-NAV-10
 UI fix: In all the views that include the hamburger menu icon on the top right it is located in exactly the same place, except for the All Tasks View. Please fix the All Tasks View to match all the others in this regard.
 
 ## FR-2026-07-27-f
-status: groomed
+status: implemented
 target: 2.11.0
+implemented: 2.11.0 / (pending)
+requirements: FR-NAV-11
 Bug fix: The issue handled by "implemented: 2.5.0 / 174507f" has resurfaced. The symptoms are the same.
 Additionally, I noticed that if:
 1. I start for example from Habits View

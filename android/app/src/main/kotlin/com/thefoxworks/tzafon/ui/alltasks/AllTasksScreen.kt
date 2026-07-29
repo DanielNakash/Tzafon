@@ -51,7 +51,6 @@ import com.thefoxworks.tzafon.domain.model.Task
 import com.thefoxworks.tzafon.domain.model.TaskState
 import com.thefoxworks.tzafon.ui.components.Fab
 import com.thefoxworks.tzafon.ui.components.GroupHeader
-import com.thefoxworks.tzafon.ui.components.HeaderMenuButton
 import com.thefoxworks.tzafon.ui.components.RustHeader
 import com.thefoxworks.tzafon.ui.components.StateSheet
 import com.thefoxworks.tzafon.ui.components.TaskRow
@@ -165,7 +164,9 @@ fun AllTasksScreen(
             RustHeader(
                 title = "All Tasks",
                 kicker = "COMPLETE INDEX",
-                right = { HeaderMenuButton(onClick = { menu = true }) },
+                // FR-NAV-10 — route through the shared `onMenu` slot so the
+                // hamburger sits in the same pixel column as every other view.
+                onMenu = { menu = true },
                 bottomContent = {
                     Column {
                         // ── search (FR-ALL-2) ──

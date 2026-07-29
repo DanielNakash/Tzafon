@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -110,8 +111,9 @@ fun SettingsScreen(
             Modifier
                 .weight(1f)
                 .verticalScroll(rememberScrollState())
+                .navigationBarsPadding() // FR-DESIGN-5.1 — keep bottom content above Android system nav
                 .padding(horizontal = 18.dp)
-                .padding(bottom = 40.dp),
+                .padding(bottom = 24.dp),
         ) {
             // ── account + sync (M9b) ──
             AccountCard(auth, scope, onSignedOut)

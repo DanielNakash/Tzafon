@@ -384,7 +384,7 @@ private fun FocusItem(
                     color = Tz.colors.ink,
                 )
                 if (t.cue != null) {
-                    Row(Modifier.padding(top = 6.dp)) { CueChip(t.cue.label) }
+                    Row(Modifier.padding(top = 6.dp)) { CueChip(t.cue.display()) }
                 }
             }
             if (onUnfocus != null) {

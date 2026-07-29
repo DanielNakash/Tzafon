@@ -13,10 +13,18 @@ import com.thefoxworks.tzafon.domain.model.Theme
  * DM-EXPORT-1 — the on-disk backup document. Domain-typed by design (the
  * DECISION in v2.8.0 §1: readable + lossless via the domain shapes, not the
  * flat Room rows). Serialized with a pretty-printing Gson (`DM-EXPORT-1.6`).
+ *
+ * FR-DATA-3 (v2.11.0) — the JSON keys on release builds are the domain-model
+ * field names verbatim (`title`, `state`, `toDoDate`, `cue`, `label`, `time`,
+ * `type`, …). The ProGuard keep rules in `android/app/proguard-rules.pro`
+ * enforce this — R8 minification does not affect the exported document.
+ * `EXPORT_FORMAT_VERSION` bumps from 1 to 2 to distinguish the fixed-format
+ * file from pre-fix backups (which release builds wrote with minified keys
+ * like `a, b, c`).
  */
 
 const val EXPORT_FORMAT = "tzafon.export"
-const val EXPORT_FORMAT_VERSION = 1
+const val EXPORT_FORMAT_VERSION = 2
 
 data class ExportManifest(
     val format: String = EXPORT_FORMAT,

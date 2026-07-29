@@ -24,6 +24,14 @@ class DataImporter(
             val document: ExportDocument,
             /** True iff any collection's actual size differs from the manifest counts. */
             val countMismatch: Boolean,
+            /**
+             * FR-DATA-3.4 — true iff the file's `manifest.formatVersion` is
+             * below [supportedFormatVersion]. Pre-fix release builds
+             * (formatVersion `1`) wrote minified keys, so some fields may fail
+             * to bind on import; the UI surfaces an "earlier-version" warning
+             * before applying so the user can decide whether to proceed.
+             */
+            val legacyVersion: Boolean = false,
         ) : ParseResult()
 
         sealed class Rejected(val message: String) : ParseResult() {
@@ -88,7 +96,11 @@ class DataImporter(
             c.reviews.size != counts.reviews ||
             c.contributions.size != counts.contributions
 
-        return ParseResult.Ok(document = document, countMismatch = mismatch)
+        return ParseResult.Ok(
+            document = document,
+            countMismatch = mismatch,
+            legacyVersion = manifest.formatVersion < supportedFormatVersion,
+        )
     }
 
     /** True iff the local store is empty (`FR-DATA-2.8`). */

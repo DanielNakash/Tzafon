@@ -35,15 +35,7 @@ object NotifyLogic {
         return h * 60 + min
     }
 
-    private fun cueLine(cue: Cue): String {
-        val label = cue.label.trim()
-        val time = cue.time?.trim()
-        return when {
-            label.isEmpty() -> time ?: ""
-            time == null || label == time -> label
-            else -> "$label · $time"
-        }
-    }
+    private fun cueLine(cue: Cue): String = cue.display()
 
     /**
      * The reminders for `date`. AT_TIME cues always carry a time; an

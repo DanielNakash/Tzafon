@@ -281,6 +281,18 @@ class DataTransferTest {
         assertTrue((result as DataImporter.ParseResult.Ok).countMismatch)
     }
 
+    // ── FR-DATA-3.4 — v1 backup accepted, flagged legacyVersion ──
+
+    @Test
+    fun `a formatVersion-1 file parses to Ok but flags legacyVersion`() {
+        val transfer = FakeTransfer()
+        val importer = DataImporter(transfer) // defaults to current EXPORT_FORMAT_VERSION (2)
+        val v1 = """{"manifest":{"format":"tzafon.export","formatVersion":1,"appVersion":"x","appVersionCode":1,"exportedAt":0,"exportedAtIso":"","counts":{"tasks":0,"series":0,"habits":0,"habitLogs":0,"goals":0,"themes":0,"reviews":0,"contributions":0}},"collections":{"tasks":[],"series":[],"habits":[],"habitLogs":[],"goals":[],"themes":[],"reviews":[],"contributions":[]}}"""
+        val result = importer.parse(v1)
+        assertTrue(result is DataImporter.ParseResult.Ok)
+        assertTrue("v1 file is flagged for a warning banner", (result as DataImporter.ParseResult.Ok).legacyVersion)
+    }
+
     // ── FR-DATA-2.7 / FR-DATA-2.8 conflict policies ──
 
     @Test

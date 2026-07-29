@@ -17,7 +17,24 @@ data class Cue(
     val type: CueType,
     val label: String,          // "After the first coffee" / "8:30" / "At the studio"
     val time: String? = null,   // HH:mm — reminders for AT_TIME (and optionally AFTER_ROUTINE)
-)
+) {
+    /**
+     * FR-CUE-3 — the canonical human-readable form of a saved cue, shared by
+     * every display surface (task rows, editor cue slot, habit editor cue row,
+     * notification body). `label · time` when both are set, `label` alone when
+     * there's no time, or `time` alone when the label is empty (post-FR-CUE-2
+     * label-less AT_TIME cues).
+     */
+    fun display(): String {
+        val l = label.trim()
+        val t = time?.trim()
+        return when {
+            l.isEmpty() -> t.orEmpty()
+            t.isNullOrEmpty() || l == t -> l
+            else -> "$l · $t"
+        }
+    }
+}
 
 data class Task(
     val id: String,

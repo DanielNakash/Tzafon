@@ -429,7 +429,7 @@ fun HabitEditorSheet(
                 TzIcons.Cue(17.dp, if (cue != null) Tz.colors.rust else Tz.colors.faint)
                 Column(Modifier.weight(1f)) {
                     Text(
-                        cue?.label ?: "Anchor it to a routine",
+                        cue?.display() ?: "Anchor it to a routine",
                         style = TextStyle(fontFamily = DenType.body, fontSize = 15.5.sp),
                         color = if (cue != null) Tz.colors.ink else Tz.colors.faint,
                     )

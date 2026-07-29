@@ -120,6 +120,7 @@ fun YourDataSection(
                             document = parsed.document,
                             countMismatch = parsed.countMismatch,
                             storeEmpty = storeEmpty,
+                            legacyVersion = parsed.legacyVersion,
                         )
                     }
                 }
@@ -185,10 +186,22 @@ fun YourDataSection(
         }
     }
 
-    // ── conflict / count-mismatch dialogs ──
+    // ── legacy-version / conflict / count-mismatch dialogs ──
     val pending = pendingImport
     if (pending != null) {
-        if (pending.countMismatch && !pending.countMismatchConfirmed) {
+        if (pending.legacyVersion && !pending.legacyVersionConfirmed) {
+            // FR-DATA-3.4 — pre-fix (formatVersion == 1) backups had minified
+            // keys on release builds; some fields may not restore. Ask before
+            // committing so the user makes an informed choice.
+            ConfirmDialog(
+                title = "Older backup",
+                body = "This backup is from an earlier version of Tzafon and may not restore all fields. If possible, re-export from the version that made it.",
+                confirmLabel = "Import anyway",
+                cancelLabel = "Cancel",
+                onConfirm = { pendingImport = pending.copy(legacyVersionConfirmed = true) },
+                onDismiss = { pendingImport = null },
+            )
+        } else if (pending.countMismatch && !pending.countMismatchConfirmed) {
             ConfirmDialog(
                 title = "Backup looks incomplete",
                 body = "The counts in this file don't match its contents. Import anyway?",
@@ -245,7 +258,9 @@ private data class PendingImport(
     val document: ExportDocument,
     val countMismatch: Boolean,
     val storeEmpty: Boolean,
+    val legacyVersion: Boolean = false,
     val countMismatchConfirmed: Boolean = false,
+    val legacyVersionConfirmed: Boolean = false,
 )
 
 @Composable

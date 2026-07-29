@@ -207,36 +207,8 @@ fun TaskEditorScreen(
                 minLines = 3,
             )
 
-            // ── cue (DM-TASK-4: "When will you do this?") ──
-            EdSection("When will you do this? · cue")
-            Row(
-                Modifier.fillMaxWidth()
-                    .clip(RoundedCornerShape(13.dp))
-                    .background(if (draft.cue != null) Tz.colors.amber.a(0.1f) else Tz.colors.card)
-                    .border(1.dp, if (draft.cue != null) Tz.colors.amber.a(0.4f) else Tz.colors.line, RoundedCornerShape(13.dp))
-                    .pressable { sheet = "cue" }
-                    .padding(horizontal = 14.dp, vertical = 13.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(11.dp),
-            ) {
-                TzIcons.Cue(17.dp, if (draft.cue != null) Tz.colors.rust else Tz.colors.faint)
-                Column(Modifier.weight(1f)) {
-                    Text(
-                        draft.cue?.label ?: "Anchor it to a routine — optional",
-                        style = TextStyle(fontFamily = DenType.body, fontSize = 15.5.sp),
-                        color = if (draft.cue != null) Tz.colors.ink else Tz.colors.faint,
-                    )
-                    Text(
-                        draft.cue?.let { "${it.type.name.replace('_', '-')} · A TRIGGER BEATS A CLOCK" }
-                            ?: "WHEN X, I WILL DO Y",
-                        style = TextStyle(fontFamily = DenType.mono, fontSize = 10.sp),
-                        color = Tz.colors.faint,
-                        modifier = Modifier.padding(top = 2.dp),
-                    )
-                }
-                TzIcons.Chevron(17.dp, Tz.colors.ink.a(0.28f))
-            }
-
+            // FR-EDITOR-1 — Serves before Cue: alignment (goal/habit) is a more
+            // identity-shaping choice than the trigger, so it comes first.
             // ── serves (M4: the habit link; themes M6, goals M5) ──
             EdSection("Serves · alignment (optional)")
             val linkedHabit = habits.firstOrNull { it.id == draft.habitId }
@@ -315,6 +287,36 @@ fun TaskEditorScreen(
                         modifier = Modifier.weight(1f),
                     )
                 }
+            }
+
+            // ── cue (DM-TASK-4: "When will you do this?") ──
+            EdSection("When will you do this? · cue")
+            Row(
+                Modifier.fillMaxWidth()
+                    .clip(RoundedCornerShape(13.dp))
+                    .background(if (draft.cue != null) Tz.colors.amber.a(0.1f) else Tz.colors.card)
+                    .border(1.dp, if (draft.cue != null) Tz.colors.amber.a(0.4f) else Tz.colors.line, RoundedCornerShape(13.dp))
+                    .pressable { sheet = "cue" }
+                    .padding(horizontal = 14.dp, vertical = 13.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(11.dp),
+            ) {
+                TzIcons.Cue(17.dp, if (draft.cue != null) Tz.colors.rust else Tz.colors.faint)
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        draft.cue?.display() ?: "Anchor it to a routine — optional",
+                        style = TextStyle(fontFamily = DenType.body, fontSize = 15.5.sp),
+                        color = if (draft.cue != null) Tz.colors.ink else Tz.colors.faint,
+                    )
+                    Text(
+                        draft.cue?.let { "${it.type.name.replace('_', '-')} · A TRIGGER BEATS A CLOCK" }
+                            ?: "WHEN X, I WILL DO Y",
+                        style = TextStyle(fontFamily = DenType.mono, fontSize = 10.sp),
+                        color = Tz.colors.faint,
+                        modifier = Modifier.padding(top = 2.dp),
+                    )
+                }
+                TzIcons.Chevron(17.dp, Tz.colors.ink.a(0.28f))
             }
 
             // ── dates ──

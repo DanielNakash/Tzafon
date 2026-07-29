@@ -9,6 +9,56 @@ to the versioned requirements documents in the repo.
 
 ---
 
+## [2.11.0] — 2026-07-29
+
+### Added
+- **The cue time shows on the row and in the editor** (`FR-CUE-3`) — a saved cue's
+  time (e.g. `08:30`) is now visible wherever the cue is rendered — the task list
+  chip on Today, Planning, All Tasks and Backlog, the editor's cue slot, and the
+  habit editor's cue row. A label-less time-only cue (allowed since `FR-CUE-2` in
+  v2.10.0) reads as just the time; a labelled cue with a time reads `label · time`;
+  a label-only cue reads as the label alone. The chip and the notification body
+  now compose from a single shared `Cue.display()` so they never drift.
+
+### Changed
+- **Task editor: Serves before Cue** (`FR-EDITOR-1`) — the task editor's field
+  order becomes `Title → Description → Serves → Cue → Dates → Recurrence` — the
+  alignment to a goal or habit ("what this task is *for*") is now chosen before
+  the trigger ("*when* I'll do it"). All click bindings, sheets, and section
+  headers are otherwise unchanged.
+- **All Tasks header hamburger sits in the same column as every other view**
+  (`FR-NAV-10`) — All Tasks routed its hamburger through the header's arbitrary
+  `right` slot, landing it ~10-12 dp off from the shared position used on Today,
+  Habits, Directions, Backlog and Planning. It now uses the same canonical
+  `onMenu` slot, so the button is in the same pixel column across the whole
+  five-tab surface.
+
+### Fixed
+- **Export JSON keys are the descriptive domain field names on release builds**
+  (`FR-DATA-3`, refines `DM-EXPORT-1`) — release builds previously wrote exports
+  as `{"a":…,"b":…,"c":…}` because R8 minified the domain-model field names and
+  Gson dutifully wrote the minified names. ProGuard now keeps the domain-model
+  and export-document field names verbatim so an exported `.tzafon.json` reads
+  as `{"title":…,"state":…,"toDoDate":…,"cue":{"label":…,"time":…,"type":…}, …}`
+  on release too. `EXPORT_FORMAT_VERSION` bumps from `1` to `2`. Older (v1)
+  backups still parse but surface an "earlier-version" warning banner in the
+  restore sheet before applying, so the user makes an informed choice.
+- **Settings and About don't hide content under the system nav bar**
+  (`FR-DESIGN-5`) — the Settings and About screens now consume the Android
+  system navigation-bar inset (via `navigationBarsPadding()`), so the bottom row
+  is fully visible on 3-button, 2-button, and gesture-nav phones — no more sign-
+  out / Contact-Us hidden behind system chrome. Other screens are unchanged.
+- **Tab tap always lands on the tab's base — reference-view leak and lateral-hop
+  escalation both closed** (`FR-NAV-11`) — the v2.5.0 fix for opening All Tasks
+  or Backlog on top of a tab and then switching tabs (`FR-NAV-9`, `174507f`)
+  regressed under one path, and a new failure mode showed up: repeated lateral
+  hops between All Tasks and Backlog accumulated on the back-stack, so tapping
+  a tab took `2×` presses per hop to reach it. `goTab` now pops every reference
+  view above the target tab before switching (a loop, not a single `if`), and
+  `goRef` collapses onto the nearest tab base instead of stacking on top of
+  another reference view. Any tab tap now lands on the tab's base regardless of
+  prior hop count.
+
 ## [2.10.0] — 2026-07-24
 
 ### Changed
@@ -279,6 +329,7 @@ the new name **Tzafon**. Local-first persistence (Room) behind repository interf
 - **Cloud sync (behind the seam)** — Firebase Auth (Google sign-in) and offline-first
   Firestore sync, kept behind the repository interfaces (`M9b`).
 
+[2.11.0]: https://github.com/DanielNakash/Tzafon/releases/tag/v2.11.0
 [2.10.0]: https://github.com/DanielNakash/Tzafon/releases/tag/v2.10.0
 [2.9.0]: https://github.com/DanielNakash/Tzafon/releases/tag/v2.9.0
 [2.8.0]: https://github.com/DanielNakash/Tzafon/releases/tag/v2.8.0
