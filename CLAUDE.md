@@ -11,13 +11,20 @@ requests**, through the automated pipeline below. Work the pipeline, not the mil
 
 | | |
 |---|---|
-| **Shipped** | **v2.10.0** — tag `v2.10.0`, `versionName "2.10.0"` / `versionCode 11` |
-| **In flight** | **v2.11.0** — groomed, not yet built: requests `FR-2026-07-27-a`…`-f`, requirements in `v2.11.0 Requirements.md` (its `## Milestones` list is the builder's plan) |
+| **Latest promoted** | **v2.10.0** — tag `v2.10.0`, `versionName "2.10.0"` / `versionCode 11`. This is what `main` and `origin` carry. |
+| **Built, awaiting promotion** | **v2.11.0** — built 2026-07-29 (`feature-requests/releases/Tzafon-2.11.0.apk`) from `v2.11.0 Requirements.md`, on a **local** `release/2.11.0` branch + tag. Never pushed, so on `main` the six `FR-2026-07-27-*` requests still read `groomed` and the version still reads 2.10.0 — the builder's "mark implemented" commit rides the unpushed branch. `/promote 2.11.0` is the missing step. |
 | **Full history** | `CHANGELOG.md` — every shipped version in user-facing language, each bullet citing its requirement code |
 
+> **The remote is not the whole truth.** A finished build lives only on the machine that built it
+> until `/promote` pushes it — the `release/*` branch, the `v*` tag, and the APK in
+> `feature-requests/releases/` (git-ignored) are all local. A session in a fresh clone (Claude Code
+> on the web, a new checkout) will therefore read a frontier one or more versions behind, and will
+> see shipped requests still marked `groomed`. Say which you're looking at.
+
 This table ages. **Re-derive the frontier at the start of a session** rather than trusting it:
-`git tag | sort -V | tail -1`, then `grep -n '^status:' feature-requests/FEATURE_REQUESTS.md`
-(statuses: `new` → `groomed` → `implemented`, or `rejected`).
+`git tag | sort -V | tail -1` and `git ls-remote --tags origin` (a local-only tag is an
+unpromoted release), then `grep -n '^status:' feature-requests/FEATURE_REQUESTS.md`
+(statuses: `new` → `groomed` → `implemented`, or `rejected`) and `ls feature-requests/releases/`.
 
 ## The pipeline — Groom → Build → Promote
 
@@ -34,7 +41,9 @@ Guardrails worth knowing before you touch any of it:
 
 - **Pause switch** — `pipeline: paused` in `FEATURE_REQUESTS.md` makes both jobs no-op.
 - **Release serialization** — the builder refuses to start version N+1 while N's tag is not yet an
-  ancestor of `main`. A stuck builder usually means **an unpromoted release**, not a bug.
+  ancestor of `main` (it logs `BUILD blocked unmerged-release`). So an unpromoted release **stalls
+  the whole pipeline**: newly groomed work just queues up. A pipeline that has gone quiet usually
+  means a built-but-unpromoted version, not a bug — check for a local `release/*` branch first.
 - **Account pin** — both jobs run `feature-requests/scripts/assert-account.sh` first and stop if the
   session isn't the pinned Claude account. Never work around it, re-pin, or edit `.pipeline-account`.
 - **Merge gate** — `main` only ever moves by the owner's `/promote`.
@@ -203,10 +212,3 @@ Same loop the builder runs, minus the branch/tag ceremony you don't want by hand
 
 Never merge to `main` yourself, never tag a version you didn't build end to end, and never edit
 another request's `status:`/`implemented:`/`requirements:` fields — those are the pipeline's ledger.
-
-## Open owner item
-
-`android/firestore.rules` was still awaiting deployment to the Firebase project (`tzafon-86e71`) as
-of the v2.7.0 release gate — production-mode default-deny blocks the Firestore mirror's writes until
-it's deployed (the app works regardless; Room is authoritative). **Unverified in-repo** — if it has
-since been deployed, delete this section.
