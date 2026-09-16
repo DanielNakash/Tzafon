@@ -11,8 +11,8 @@ requests**, through the automated pipeline below. Work the pipeline, not the mil
 
 | | |
 |---|---|
-| **Latest promoted** | **v2.10.0** — tag `v2.10.0`, `versionName "2.10.0"` / `versionCode 11`. This is what `main` and `origin` carry. |
-| **Built, awaiting promotion** | **v2.11.0** — built 2026-07-29 (`feature-requests/releases/Tzafon-2.11.0.apk`) from `v2.11.0 Requirements.md`, on a **local** `release/2.11.0` branch + tag. Never pushed, so on `main` the six `FR-2026-07-27-*` requests still read `groomed` and the version still reads 2.10.0 — the builder's "mark implemented" commit rides the unpushed branch. `/promote 2.11.0` is the missing step. |
+| **Latest promoted** | **v2.11.0** — tag `v2.11.0`, `versionName "2.11.0"` / `versionCode 12`, promoted 2026-09-15. This is what `main` and `origin` carry. |
+| **Built, awaiting promotion** | none. `main`, the highest tag and the builder's view of the frontier all agree, so the release-serialization guard is clear and the next `/build-next-version` is free to start. |
 | **Full history** | `CHANGELOG.md` — every shipped version in user-facing language, each bullet citing its requirement code |
 
 > **The remote is not the whole truth.** A finished build lives only on the machine that built it
