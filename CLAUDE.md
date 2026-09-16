@@ -35,7 +35,7 @@ The owner's only manual authoring job is appending a plain-language block to
 |---|---|---|---|
 | **Groom** | `/groom-requests` | hourly, launchd, text-only | `status: new` requests → coded requirements in `v<next-minor> Requirements.md`; flips them to `groomed`; commits to `main`. |
 | **Build** | `/build-next-version` | daily 03:00, launchd, needs SDK + emulator + keystore | Implements the lowest groomed version milestone-by-milestone on a `release/<target>` branch, runs tests, bumps `versionName`/`versionCode`, prepends the `CHANGELOG.md` entry, builds the signed release APK, marks requests `implemented`, **tags `v<target>` — and stops. It never merges to `main`.** |
-| **Promote** | `/promote <version>` | owner, after on-device verification | Fast-forwards `main` to the tag, pushes `main` + tag, deletes the `release/*` branch. |
+| **Promote** | `/promote <version>` | owner, after on-device verification | Fast-forwards `main` to the tag, refreshes the frontier table above, pushes `main` (release + doc commit) and the tag, deletes the `release/*` branch. |
 
 Guardrails worth knowing before you touch any of it:
 
