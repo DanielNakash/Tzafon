@@ -361,6 +361,15 @@ Additionally, I noticed that if:
 Then I'll have to press Habits 2*X times, each time alternating between All Tasks and Backlog, until finally getting to see Habits.
 Please identify the root cause and fix this issue.
 
+## FR-2026-07-31-a
+status: groomed
+target: 2.12.0
+requirements: FR-PLAN-6
+Add to the Planning View a search option as in the All Tasks View.
 
-
-
+## FR-2026-07-31-b
+status: groomed
+target: 2.12.0
+requirements: FR-CAPTURE-3, FR-PLAN-7
+While in a task quick add form, identify text in the form HH:MM in the end of the task's title, as a time for the cue to be set.
+When done in Planning View, this will also set the To Do Date to today.
