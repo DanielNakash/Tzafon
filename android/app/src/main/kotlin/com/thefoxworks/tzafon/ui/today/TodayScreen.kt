@@ -75,7 +75,7 @@ import kotlin.math.roundToInt
 fun TodayScreen(
     vm: TodayViewModel,
     onOpenTask: (String) -> Unit,
-    onExpandAdd: (String) -> Unit,
+    onExpandAdd: (title: String, cueTime: String?) -> Unit,
     onOpenPlanning: () -> Unit,
     onOpenAllTasks: () -> Unit,
     onOpenBacklog: (() -> Unit)? = null,
@@ -336,7 +336,7 @@ fun TodayScreen(
     if (quickAdd) {
         QuickAddSheet(
             onSave = { title, cueTime -> vm.quickAdd(title, cueTime) },
-            onExpand = { title, _ -> quickAdd = false; onExpandAdd(title) },
+            onExpand = { title, cueTime -> quickAdd = false; onExpandAdd(title, cueTime) },
             onClose = { quickAdd = false },
             datedByDefault = true, // FR-TODAY-7: Today's quick-add pre-fills toDoDate = today.
         )

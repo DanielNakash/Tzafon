@@ -272,17 +272,22 @@ private fun TzafonMainNav(container: AppContainer, initialUser: TzafonUser?) {
     // toDoDate to today, whether via inline quick-add or the full editor (expand).
     // presetBacklog: FR-BACKLOG-5.2 — expand-to-full-form from the Backlog view
     // opens the editor with state = BACKLOG and toDoDate = null.
+    // presetCue: FR-CAPTURE-3.6 — an HH:mm parsed off a quick-add title, carried
+    // into the editor's cue slot so EXPAND shows the outcome an inline save would
+    // have produced, adjustable before saving.
     fun openEditor(
         taskId: String? = null,
         title: String? = null,
         presetToday: Boolean = false,
         presetBacklog: Boolean = false,
+        presetCue: String? = null,
     ) {
         val params = buildList {
             if (taskId != null) add("taskId=$taskId")
             if (!title.isNullOrBlank()) add("title=${Uri.encode(title)}")
             if (presetToday) add("presetToday=true")
             if (presetBacklog) add("presetBacklog=true")
+            if (presetCue != null) add("presetCue=${Uri.encode(presetCue)}")
         }
         val route = if (params.isEmpty()) "editor" else "editor?" + params.joinToString("&")
         nav.navigate(route)
@@ -318,7 +323,11 @@ private fun TzafonMainNav(container: AppContainer, initialUser: TzafonUser?) {
                 TodayScreen(
                     vm = vm,
                     onOpenTask = { id -> openEditor(taskId = id) },
-                    onExpandAdd = { title -> openEditor(title = title, presetToday = true) },
+                    // FR-CAPTURE-3.6 — EXPAND carries the parsed cue; the date rule is
+                    // Today's own (FR-TODAY-7) and is unchanged by the parse.
+                    onExpandAdd = { title, cueTime ->
+                        openEditor(title = title, presetToday = true, presetCue = cueTime)
+                    },
                     onOpenPlanning = { goTab(Tab.PLANNING) },
                     onOpenAllTasks = { goRef("alltasks") },
                     onOpenBacklog = { goRef("backlog") },
@@ -333,7 +342,11 @@ private fun TzafonMainNav(container: AppContainer, initialUser: TzafonUser?) {
                 PlanningScreen(
                     vm = vm,
                     onOpenTask = { id -> openEditor(taskId = id) },
-                    onExpandAdd = { title -> openEditor(title = title) },
+                    // FR-PLAN-7.4 — a parsed time opens the editor pre-set to today with
+                    // the cue filled; a bare capture still opens undated (FR-CAPTURE-2).
+                    onExpandAdd = { title, cueTime ->
+                        openEditor(title = title, presetToday = cueTime != null, presetCue = cueTime)
+                    },
                     onOpenAllTasks = { goRef("alltasks") },
                     onOpenBacklog = { goRef("backlog") },
                     onOpenSettings = { nav.navigate("settings") },
@@ -390,8 +403,11 @@ private fun TzafonMainNav(container: AppContainer, initialUser: TzafonUser?) {
                     vm = vm,
                     onOpenTask = { id -> openEditor(taskId = id) },
                     // FR-BACKLOG-5.2 — the expand-to-full-form route from Backlog
-                    // opens the editor pre-set to Backlog state / undated.
-                    onExpandAdd = { title -> openEditor(title = title, presetBacklog = true) },
+                    // opens the editor pre-set to Backlog state / undated; the state
+                    // and date preset are untouched by a parsed cue (FR-CAPTURE-3.8).
+                    onExpandAdd = { title, cueTime ->
+                        openEditor(title = title, presetBacklog = true, presetCue = cueTime)
+                    },
                     onOpenAllTasks = { goRef("alltasks") },
                     onOpenSettings = { nav.navigate("settings") },
                     onOpenAbout = { nav.navigate("about") },
@@ -427,18 +443,20 @@ private fun TzafonMainNav(container: AppContainer, initialUser: TzafonUser?) {
             }
 
             composable(
-                route = "editor?taskId={taskId}&title={title}&presetToday={presetToday}&presetBacklog={presetBacklog}",
+                route = "editor?taskId={taskId}&title={title}&presetToday={presetToday}&presetBacklog={presetBacklog}&presetCue={presetCue}",
                 arguments = listOf(
                     navArgument("taskId") { type = NavType.StringType; nullable = true; defaultValue = null },
                     navArgument("title") { type = NavType.StringType; nullable = true; defaultValue = null },
                     navArgument("presetToday") { type = NavType.BoolType; defaultValue = false },
                     navArgument("presetBacklog") { type = NavType.BoolType; defaultValue = false },
+                    navArgument("presetCue") { type = NavType.StringType; nullable = true; defaultValue = null },
                 ),
             ) { backStack ->
                 val taskId = backStack.arguments?.getString("taskId")
                 val presetTitle = backStack.arguments?.getString("title")
                 val presetToday = backStack.arguments?.getBoolean("presetToday") == true
                 val presetBacklog = backStack.arguments?.getBoolean("presetBacklog") == true
+                val presetCue = backStack.arguments?.getString("presetCue")
                 val repo = container.taskRepository
                 // hydrate the draft synchronously off the DB (small row; simple M0 path)
                 val initial: TaskDraft? = taskId?.let {
@@ -468,8 +486,9 @@ private fun TzafonMainNav(container: AppContainer, initialUser: TzafonUser?) {
                     // New task. From Today (presetToday) it defaults toDoDate = today so it
                     // lands in the Today list; from Backlog (presetBacklog, FR-BACKLOG-5.2)
                     // it lands in Backlog state / undated; elsewhere it stays OPEN/undated
-                    // (FR-CAPTURE-2).
-                    if (presetTitle != null || presetToday || presetBacklog) {
+                    // (FR-CAPTURE-2). presetCue (FR-CAPTURE-3.6) fills the cue slot with
+                    // the time parsed off the quick-add title, whatever the surface.
+                    if (presetTitle != null || presetToday || presetBacklog || presetCue != null) {
                         TaskDraft(
                             id = null,
                             title = presetTitle ?: "",
@@ -477,6 +496,7 @@ private fun TzafonMainNav(container: AppContainer, initialUser: TzafonUser?) {
                                 com.thefoxworks.tzafon.domain.model.TaskState.BACKLOG
                             else com.thefoxworks.tzafon.domain.model.TaskState.OPEN,
                             toDoDate = if (presetToday) today else null,
+                            cue = com.thefoxworks.tzafon.domain.action.QuickAddParse.cueFor(presetCue),
                         )
                     } else null
                 }

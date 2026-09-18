@@ -65,7 +65,7 @@ import com.thefoxworks.tzafon.ui.theme.a
 fun PlanningScreen(
     vm: PlanningViewModel,
     onOpenTask: (String) -> Unit,
-    onExpandAdd: (String) -> Unit,
+    onExpandAdd: (title: String, cueTime: String?) -> Unit,
     onOpenAllTasks: () -> Unit,
     onOpenBacklog: (() -> Unit)? = null,
     onOpenSettings: (() -> Unit)? = null,
@@ -306,7 +306,7 @@ fun PlanningScreen(
     if (quickAdd) {
         QuickAddSheet(
             onSave = { title, cueTime -> vm.quickAdd(title, cueTime) },
-            onExpand = { title, _ -> quickAdd = false; onExpandAdd(title) },
+            onExpand = { title, cueTime -> quickAdd = false; onExpandAdd(title, cueTime) },
             onClose = { quickAdd = false },
             datesOnParsedTime = true, // FR-PLAN-7: a parsed time dates the capture to today
         )

@@ -55,7 +55,7 @@ import com.thefoxworks.tzafon.ui.theme.contentDir
 fun BacklogScreen(
     vm: BacklogViewModel,
     onOpenTask: (String) -> Unit,
-    onExpandAdd: (String) -> Unit,
+    onExpandAdd: (title: String, cueTime: String?) -> Unit,
     onOpenAllTasks: (() -> Unit)? = null,
     onOpenSettings: (() -> Unit)? = null,
     onOpenAbout: (() -> Unit)? = null,
@@ -195,7 +195,7 @@ fun BacklogScreen(
     if (quickAdd) {
         QuickAddSheet(
             onSave = { title, cueTime -> vm.quickAdd(title, cueTime) },
-            onExpand = { title, _ -> quickAdd = false; onExpandAdd(title) },
+            onExpand = { title, cueTime -> quickAdd = false; onExpandAdd(title, cueTime) },
             onClose = { quickAdd = false },
         )
     }
