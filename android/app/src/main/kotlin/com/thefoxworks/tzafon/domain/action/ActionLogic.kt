@@ -105,15 +105,32 @@ object ActionLogic {
         val inbox: List<Task>,
     )
 
-    /** FR-PLAN-1 — overdue at top, today+future to the range end, then Inbox. */
-    fun planningGroups(tasks: List<Task>, today: String, rangeDays: Long): PlanningGroups {
-        val open = tasks.filter { it.state == TaskState.OPEN }
+    /**
+     * FR-PLAN-1 — overdue at top, today+future to the range end, then Inbox.
+     *
+     * FR-PLAN-6 — an optional live `query` narrows every bucket through the same
+     * [matchesQuery] All Tasks uses (FR-ALL-2), filtering *before* the grouping so
+     * headers with no surviving match never render (FR-PLAN-6.5). Blank — the
+     * default — matches everything, leaving every pre-v2.12.0 caller untouched.
+     * The filter lives here rather than in the caller so the FR-PLAN-5 sibling
+     * lookup below still sees the unfiltered list: a query must never un-hide a
+     * slipped occurrence whose today-sibling simply didn't match (FR-PLAN-6.4).
+     */
+    fun planningGroups(
+        tasks: List<Task>,
+        today: String,
+        rangeDays: Long,
+        query: String = "",
+    ): PlanningGroups {
+        val open = tasks.filter { it.state == TaskState.OPEN && matchesQuery(it, query) }
         val rangeEnd = Dates.addDays(today, rangeDays)
 
         // FR-PLAN-5 — a slipped recurring occurrence is hidden from overdue once the
         // series has an occurrence dated today (regardless of that occurrence's state).
         // FR-TODAY-8 — the same predicate feeds Today's slippage banner (slippedCount).
-        val overdue = slippedOverdue(tasks, today).sortedBy { it.toDoDate }
+        val overdue = slippedOverdue(tasks, today)
+            .filter { matchesQuery(it, query) }
+            .sortedBy { it.toDoDate }
         val inRange = open.filter { it.toDoDate != null && it.toDoDate >= today && it.toDoDate <= rangeEnd }
         val dated = inRange
             .groupBy { Dates.groupFor(it.toDoDate!!, today) }

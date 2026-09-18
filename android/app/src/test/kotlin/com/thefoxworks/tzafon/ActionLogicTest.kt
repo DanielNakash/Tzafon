@@ -253,6 +253,98 @@ class ActionLogicTest {
         assertEquals(listOf("B__slip"), g.overdue.map { it.id })
     }
 
+    // ── FR-PLAN-6 — live search narrows every bucket ──────────
+
+    private fun titled(
+        id: String,
+        title: String,
+        toDo: String? = null,
+        description: String = "",
+        state: TaskState = TaskState.OPEN,
+        seriesId: String? = null,
+    ) = Task(
+        id = id, title = title, description = description, toDoDate = toDo,
+        state = state, seriesId = seriesId,
+    )
+
+    /** The three-bucket fixture from §3.2 acceptance 2/3: overdue, dated, Inbox. */
+    private val searchFixture = listOf(
+        titled("od", "Dentist", toDo = "2026-07-02"),
+        titled("dated", "Dentist forms", toDo = "2026-07-06"),
+        titled("far", "Dentist referral", toDo = "2026-07-25"), // outside a 7-day range
+        titled("inbox", "Call plumber"),
+        titled("desc", "Errand", description = "collect the dentist forms"),
+        titled("done", "Dentist archive", toDo = "2026-07-06", state = TaskState.DONE),
+    )
+
+    private fun groups(query: String, rangeDays: Long = 7) =
+        ActionLogic.planningGroups(searchFixture, today, rangeDays, query)
+
+    @Test
+    fun `FR-PLAN-6 blank query leaves every bucket untouched`() {
+        val all = groups("")
+        assertEquals(listOf("od"), all.overdue.map { it.id })
+        assertEquals(listOf("dated"), all.dated.flatMap { it.second }.map { it.id })
+        assertEquals(listOf("inbox", "desc"), all.inbox.map { it.id })
+    }
+
+    @Test
+    fun `FR-PLAN-6 a query narrows overdue, dated and inbox together`() {
+        val g = groups("dent")
+        assertEquals(listOf("od"), g.overdue.map { it.id })
+        assertEquals(listOf("dated"), g.dated.flatMap { it.second }.map { it.id })
+        // "Errand" matches on its description (FR-PLAN-6.3, via matchesQuery)
+        assertEquals(listOf("desc"), g.inbox.map { it.id })
+    }
+
+    @Test
+    fun `FR-PLAN-6-5 a group with no surviving match produces no group at all`() {
+        val g = groups("plumb")
+        assertEquals(emptyList<String>(), g.overdue.map { it.id })
+        assertTrue("no dated group should survive", g.dated.isEmpty())
+        assertEquals(listOf("inbox"), g.inbox.map { it.id })
+    }
+
+    @Test
+    fun `FR-PLAN-6 no match anywhere empties all three buckets`() {
+        val g = groups("zzzz")
+        assertTrue(g.overdue.isEmpty() && g.dated.isEmpty() && g.inbox.isEmpty())
+    }
+
+    @Test
+    fun `FR-PLAN-6 search is case-insensitive`() {
+        val ids = { q: String -> groups(q).overdue.map { it.id } }
+        assertEquals(ids("dentist"), ids("DENTIST"))
+        assertEquals(ids("dentist"), ids("Dentist"))
+    }
+
+    @Test
+    fun `FR-PLAN-6-4 search never widens the range nor reveals non-open tasks`() {
+        // "far" is dated 20 days out: absent at 7 days, present at 30 (FR-PLAN-6.8).
+        assertFalse(groups("dentist").dated.flatMap { it.second }.any { it.id == "far" })
+        assertTrue(groups("dentist", rangeDays = 30).dated.flatMap { it.second }.any { it.id == "far" })
+        // the DONE task matches the query by title and must still never appear
+        assertFalse(
+            groups("dentist", rangeDays = 30).dated.flatMap { it.second }.any { it.id == "done" },
+        )
+    }
+
+    @Test
+    fun `FR-PLAN-6-4 a query cannot un-hide an FR-PLAN-5 slipped occurrence`() {
+        // The slip matches the query; its today-sibling does not. The FR-PLAN-5
+        // hide must survive, or search would resurrect exactly what FR-PLAN-5 buries.
+        val g = ActionLogic.planningGroups(
+            listOf(
+                titled("S__slip", "Water the plants", toDo = "2026-07-03", seriesId = "S"),
+                titled("S__today", "Watering (renamed)", toDo = today, seriesId = "S"),
+            ),
+            today,
+            rangeDays = 7,
+            query = "water the plants",
+        )
+        assertEquals(emptyList<String>(), g.overdue.map { it.id })
+    }
+
     @Test
     fun `range presets - month runs to month end, custom to the picked date`() {
         assertEquals(7L, ActionLogic.rangeDays(RangePreset.DAYS_7, today, null))

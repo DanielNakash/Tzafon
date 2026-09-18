@@ -31,6 +31,7 @@ data class PlanningUiState(
     val undatedCount: Int = 0,
     val habitsById: Map<String, Habit> = emptyMap(), // M4 chips + quant prompt
     val goalsById: Map<String, com.thefoxworks.tzafon.domain.model.Goal> = emptyMap(), // M5 prompt rule
+    val query: String = "", // FR-PLAN-6 — live search, transient view state
 )
 
 /**
@@ -48,15 +49,23 @@ class PlanningViewModel(
 
     val today: String get() = Dates.todayIso()
 
+    /** FR-PLAN-6.7 — live search text. Transient: never written to DataStore, never synced. */
+    private val query = MutableStateFlow("")
+
     val uiState: StateFlow<PlanningUiState> =
         combine(
-            repo.observeTasks(),
-            settings.planningPreset,
-            settings.planningCustomEnd,
+            // `combine` tops out at five flows; the range triple folds into one
+            // so the FR-PLAN-6 query can join without a vararg cast.
+            combine(
+                repo.observeTasks(),
+                settings.planningPreset,
+                settings.planningCustomEnd,
+            ) { tasks, presetName, customEnd -> Triple(tasks, presetName, customEnd) },
             habitRepo.observeHabits(),
             goalRepo.observeGoals(),
-        ) { tasks, presetName, customEnd, habits, goals ->
-            build(tasks, RangePreset.parse(presetName), customEnd).copy(
+            query,
+        ) { (tasks, presetName, customEnd), habits, goals, q ->
+            build(tasks, RangePreset.parse(presetName), customEnd, q).copy(
                 habitsById = habits.associateBy { it.id },
                 goalsById = goals.associateBy { it.id },
             )
@@ -71,10 +80,17 @@ class PlanningViewModel(
         }
     }
 
-    private fun build(tasks: List<Task>, preset: RangePreset, customEnd: String?): PlanningUiState {
+    private fun build(
+        tasks: List<Task>,
+        preset: RangePreset,
+        customEnd: String?,
+        query: String = "",
+    ): PlanningUiState {
         val today = Dates.todayIso()
         val days = ActionLogic.rangeDays(preset, today, customEnd)
-        val groups = ActionLogic.planningGroups(tasks, today, days)
+        // FR-PLAN-6.3 — one predicate, applied before grouping, so every bucket
+        // narrows together and empty headers never render (FR-PLAN-6.5).
+        val groups = ActionLogic.planningGroups(tasks, today, days, query)
         return PlanningUiState(
             today = today,
             preset = preset,
@@ -84,7 +100,13 @@ class PlanningViewModel(
             dated = groups.dated,
             inbox = groups.inbox,
             undatedCount = groups.inbox.size,
+            query = query,
         )
+    }
+
+    /** FR-PLAN-6.3 — the search text is an input to the same combine the range feeds. */
+    fun setQuery(q: String) {
+        query.value = q
     }
 
     fun setRange(preset: RangePreset, customEnd: String? = null) {

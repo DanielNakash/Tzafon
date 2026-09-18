@@ -16,17 +16,21 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -45,6 +49,7 @@ import com.thefoxworks.tzafon.ui.components.RustHeader
 import com.thefoxworks.tzafon.ui.components.StateSheet
 import com.thefoxworks.tzafon.ui.components.TaskCheckbox
 import com.thefoxworks.tzafon.ui.components.TaskRow
+import com.thefoxworks.tzafon.ui.components.TzIcons
 import com.thefoxworks.tzafon.ui.components.pressable
 import com.thefoxworks.tzafon.ui.nav.AppMenuSheet
 import com.thefoxworks.tzafon.ui.theme.Tz
@@ -71,6 +76,9 @@ fun PlanningScreen(
     var menu by remember { mutableStateOf(false) }
     var rescheduleId by remember { mutableStateOf<String?>(null) }
     var customRange by remember { mutableStateOf(false) }
+    // FR-PLAN-6.7 — survives configuration change, dies on navigation away
+    var query by rememberSaveable { mutableStateOf("") }
+    val searching = query.isNotBlank()
     // FR-PLAN-4 — the overdue action-row's third pill opens StateSheet
     var changeStatusFor by remember { mutableStateOf<Task?>(null) }
     var amountTask by remember { mutableStateOf<Task?>(null) } // DM-HABIT-5 prompt
@@ -96,8 +104,47 @@ fun PlanningScreen(
                 metaRight = "${state.undatedCount} undated",
                 onMenu = { menu = true },
                 bottomContent = {
+                  Column {
+                    // ── search (FR-PLAN-6) — All Tasks' treatment verbatim (FR-PLAN-6.2) ──
                     Row(
-                        Modifier.horizontalScroll(rememberScrollState()),
+                        Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(11.dp))
+                            .background(Color.White.a(0.16f))
+                            .padding(horizontal = 12.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(9.dp),
+                    ) {
+                        TzIcons.Search(16.dp, Color.White.a(0.8f))
+                        BasicTextField(
+                            value = query,
+                            onValueChange = { query = it; vm.setQuery(it) },
+                            textStyle = TextStyle(fontFamily = DenType.body, fontSize = 14.sp, color = Color.White),
+                            cursorBrush = SolidColor(Tz.colors.cream),
+                            singleLine = true,
+                            decorationBox = { inner ->
+                                Box {
+                                    if (query.isEmpty()) {
+                                        Text(
+                                            "Search title or description…",
+                                            style = TextStyle(fontFamily = DenType.body, fontSize = 14.sp),
+                                            color = Color.White.a(0.72f),
+                                        )
+                                    }
+                                    inner()
+                                }
+                            },
+                            modifier = Modifier.weight(1f),
+                        )
+                        if (query.isNotEmpty()) {
+                            Box(Modifier.pressable { query = ""; vm.setQuery("") }.padding(2.dp)) {
+                                TzIcons.X(13.dp, Color.White.a(0.8f))
+                            }
+                        }
+                    }
+                    // ── range presets (FR-PLAN-2) — unchanged, now one row down ──
+                    Row(
+                        Modifier.padding(top = 11.dp).horizontalScroll(rememberScrollState()),
                         horizontalArrangement = Arrangement.spacedBy(7.dp),
                     ) {
                         RangePreset.entries.forEach { p ->
@@ -126,6 +173,7 @@ fun PlanningScreen(
                             }
                         }
                     }
+                  }
                 },
             )
 
@@ -213,22 +261,37 @@ fun PlanningScreen(
                 }
 
                 if (state.overdue.isEmpty() && state.dated.isEmpty() && state.inbox.isEmpty()) {
-                    item {
-                        Column(
-                            Modifier.fillMaxWidth().padding(top = 90.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                        ) {
+                    // FR-PLAN-6.6 — an empty result is not an empty table: while a
+                    // query is live the calm empty state stands down and the
+                    // range-honest no-results line points at the exhaustive index.
+                    if (searching) {
+                        item(key = "noresults") {
                             Text(
-                                "The table is clear",
-                                style = TextStyle(fontFamily = DenType.serif, fontSize = 21.sp),
-                                color = Tz.colors.ink,
-                            )
-                            Text(
-                                "Captured things land here to be given a day.",
+                                "Nothing in range matches — All Tasks searches everything.",
                                 style = TextStyle(fontFamily = DenType.body, fontSize = 13.5.sp),
                                 color = Tz.colors.muted,
-                                modifier = Modifier.padding(top = 6.dp),
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth().padding(top = 40.dp),
                             )
+                        }
+                    } else {
+                        item {
+                            Column(
+                                Modifier.fillMaxWidth().padding(top = 90.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                            ) {
+                                Text(
+                                    "The table is clear",
+                                    style = TextStyle(fontFamily = DenType.serif, fontSize = 21.sp),
+                                    color = Tz.colors.ink,
+                                )
+                                Text(
+                                    "Captured things land here to be given a day.",
+                                    style = TextStyle(fontFamily = DenType.body, fontSize = 13.5.sp),
+                                    color = Tz.colors.muted,
+                                    modifier = Modifier.padding(top = 6.dp),
+                                )
+                            }
                         }
                     }
                 }
