@@ -165,13 +165,35 @@ class PlanningViewModel(
         }
     }
 
-    fun quickAdd(title: String) {
+    fun quickAdd(title: String, cueTime: String? = null) {
         viewModelScope.launch {
-            repo.saveDraft(
-                com.thefoxworks.tzafon.domain.model.TaskDraft(id = null, title = title),
-                com.thefoxworks.tzafon.domain.model.EditScope.ONE,
-                today,
-            )
+            repo.saveDraft(quickAddDraft(title, today, cueTime), com.thefoxworks.tzafon.domain.model.EditScope.ONE, today)
         }
+    }
+
+    companion object {
+        /**
+         * FR-CAPTURE-2 — a bare Planning capture is undated and lands in the Inbox;
+         * the v2.1.0 decision that keeps Planning's "needs a date" group meaningful
+         * stands untouched for it.
+         *
+         * FR-PLAN-7 — the one exception, conditional on the parse rather than on the
+         * view: a typed clock time is the expression of intent a bare capture lacks,
+         * and NotifyLogic.remindersFor only ever schedules a task reminder when the
+         * task is dated — so an undated task carrying an 08:30 cue is a cue that can
+         * never fire. With a parsed time the draft is dated today; without one it is
+         * exactly what it was before v2.12.0.
+         */
+        fun quickAddDraft(
+            title: String,
+            today: String,
+            cueTime: String? = null,
+        ): com.thefoxworks.tzafon.domain.model.TaskDraft =
+            com.thefoxworks.tzafon.domain.model.TaskDraft(
+                id = null,
+                title = title,
+                toDoDate = if (cueTime != null) today else null,
+                cue = com.thefoxworks.tzafon.domain.action.QuickAddParse.cueFor(cueTime),
+            )
     }
 }

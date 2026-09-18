@@ -164,10 +164,10 @@ class TodayViewModel(
         }
     }
 
-    fun quickAdd(title: String) {
+    fun quickAdd(title: String, cueTime: String? = null) {
         viewModelScope.launch {
             repo.saveDraft(
-                quickAddDraft(title, today),
+                quickAddDraft(title, today, cueTime),
                 com.thefoxworks.tzafon.domain.model.EditScope.ONE,
                 today,
             )
@@ -180,8 +180,21 @@ class TodayViewModel(
          * lands in the Today list immediately (FR-TODAY-1 membership rule). All other
          * capture surfaces retain FR-CAPTURE-2's undated default; this default only
          * fires for the initial write from Today's quick-add.
+         *
+         * FR-CAPTURE-3.9 — a time parsed off the title rides along as a label-less
+         * AT_TIME cue; the date rule above is untouched, so the reminder fires the
+         * same day with nothing further to do.
          */
-        fun quickAddDraft(title: String, today: String): com.thefoxworks.tzafon.domain.model.TaskDraft =
-            com.thefoxworks.tzafon.domain.model.TaskDraft(id = null, title = title, toDoDate = today)
+        fun quickAddDraft(
+            title: String,
+            today: String,
+            cueTime: String? = null,
+        ): com.thefoxworks.tzafon.domain.model.TaskDraft =
+            com.thefoxworks.tzafon.domain.model.TaskDraft(
+                id = null,
+                title = title,
+                toDoDate = today,
+                cue = com.thefoxworks.tzafon.domain.action.QuickAddParse.cueFor(cueTime),
+            )
     }
 }

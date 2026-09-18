@@ -194,8 +194,8 @@ fun BacklogScreen(
 
     if (quickAdd) {
         QuickAddSheet(
-            onSave = { vm.quickAdd(it) },
-            onExpand = { title -> quickAdd = false; onExpandAdd(title) },
+            onSave = { title, cueTime -> vm.quickAdd(title, cueTime) },
+            onExpand = { title, _ -> quickAdd = false; onExpandAdd(title) },
             onClose = { quickAdd = false },
         )
     }
