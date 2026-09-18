@@ -22,8 +22,8 @@ android {
         applicationId = "com.thefoxworks.tzafon"
         minSdk = 26
         targetSdk = 36
-        versionCode = 12
-        versionName = "2.11.0"
+        versionCode = 13
+        versionName = "2.12.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

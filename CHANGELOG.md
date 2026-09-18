@@ -9,6 +9,40 @@ to the versioned requirements documents in the repo.
 
 ---
 
+## [2.12.0] — 2026-09-18
+
+### Added
+- **Planning has a search field** (`FR-PLAN-6`) — the same live title/description
+  search All Tasks has always had now sits in Planning's header, just above the
+  range chips. Typing narrows all three of Planning's sections at once — the
+  overdue decide-cards, every dated group in the chosen range, and the Inbox —
+  and a section with nothing matching simply disappears rather than showing an
+  empty header. Matching, placeholder, and the clear "✕" behave exactly as they
+  do on All Tasks, so there is only one idea of "search" to learn. The search
+  stays inside the range you picked; when nothing in range matches, the line
+  **"Nothing in range matches — All Tasks searches everything."** points at the
+  view that does search everything. The text is not remembered: leave Planning
+  and come back to an empty field.
+- **Quick-add reads a time at the end of the title** (`FR-CAPTURE-3`) — type
+  `Call the bank 08:30` and you get a task called *Call the bank* with an
+  08:30 cue, without opening the full editor. It is never silent: a small line
+  under the field reads `CUE · 08:30 — TAP TO KEEP AS TEXT` before you save, and
+  one tap on it keeps the time in the title instead (the line then offers to set
+  it as a cue again). Only a zero-padded 24-hour `HH:MM` at the very end counts —
+  `8:30`, `8.30`, `0830` and `Watch the 9:45 train` are all left exactly as
+  typed — so ordinary titles that happen to contain numbers are safe. Tapping
+  **EXPAND** carries the same result into the editor, cue slot already filled.
+  Works on Today, Planning and Backlog, and with right-to-left titles.
+
+### Changed
+- **A Planning quick-add that carries a time is dated today** (`FR-PLAN-7`) —
+  a time you type is only useful if it can actually remind you, and a reminder
+  needs a date. So on Planning, `Call the bank 08:30` now lands in today's group
+  rather than the undated Inbox. A plain capture with no time is untouched: it
+  still lands in the Inbox to be given a day later, and declining the parsed cue
+  declines the date with it. Backlog captures stay in Backlog and undated — they
+  keep the time for whenever you pull them out — and Today is unchanged.
+
 ## [2.11.0] — 2026-07-29
 
 ### Added
@@ -329,6 +363,7 @@ the new name **Tzafon**. Local-first persistence (Room) behind repository interf
 - **Cloud sync (behind the seam)** — Firebase Auth (Google sign-in) and offline-first
   Firestore sync, kept behind the repository interfaces (`M9b`).
 
+[2.12.0]: https://github.com/DanielNakash/Tzafon/releases/tag/v2.12.0
 [2.11.0]: https://github.com/DanielNakash/Tzafon/releases/tag/v2.11.0
 [2.10.0]: https://github.com/DanielNakash/Tzafon/releases/tag/v2.10.0
 [2.9.0]: https://github.com/DanielNakash/Tzafon/releases/tag/v2.9.0
