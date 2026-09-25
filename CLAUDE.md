@@ -11,7 +11,7 @@ requests**, through the automated pipeline below. Work the pipeline, not the mil
 
 | | |
 |---|---|
-| **Latest promoted** | **v2.11.0** — tag `v2.11.0`, `versionName "2.11.0"` / `versionCode 12`, promoted 2026-09-15. This is what `main` and `origin` carry. |
+| **Latest promoted** | **v2.12.0** — tag `v2.12.0`, `versionName "2.12.0"` / `versionCode 13`, promoted 2026-09-25. This is what `main` and `origin` carry. |
 | **Built, awaiting promotion** | none. `main`, the highest tag and the builder's view of the frontier all agree, so the release-serialization guard is clear and the next `/build-next-version` is free to start. |
 | **Full history** | `CHANGELOG.md` — every shipped version in user-facing language, each bullet citing its requirement code |
 
@@ -56,7 +56,7 @@ Full contract: `feature-requests/README.md`. The step-by-step logic lives in `.c
 
 - **`v2.0.0 Requirements.md`** — the **baseline contract**: the data model (`DM-*`), the original
   functional surface (`FR-*`), non-functional requirements (`NFR-*`), out-of-scope in §10.
-- **`v2.1.0` … `v2.11.0 Requirements.md`** — one **delta doc per version**, auto-groomed from user
+- **`v2.1.0` … `v2.12.0 Requirements.md`** — one **delta doc per version**, auto-groomed from user
   requests. They add new codes and **refine existing ones**; for any code, the *newest* doc that
   touches it wins. Each section cites its source request id and carries acceptance criteria.
   Before changing behaviour in an area, grep that area's code across the docs in version order —
