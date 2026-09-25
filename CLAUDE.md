@@ -212,3 +212,17 @@ Same loop the builder runs, minus the branch/tag ceremony you don't want by hand
 
 Never merge to `main` yourself, never tag a version you didn't build end to end, and never edit
 another request's `status:`/`implemented:`/`requirements:` fields — those are the pipeline's ledger.
+
+## Agent skills
+
+### Issue tracker
+
+GitHub Issues on `DanielNakash/Tzafon` via `gh` — separate from the owner's `FEATURE_REQUESTS.md` pipeline, which stays the source for shipped work. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default five-role vocabulary (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context — one root `CONTEXT.md` + `docs/adr/`, created lazily. See `docs/agents/domain.md`.
