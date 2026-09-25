@@ -37,3 +37,6 @@ android/app/google-services.json
 android/keystore.properties
 *.jks
 *.keystore
+
+# Personal scratch folder — never committed
+NON COMMIT/
