@@ -122,7 +122,7 @@ fun AppMenuSheet(
                 onClose(); onAllTasks()
             }
             if (onBacklog != null) {
-                MenuRow("Backlog", "Someday / maybe — parked, not scheduled", { TzIcons.Moon(17.dp, Tz.colors.backlog) }) {
+                MenuRow("Backlog", "Parked, not scheduled", { TzIcons.Moon(17.dp, Tz.colors.backlog) }) {
                     onClose(); onBacklog()
                 }
             }

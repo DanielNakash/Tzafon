@@ -47,7 +47,7 @@ import com.thefoxworks.tzafon.ui.theme.a
 import com.thefoxworks.tzafon.ui.theme.contentDir
 
 /**
- * Backlog (FR-BACKLOG, design: BacklogScreen) — a quiet someday/maybe pool.
+ * Backlog (FR-BACKLOG, design: BacklogScreen) — a quiet pool of parked tasks.
  * PULL → reopens a task (optionally dated); the checkbox / long-press opens
  * the state sheet for Done ("did it anyway") or Closed ("decided against").
  */
@@ -71,8 +71,7 @@ fun BacklogScreen(
         Column(Modifier.fillMaxSize()) {
             RustHeader(
                 title = "Backlog",
-                kicker = "SOMEDAY / MAYBE",
-                metaLeft = "Parked — not scheduled",
+                kicker = "PARKED, NOT SCHEDULED",
                 metaRight = "${state.items.size} item${if (state.items.size == 1) "" else "s"}",
                 onMenu = { menu = true },
             )
@@ -114,7 +113,7 @@ fun BacklogScreen(
                                 modifier = Modifier.padding(top = 12.dp),
                             )
                             Text(
-                                "Someday-things land here from Planning or the task editor — waiting without weighing on you.",
+                                "Tasks you park land here from Planning or the task editor — waiting without weighing on you.",
                                 style = TextStyle(fontFamily = DenType.body, fontSize = 13.5.sp, lineHeight = 19.5.sp),
                                 color = Tz.colors.muted,
                                 textAlign = TextAlign.Center,

@@ -126,7 +126,7 @@ fun PlanningScreen(
                                 Box {
                                     if (query.isEmpty()) {
                                         Text(
-                                            "Search title or description…",
+                                            "Search title or notes…",
                                             style = TextStyle(fontFamily = DenType.body, fontSize = 14.sp),
                                             color = Color.White.a(0.72f),
                                         )
@@ -360,7 +360,7 @@ fun PlanningScreen(
 
 /**
  * An overdue row presented as a calm decision, not a debt (FR-PLAN-3).
- * FR-PLAN-4 — the pill row is `Today · Reschedule · Change Status`; the
+ * FR-PLAN-4 — the pill row is `Today · Reschedule · Set status`; the
  * checkbox is an isolated tap target that marks the task Done through the
  * same `requestToggle` helper used by non-overdue rows (FR-PLAN-4.3).
  */
@@ -406,7 +406,7 @@ private fun DecideCard(
         ) {
             PillButton("Today", onClick = onToday)
             PillButton("Reschedule", onClick = onReschedule)
-            PillButton("Change Status", onClick = onChangeStatus)
+            PillButton("Set status", onClick = onChangeStatus)
         }
         if (!last) {
             Box(

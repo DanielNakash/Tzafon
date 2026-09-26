@@ -190,7 +190,7 @@ fun AllTasksScreen(
                                     Box {
                                         if (query.isEmpty()) {
                                             Text(
-                                                "Search title or description…",
+                                                "Search title or notes…",
                                                 style = TextStyle(fontFamily = DenType.body, fontSize = 14.sp),
                                                 color = Color.White.a(0.72f),
                                             )
@@ -448,7 +448,7 @@ private fun HorizonMarker(horizonDate: String, today: String) {
     ) {
         Box(Modifier.weight(1f).height(1.dp).background(Tz.colors.line))
         Text(
-            "SCHEDULED THROUGH ${Dates.fmtDate(horizonDate, today).uppercase()}\nRECURRING TASKS REPEAT BEYOND THIS",
+            "SCHEDULED THROUGH ${Dates.fmtDate(horizonDate, today).uppercase()} · REPEATING TASKS CONTINUE BEYOND",
             style = TextStyle(
                 fontFamily = DenType.mono,
                 fontSize = 9.5.sp,

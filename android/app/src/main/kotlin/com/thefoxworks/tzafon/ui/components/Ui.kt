@@ -202,6 +202,16 @@ fun Serves(label: String, accent: Color, plus: Int = 0, modifier: Modifier = Mod
     }
 }
 
+/** "ticks <habit>" — a task ticks the one habit it's linked to. */
+@Composable
+fun Ticks(habit: String, modifier: Modifier = Modifier) {
+    Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+        TzIcons.Repeat(12.dp, Tz.colors.faint)
+        Text("ticks", style = DenType.chip, color = Tz.colors.faint)
+        Text(habit, style = DenType.chip.contentDir(), color = Tz.colors.muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
+    }
+}
+
 /** state pill for done/closed/frozen/backlog rows. */
 @Composable
 fun StateTag(state: TaskState, modifier: Modifier = Modifier) {
@@ -209,7 +219,7 @@ fun StateTag(state: TaskState, modifier: Modifier = Modifier) {
         TaskState.DONE -> "DONE" to Tz.colors.green
         TaskState.CLOSED -> "CLOSED" to Tz.colors.closed
         TaskState.FROZEN -> "FROZEN" to Tz.colors.frozen
-        TaskState.BACKLOG -> "SOMEDAY" to Tz.colors.backlog
+        TaskState.BACKLOG -> "BACKLOG" to Tz.colors.backlog
         TaskState.OPEN -> return
     }
     Box(
@@ -271,7 +281,7 @@ fun TaskCheckbox(state: TaskState, onClick: (() -> Unit)? = null, modifier: Modi
                     TaskState.DONE -> "Done"
                     TaskState.CLOSED -> "Closed"
                     TaskState.FROZEN -> "Frozen"
-                    TaskState.BACKLOG -> "Someday"
+                    TaskState.BACKLOG -> "Backlog"
                 }
             },
         ) { CheckboxVisual(state) }

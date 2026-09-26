@@ -18,7 +18,7 @@ data class BacklogUiState(
 )
 
 /**
- * Backlog (FR-BACKLOG) — the someday/maybe pool. Excluded from Today,
+ * Backlog (FR-BACKLOG) — the pool of parked tasks. Excluded from Today,
  * Planning and the overload count by construction (those views keep only
  * OPEN tasks); this screen is where parked things wait to be pulled.
  */

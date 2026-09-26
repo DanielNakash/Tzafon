@@ -62,7 +62,7 @@ class AppMenuAboutTest {
         rule.onNodeWithText("About").assertIsDisplayed()
         // FR-NAV-4.4 — existing subtitles remain untouched.
         rule.onNodeWithText("The complete, searchable index").assertIsDisplayed()
-        rule.onNodeWithText("Someday / maybe — parked, not scheduled").assertIsDisplayed()
+        rule.onNodeWithText("Parked, not scheduled").assertIsDisplayed()
         rule.onNodeWithText("Week start, reminders, account").assertIsDisplayed()
     }
 

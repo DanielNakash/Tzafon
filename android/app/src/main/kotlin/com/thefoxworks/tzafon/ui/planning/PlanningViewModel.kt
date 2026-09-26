@@ -137,15 +137,7 @@ class PlanningViewModel(
         viewModelScope.launch { repo.setState(id, TaskState.CLOSED, today) }
     }
 
-    /**
-     * "Someday" → Backlog (FR-BACKLOG-2). Callers guard the recurring case
-     * first — a live series can't be someday; the UI offers Frozen instead.
-     */
-    fun someday(id: String) {
-        viewModelScope.launch { repo.setState(id, TaskState.BACKLOG, today) }
-    }
-
-    /** Guard-pane resolution (e.g. Someday-on-series → Frozen instead). */
+    /** Guard-pane resolution (e.g. Backlog on a series → Frozen instead). */
     fun toState(id: String, target: TaskState) {
         viewModelScope.launch { repo.setState(id, target, today) }
     }

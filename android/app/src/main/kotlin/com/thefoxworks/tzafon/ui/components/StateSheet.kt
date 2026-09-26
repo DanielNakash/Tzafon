@@ -80,7 +80,7 @@ fun StateSheet(
 
                 Pane.CannotBacklog -> GuardPane(
                     icon = { TzIcons.Moon(18.dp, Tz.colors.backlog) },
-                    title = "A repeating task can't be someday",
+                    title = "A repeating task can't go to the Backlog",
                     body = "A live series keeps its rhythm. To park it, freeze it instead — same shelf, easy to thaw.",
                     confirmLabel = "Freeze it instead",
                     confirmColor = Tz.colors.frozen,
@@ -102,7 +102,7 @@ private fun StateList(current: TaskState, isRecurring: Boolean, onSelect: (TaskS
         Triple(TaskState.DONE, "Done", "Finished. Ticks the habit, moves the goal, files into Journey."),
         Triple(TaskState.CLOSED, "Closed", "Not done, no longer relevant. A calm skip — no penalty, links kept."),
         Triple(TaskState.FROZEN, "Frozen", "On ice for now. Thaw it any time, right where you left it."),
-        Triple(TaskState.BACKLOG, "Someday", "Parked in the backlog. Out of Today — pull it when it calls."),
+        Triple(TaskState.BACKLOG, "Backlog", "Parked in the backlog. Out of Today — pull it when it calls."),
     )
     Column {
         states.forEachIndexed { i, (state, name, desc) ->

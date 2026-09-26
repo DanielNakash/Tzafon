@@ -107,7 +107,7 @@ fun TaskRow(
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
                         if (servesLabel != null) Serves(servesLabel, servesAccent)
-                        if (habitLabel != null) Chip(habitLabel, icon = { TzIcons.Repeat(12.dp, Tz.colors.faint) }, userContent = true)
+                        if (habitLabel != null) Ticks(habitLabel)
                         task.cue?.let { CueChip(it.display()) }
                         if (recurSummary != null) Chip(recurSummary, icon = { TzIcons.Repeat(12.dp, Tz.colors.faint) })
                     }

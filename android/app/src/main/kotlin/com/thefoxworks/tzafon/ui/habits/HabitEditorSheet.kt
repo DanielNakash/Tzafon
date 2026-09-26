@@ -413,7 +413,7 @@ fun HabitEditorSheet(
                 }
             }
 
-            SectionLabel("Cue · when will you do it?", modifier = Modifier.padding(top = 16.dp))
+            SectionLabel("Cue · when X, I will do Y", modifier = Modifier.padding(top = 16.dp))
             Row(
                 Modifier
                     .fillMaxWidth()
