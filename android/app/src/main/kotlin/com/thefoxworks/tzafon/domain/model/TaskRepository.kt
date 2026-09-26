@@ -31,11 +31,19 @@ interface TaskRepository {
     suspend fun toggleDone(id: String, habitAmount: Double? = null)
 
     /**
-     * DM-TASK-1/2/3 — apply a state transition with its effects (thaw, series
-     * freeze/restore per FR-REC-5, the DM-ATTR-2 habit ledger from M4, goal
-     * attribution from M5). Callers clear StateMachine.guardFor(...) first.
+     * DM-TASK-1/2/3 — apply a state transition with its effects (the DM-ATTR-2
+     * habit ledger, goal attribution, and on a repeating task the v2.13.0
+     * series rules: freeze, thaw, close and reopen the whole series).
+     * Callers put StateMachine.askFor(...) to the user first and pass the
+     * answer as [scope]; where nothing was asked the scope has no effect.
      */
-    suspend fun setState(id: String, target: TaskState, today: String, habitAmount: Double? = null)
+    suspend fun setState(
+        id: String,
+        target: TaskState,
+        today: String,
+        habitAmount: Double? = null,
+        scope: StatusScope = StatusScope.THIS_ONE,
+    )
 
     /**
      * Materialize missing occurrences for every live series up to the

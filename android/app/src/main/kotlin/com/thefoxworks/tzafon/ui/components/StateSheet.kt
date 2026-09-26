@@ -30,10 +30,15 @@ import com.thefoxworks.tzafon.ui.theme.Tz
 import com.thefoxworks.tzafon.ui.theme.DenType
 import com.thefoxworks.tzafon.ui.theme.a
 
+/** The confirmation panes the sheet can show in place of the list. */
+private enum class Pane { FreezeSeries, CannotBacklog }
+
 /**
  * "Where does this stand?" — the task state sheet (design: StateSheet).
- * Handles the two guards inline: FR-REC-5 freeze-terminates-series confirm,
- * and FR-BACKLOG-2 recurring-can't-backlog (offers Frozen instead).
+ * Handles two panes inline: FR-REC-5 freeze-the-series confirm, and
+ * FR-BACKLOG-2 recurring-can't-backlog (offers Frozen instead). It never
+ * asks for a scope, so thawing and closing reach the occurrence alone; the
+ * v2.13.0 status sheet replaces it and asks where [StateMachine.askFor] says so.
  */
 @Composable
 fun StateSheet(
@@ -41,10 +46,9 @@ fun StateSheet(
     isRecurring: Boolean,
     onPick: (TaskState) -> Unit,
     onClose: () -> Unit,
-    /** open straight on a guard pane (e.g. Planning's Someday on a series) */
-    initialGuard: StateMachine.Guard? = null,
 ) {
-    var guard by remember { mutableStateOf(initialGuard) }
+    var guard by remember { mutableStateOf<Pane?>(null) }
+    val freezeNeedsConfirm = isRecurring && current != TaskState.FROZEN
 
     DenSheet(title = "Where does this stand?", onClose = onClose) {
         Column {
@@ -55,17 +59,16 @@ fun StateSheet(
                 modifier = Modifier.padding(top = 3.dp, bottom = 8.dp),
             )
 
-            when (val g = guard) {
+            when (guard) {
                 null -> StateList(current, isRecurring) { target ->
-                    val needed = StateMachine.guardFor(current, target, isRecurring)
-                    if (needed == null) {
-                        onPick(target); onClose()
-                    } else {
-                        guard = needed
+                    guard = when {
+                        target == TaskState.FROZEN && freezeNeedsConfirm -> Pane.FreezeSeries
+                        target == TaskState.BACKLOG && isRecurring -> Pane.CannotBacklog
+                        else -> { onPick(target); onClose(); null }
                     }
                 }
 
-                StateMachine.Guard.ConfirmFreezeSeries -> GuardPane(
+                Pane.FreezeSeries -> GuardPane(
                     icon = { TzIcons.Frozen(18.dp, Tz.colors.frozen) },
                     title = "Freeze the whole series?",
                     body = "This task repeats. Freezing puts the series on ice — no new occurrences until you thaw it. This one stays right here, waiting.",
@@ -75,15 +78,15 @@ fun StateSheet(
                     onBack = { guard = null },
                 )
 
-                StateMachine.Guard.RecurringCannotBacklog -> GuardPane(
+                Pane.CannotBacklog -> GuardPane(
                     icon = { TzIcons.Moon(18.dp, Tz.colors.backlog) },
                     title = "A repeating task can't be someday",
                     body = "A live series keeps its rhythm. To park it, freeze it instead — same shelf, easy to thaw.",
                     confirmLabel = "Freeze it instead",
                     confirmColor = Tz.colors.frozen,
                     onConfirm = {
-                        val needed = StateMachine.guardFor(current, TaskState.FROZEN, isRecurring)
-                        if (needed == null) { onPick(TaskState.FROZEN); onClose() } else guard = needed
+                        if (freezeNeedsConfirm) guard = Pane.FreezeSeries
+                        else { onPick(TaskState.FROZEN); onClose() }
                     },
                     onBack = { guard = null },
                 )

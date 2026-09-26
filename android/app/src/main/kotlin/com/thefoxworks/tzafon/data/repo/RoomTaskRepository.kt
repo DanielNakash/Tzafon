@@ -12,7 +12,9 @@ import com.thefoxworks.tzafon.domain.model.EditScope
 import com.thefoxworks.tzafon.domain.model.GoalRepository
 import com.thefoxworks.tzafon.domain.model.HabitRepository
 import com.thefoxworks.tzafon.domain.model.Series
+import com.thefoxworks.tzafon.domain.model.SeriesStatus
 import com.thefoxworks.tzafon.domain.model.StateMachine
+import com.thefoxworks.tzafon.domain.model.StatusScope
 import com.thefoxworks.tzafon.domain.model.Task
 import com.thefoxworks.tzafon.domain.model.TaskDraft
 import com.thefoxworks.tzafon.domain.model.TaskRepository
@@ -329,12 +331,22 @@ class RoomTaskRepository(
         setState(id, next, Dates.todayIso(), habitAmount)
     }
 
-    override suspend fun setState(id: String, target: TaskState, today: String, habitAmount: Double?) {
+    override suspend fun setState(
+        id: String,
+        target: TaskState,
+        today: String,
+        habitAmount: Double?,
+        scope: StatusScope,
+    ) {
         val t = taskDao.get(id)?.toDomain() ?: return
-        if (t.state == target) return
-        val isRecurring = t.seriesId != null
-        val fx = StateMachine.transition(t.state, target, isRecurring)
+        val series = t.seriesId?.let { seriesDao.get(it)?.toDomain() }
+        val fx = StateMachine.transition(t.state, target, series?.let { SeriesStatus.of(it, today) }, scope)
+        if (t.state != target) flip(t, fx, today, habitAmount)
+        if (series != null) applySeriesEffects(series, t, fx, today)
+    }
 
+    /** The occurrence's own change: contribution up-flow or reversal, then the row. */
+    private suspend fun flip(t: Task, fx: StateMachine.Effects, today: String, habitAmount: Double?) {
         // DM-ATTR — the up-flow, counted once: habit ledger first (ATTR-2),
         // then goal attribution (ATTR-1: gather → dedupe → apply once)
         if (fx.applyContribution) {
@@ -384,33 +396,62 @@ class RoomTaskRepository(
             ).toEntity()
         )
 
-        val seriesId = t.seriesId ?: return
-        val series = seriesDao.get(seriesId)?.toDomain() ?: return
+    }
 
-        if (fx.freezeSeries && !series.frozen) {
-            // FR-REC-5: terminate generation; retain the frozen instance and
-            // settled history, drop the untouched future occurrences
+    /**
+     * Fill a thawed or reopened series in again from [today]. Slots before
+     * today that are gone (dropped while it was frozen or closed) are recorded
+     * as exceptions, so neither this nor a later topUp brings them back.
+     */
+    private suspend fun resumeFromToday(series: Series, today: String) {
+        val existing = taskDao.occurrencesOf(series.id).mapNotNull { it.occurrenceDate }.toSet()
+        val gone = Recurrence.planOccurrences(series.toSpec(), Dates.addDays(today, -1), existing)
+            .create.map { it.occurrenceDate }
+        val resumed = series.copy(exceptions = (series.exceptions + gone).distinct())
+        seriesDao.upsert(resumed.toEntity())
+        generate(resumed, existing, today, Dates.addDays(today, Recurrence.HORIZON_DAYS))
+    }
+
+    /** An occurrence's date as the user sees it: its to-do date, else its slot. */
+    private fun Task.day(): String? = toDoDate ?: occurrenceDate
+
+    /** v2.13.0 — what a status change does to the occurrence's whole series. */
+    private suspend fun applySeriesEffects(series: Series, chosen: Task, fx: StateMachine.Effects, today: String) {
+        if (fx.freezeSeries) {
+            // FR-REC-5: stop generating; the chosen occurrence and everything
+            // before it stay, later occurrences still Open go — edited or not
             seriesDao.upsert(series.copy(frozen = true).toEntity())
-            val occ = taskDao.occurrencesOf(seriesId).map { it.toDomain() }
-            val cutoff = t.occurrenceDate ?: today
-            val prune = occ.filter { o ->
-                o.id != t.id && (o.occurrenceDate ?: "") > cutoff &&
-                    o.state == TaskState.OPEN && !o.overridden
+            val cutoff = chosen.day() ?: today
+            val prune = taskDao.occurrencesOf(series.id).map { it.toDomain() }.filter { o ->
+                o.id != chosen.id && (o.day() ?: "") > cutoff && o.state == TaskState.OPEN
             }
             taskDao.deleteAll(prune.map { it.id })
         }
 
-        if (fx.restoreSeries && series.frozen) {
-            // DM-TASK-2: thaw restores recurrence; next occurrence generates
-            // forward from the thawed instance via the normal topUp path
-            seriesDao.upsert(series.copy(frozen = false).toEntity())
-            val existing = taskDao.occurrencesOf(seriesId).mapNotNull { it.occurrenceDate }.toSet()
-            generate(
-                series.copy(frozen = false),
-                existing,
-                today,
-                Dates.addDays(today, Recurrence.HORIZON_DAYS),
+        if (fx.closeSeries) {
+            // the series ends today (and is never both frozen and closed):
+            // what isn't Done settles as Closed up to today and goes after it,
+            // so a reopen can bring those later dates back
+            seriesDao.upsert(series.copy(endDate = today, frozen = false).toEntity())
+            val notDone = taskDao.occurrencesOf(series.id).map { it.toDomain() }
+                .filter { it.state != TaskState.DONE }
+            val (upToToday, later) = notDone.partition { (it.day() ?: today) <= today }
+            taskDao.upsertAll(
+                upToToday.filter { it.state != TaskState.CLOSED }
+                    .map { it.copy(state = TaskState.CLOSED, stateChangedAt = now()).toEntity() },
             )
+            taskDao.deleteAll(later.map { it.id })
+        }
+
+        if (fx.thawSeries) {
+            // DM-TASK-2: the series thaws and fills in again from today
+            resumeFromToday(series.copy(frozen = false), today)
+        }
+
+        if (fx.reopenSeries) {
+            // a closed series reopens: it ends never again (the old end date
+            // isn't remembered) and fills in from today; the past stays as is
+            resumeFromToday(series.copy(endDate = null), today)
         }
     }
 }
