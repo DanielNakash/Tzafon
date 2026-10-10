@@ -1,6 +1,7 @@
 package com.thefoxworks.tzafon.domain.habits
 
 import com.thefoxworks.tzafon.domain.dates.Dates
+import com.thefoxworks.tzafon.domain.dates.MonthGrid
 import com.thefoxworks.tzafon.domain.model.Habit
 import com.thefoxworks.tzafon.domain.model.HabitKind
 import com.thefoxworks.tzafon.domain.model.HabitLog
@@ -13,12 +14,7 @@ import com.thefoxworks.tzafon.domain.model.Task
  */
 object HabitMath {
 
-    /** Sunday-based day index (0..6) of a week-start setting. */
-    private fun startIndex(weekStart: String): Int = when (weekStart) {
-        "MONDAY" -> 1
-        "SATURDAY" -> 6
-        else -> 0 // SUNDAY, the default
-    }
+    private fun startIndex(weekStart: String): Int = MonthGrid.startIndex(weekStart)
 
     /** The ISO date the current period began (DM-REL-2 drives boundaries). */
     fun weekStartFor(date: String, weekStart: String): String {

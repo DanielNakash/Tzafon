@@ -57,6 +57,9 @@ A task with no to-do date.
 **Window**:
 The days from a task's to-do date to its deadline, the time you can still move the plan around without being late. A deadline before the to-do date means you plan to work on the task after it's due.
 
+**Armed field**:
+The date a tap on the editor's calendar sets: the to-do date (always, when the Timing pane opens), the deadline, or briefly the end date while the repeat card's Ends is being set. Tapping the armed field's own date clears it, except a repeating task's to-do date, which it always has.
+
 ### Status
 
 **Status**:
