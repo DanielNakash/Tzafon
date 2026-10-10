@@ -40,3 +40,7 @@ android/keystore.properties
 
 # Personal scratch folder — never committed
 NON COMMIT/
+
+# Cloud-drive sync temp folders — never committed
+.tmp.drivedownload/
+.tmp.driveupload/
