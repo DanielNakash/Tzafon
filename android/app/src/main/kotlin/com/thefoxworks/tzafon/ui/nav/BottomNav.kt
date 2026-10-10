@@ -53,6 +53,9 @@ private fun TabIcon(tab: Tab, size: Dp, color: Color, weight: Float) {
     }
 }
 
+/** The bar's height above the system navigation inset, for overlays like the status toast. */
+val BOTTOM_NAV_HEIGHT = 58.dp
+
 /**
  * The Den bottom bar (tz-ui BottomNav): 84dp, hairline, rust pill on active.
  * `active = null` renders every tab inactive — used on reference views (All

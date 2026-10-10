@@ -36,11 +36,12 @@ import com.thefoxworks.tzafon.ui.components.DenSheet
 import com.thefoxworks.tzafon.ui.components.Dot
 import com.thefoxworks.tzafon.ui.components.Fab
 import com.thefoxworks.tzafon.ui.components.RustHeader
-import com.thefoxworks.tzafon.ui.components.StateSheet
 import com.thefoxworks.tzafon.ui.components.TaskCheckbox
 import com.thefoxworks.tzafon.ui.components.TzIcons
 import com.thefoxworks.tzafon.ui.components.pressable
 import com.thefoxworks.tzafon.ui.nav.AppMenuSheet
+import com.thefoxworks.tzafon.ui.status.TaskStatusSheets
+import com.thefoxworks.tzafon.ui.status.rememberTaskStatusControls
 import com.thefoxworks.tzafon.ui.theme.Tz
 import com.thefoxworks.tzafon.ui.theme.DenType
 import com.thefoxworks.tzafon.ui.theme.a
@@ -63,7 +64,7 @@ fun BacklogScreen(
     val state by vm.uiState.collectAsStateWithLifecycle()
     var pullTask by remember { mutableStateOf<Task?>(null) }
     var pullPickDate by remember { mutableStateOf(false) }
-    var sheetTask by remember { mutableStateOf<Task?>(null) }
+    val status = rememberTaskStatusControls() // v2.13.0 tap rule, hold, sheet
     var quickAdd by remember { mutableStateOf(false) }
     var menu by remember { mutableStateOf(false) }
 
@@ -94,7 +95,8 @@ fun BacklogScreen(
                         task = t,
                         last = t.id == state.items.last().id,
                         onOpen = { onOpenTask(t.id) },
-                        onSheet = { sheetTask = t },
+                        onTap = { status.tap(t) },
+                        onHold = { status.hold(t) },
                         onPull = { pullTask = t },
                     )
                 }
@@ -182,14 +184,7 @@ fun BacklogScreen(
         }
     }
 
-    sheetTask?.let { task ->
-        StateSheet(
-            current = task.state,
-            isRecurring = task.seriesId != null,
-            onPick = { target -> vm.setState(task.id, target) },
-            onClose = { sheetTask = null },
-        )
-    }
+    TaskStatusSheets(status)
 
     if (quickAdd) {
         QuickAddSheet(
@@ -214,7 +209,8 @@ private fun BacklogRow(
     task: Task,
     last: Boolean,
     onOpen: () -> Unit,
-    onSheet: () -> Unit,
+    onTap: () -> Unit,
+    onHold: () -> Unit,
     onPull: () -> Unit,
 ) {
     val hasLinks = task.themeId != null || task.habitId != null || task.goalIds.isNotEmpty()
@@ -224,7 +220,7 @@ private fun BacklogRow(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(13.dp),
         ) {
-            TaskCheckbox(task.state, onClick = onSheet)
+            TaskCheckbox(task.state, onClick = onTap, title = task.title, onHold = onHold)
             Column(Modifier.weight(1f)) {
                 Text(
                     task.title,

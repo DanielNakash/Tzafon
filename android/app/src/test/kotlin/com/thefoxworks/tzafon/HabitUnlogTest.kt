@@ -46,6 +46,8 @@ class HabitUnlogTest {
         override suspend fun deleteLogsForTask(taskId: String) {
             logs.value = logs.value.filterNot { it.sourceTaskId == taskId }
         }
+        override suspend fun logsForTask(taskId: String): List<HabitLogEntity> =
+            logs.value.filter { it.sourceTaskId == taskId }
     }
 
     @Test

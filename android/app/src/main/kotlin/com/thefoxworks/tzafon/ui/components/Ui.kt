@@ -33,7 +33,6 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
@@ -265,26 +264,21 @@ fun DeadlinePill(modifier: Modifier = Modifier) {
 
 // ── the reusable task checkbox (state-aware) ─────────────────
 
+/**
+ * The task checkbox. Pass [onClick] to make it a list-row control: a tap
+ * (the one tap rule), and with [onHold] the v2.13.0 hold-to-choose gesture
+ * that raises the status sheet. [title] is what TalkBack reads with the status.
+ */
 @Composable
-fun TaskCheckbox(state: TaskState, onClick: (() -> Unit)? = null, modifier: Modifier = Modifier) {
+fun TaskCheckbox(
+    state: TaskState,
+    onClick: (() -> Unit)? = null,
+    modifier: Modifier = Modifier,
+    title: String? = null,
+    onHold: (() -> Unit)? = null,
+) {
     if (onClick != null) {
-        // NFR-A11Y-1: 48dp target + TalkBack state, visual slot unchanged
-        TouchTarget(
-            visualSize = 25.dp,
-            onClick = onClick,
-            modifier = modifier,
-            label = "Change task state",
-            role = Role.Checkbox,
-            semantics = {
-                stateDescription = when (state) {
-                    TaskState.OPEN -> "Open"
-                    TaskState.DONE -> "Done"
-                    TaskState.CLOSED -> "Closed"
-                    TaskState.FROZEN -> "Frozen"
-                    TaskState.BACKLOG -> "Backlog"
-                }
-            },
-        ) { CheckboxVisual(state) }
+        HoldCheckbox(state, title, onClick, onHold, modifier) { CheckboxVisual(state) }
     } else {
         CheckboxVisual(state, modifier)
     }

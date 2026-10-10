@@ -52,11 +52,13 @@ import com.thefoxworks.tzafon.domain.model.TaskState
 import com.thefoxworks.tzafon.ui.components.Fab
 import com.thefoxworks.tzafon.ui.components.GroupHeader
 import com.thefoxworks.tzafon.ui.components.RustHeader
-import com.thefoxworks.tzafon.ui.components.StateSheet
 import com.thefoxworks.tzafon.ui.components.TaskRow
 import com.thefoxworks.tzafon.ui.components.TzIcons
 import com.thefoxworks.tzafon.ui.components.pressable
 import com.thefoxworks.tzafon.ui.nav.AppMenuSheet
+import com.thefoxworks.tzafon.ui.status.TaskStatusControls
+import com.thefoxworks.tzafon.ui.status.TaskStatusSheets
+import com.thefoxworks.tzafon.ui.status.rememberTaskStatusControls
 import com.thefoxworks.tzafon.ui.theme.Tz
 import com.thefoxworks.tzafon.ui.theme.DenType
 import com.thefoxworks.tzafon.ui.theme.a
@@ -106,9 +108,8 @@ fun AllTasksScreen(
     onOpenAbout: (() -> Unit)? = null,
 ) {
     val state by vm.uiState.collectAsStateWithLifecycle()
-    var sheetTask by remember { mutableStateOf<Task?>(null) }
     var menu by remember { mutableStateOf(false) }
-    var amountTask by remember { mutableStateOf<Task?>(null) } // DM-HABIT-5 prompt
+    val status = rememberTaskStatusControls() // v2.13.0 tap rule, hold, sheet
     var query by rememberSaveable { mutableStateOf("") }
     val collapsed = remember { mutableStateMapOf<String, Boolean>() }
     val listState = rememberLazyListState()
@@ -260,13 +261,8 @@ fun AllTasksScreen(
 
                             is Entry.Item -> item(key = e.key) {
                                 TaskLine(
-                                    e.task, state.today, vm, onOpenTask,
-                                    onSheet = { sheetTask = it },
-                                    onAmount = { amountTask = it },
+                                    e.task, state.today, status, onOpenTask,
                                     habitLabel = state.habitsById[e.task.habitId]?.name,
-                                    needsPrompt = com.thefoxworks.tzafon.domain.attribution.Attribution.needsAmountPrompt(
-                                        e.task, state.habitsById[e.task.habitId], state.goalsById,
-                                    ),
                                     last = e.last,
                                     summaries = state.ruleSummaries,
                                 )
@@ -324,14 +320,6 @@ fun AllTasksScreen(
         }
     }
 
-    sheetTask?.let { task ->
-        StateSheet(
-            current = task.state,
-            isRecurring = task.seriesId != null,
-            onPick = { target -> vm.setState(task.id, target) },
-            onClose = { sheetTask = null },
-        )
-    }
     if (menu) {
         AppMenuSheet(
             onClose = { menu = false },
@@ -341,44 +329,26 @@ fun AllTasksScreen(
             onAbout = onOpenAbout,
         )
     }
-    amountTask?.let { t ->
-        val habit = state.habitsById[t.habitId]
-        com.thefoxworks.tzafon.ui.components.AmountSheet(
-            title = "How much? · ${habit?.name ?: t.title}",
-            unit = com.thefoxworks.tzafon.domain.attribution.Attribution.promptUnit(t, habit, state.goalsById),
-            suggested = habit?.target,
-            onConfirm = { vm.toggleDone(t.id, habitAmount = it) },
-            onClose = { amountTask = null },
-        )
-    }
+    TaskStatusSheets(status)
 }
 
 @Composable
 private fun TaskLine(
     task: Task,
     today: String,
-    vm: AllTasksViewModel,
+    status: TaskStatusControls,
     onOpenTask: (String) -> Unit,
-    onSheet: (Task) -> Unit,
-    onAmount: (Task) -> Unit,
     habitLabel: String?,
-    needsPrompt: Boolean,
     last: Boolean,
     summaries: Map<String, String>,
 ) {
-    val settled = task.state == TaskState.CLOSED || task.state == TaskState.FROZEN || task.state == TaskState.BACKLOG
     TaskRow(
         task = task,
         today = today,
-        onToggle = {
-            when {
-                settled -> onSheet(task)
-                task.state != TaskState.DONE && needsPrompt -> onAmount(task) // DM-HABIT-5 / DM-GOAL-3
-                else -> vm.toggleDone(task.id)
-            }
-        },
+        onToggle = { status.tap(task) },
         onOpen = { onOpenTask(task.id) },
-        onLongPress = { onSheet(task) },
+        onLongPress = { status.hold(task) },
+        onHold = { status.hold(task) },
         recurSummary = task.seriesId?.let { summaries[it] },
         habitLabel = habitLabel,
         last = last,

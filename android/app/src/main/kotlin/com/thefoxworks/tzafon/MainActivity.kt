@@ -19,6 +19,7 @@ import com.thefoxworks.tzafon.domain.model.TzafonUser
 import kotlinx.coroutines.flow.map
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -42,6 +43,7 @@ import com.thefoxworks.tzafon.ui.habits.HabitsScreen
 import com.thefoxworks.tzafon.ui.habits.HabitsViewModel
 import com.thefoxworks.tzafon.ui.journey.JourneyScreen
 import com.thefoxworks.tzafon.ui.journey.JourneyViewModel
+import com.thefoxworks.tzafon.ui.nav.BOTTOM_NAV_HEIGHT
 import com.thefoxworks.tzafon.ui.nav.DenBottomNav
 import com.thefoxworks.tzafon.ui.nav.Tab
 import com.thefoxworks.tzafon.ui.planning.PlanningScreen
@@ -49,6 +51,8 @@ import com.thefoxworks.tzafon.ui.planning.PlanningViewModel
 import com.thefoxworks.tzafon.ui.review.ReviewScreen
 import com.thefoxworks.tzafon.ui.review.ReviewViewModel
 import com.thefoxworks.tzafon.ui.settings.SettingsScreen
+import com.thefoxworks.tzafon.ui.status.LocalStatusHost
+import com.thefoxworks.tzafon.ui.status.StatusToastHost
 import com.thefoxworks.tzafon.ui.theme.LocalPalette
 import com.thefoxworks.tzafon.ui.theme.paletteFor
 import com.thefoxworks.tzafon.ui.theme.TzafonTheme
@@ -69,7 +73,7 @@ class MainActivity : ComponentActivity() {
             // on the next frame (no restart). Defaults to Den before first emission.
             val paletteName by container.settings.palette.collectAsStateWithLifecycle(initialValue = "den")
             val palette = paletteFor(paletteName)
-            CompositionLocalProvider(LocalPalette provides palette) {
+            CompositionLocalProvider(LocalPalette provides palette, LocalStatusHost provides container.statusHost) {
                 TzafonTheme(palette = palette) {
                     TzafonNavHost(container)
                 }
@@ -83,13 +87,13 @@ class VmFactory(private val container: AppContainer) : ViewModelProvider.Factory
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T = when (modelClass) {
         AllTasksViewModel::class.java ->
-            AllTasksViewModel(container.taskRepository, container.sessionHorizonDays, container.habitRepository, container.goalRepository, container.settings, container.chimePlayer) as T
+            AllTasksViewModel(container.taskRepository, container.sessionHorizonDays, container.habitRepository, container.goalRepository) as T
         TodayViewModel::class.java ->
-            TodayViewModel(container.taskRepository, container.settings, container.habitRepository, container.goalRepository, container.reviewRepository, container.chimePlayer) as T
+            TodayViewModel(container.taskRepository, container.settings, container.habitRepository, container.goalRepository, container.reviewRepository) as T
         ReviewViewModel::class.java ->
             ReviewViewModel(container.reviewRepository, container.taskRepository, container.habitRepository, container.goalRepository, container.settings) as T
         PlanningViewModel::class.java ->
-            PlanningViewModel(container.taskRepository, container.settings, container.sessionHorizonDays, container.habitRepository, container.goalRepository, container.chimePlayer) as T
+            PlanningViewModel(container.taskRepository, container.settings, container.sessionHorizonDays, container.habitRepository, container.goalRepository) as T
         BacklogViewModel::class.java ->
             BacklogViewModel(container.taskRepository) as T
         HabitsViewModel::class.java ->
@@ -515,5 +519,11 @@ private fun TzafonMainNav(container: AppContainer, initialUser: TzafonUser?) {
                 modifier = Modifier.align(Alignment.BottomCenter),
             )
         }
+        // v2.13.0 — the one status toast, outside the NavHost so it survives tab switches
+        StatusToastHost(
+            host = container.statusHost,
+            aboveNav = if (showBottomNav) BOTTOM_NAV_HEIGHT else 0.dp,
+            modifier = Modifier.align(Alignment.BottomCenter),
+        )
     }
 }

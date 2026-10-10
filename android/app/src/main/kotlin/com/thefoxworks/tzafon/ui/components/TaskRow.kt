@@ -49,6 +49,8 @@ fun TaskRow(
     onToggle: () -> Unit,
     onOpen: () -> Unit,
     onLongPress: (() -> Unit)? = null,
+    /** v2.13.0 — holding the checkbox raises the status sheet */
+    onHold: (() -> Unit)? = null,
     recurSummary: String? = null,
     servesLabel: String? = null,
     servesAccent: androidx.compose.ui.graphics.Color = Tz.colors.muted,
@@ -78,7 +80,7 @@ fun TaskRow(
             verticalAlignment = Alignment.Top,
             horizontalArrangement = Arrangement.spacedBy(13.dp),
         ) {
-            Box(Modifier.padding(top = 1.dp)) { TaskCheckbox(task.state, onClick = onToggle) }
+            Box(Modifier.padding(top = 1.dp)) { TaskCheckbox(task.state, onClick = onToggle, title = task.title, onHold = onHold) }
             Column(Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(

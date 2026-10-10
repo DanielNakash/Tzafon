@@ -94,6 +94,9 @@ interface HabitDao {
     /** Exact reversal of a task's ledger rows (DM-ATTR-2). */
     @Query("DELETE FROM habit_logs WHERE sourceTaskId = :taskId AND source = 'TASK'")
     suspend fun deleteLogsForTask(taskId: String)
+
+    @Query("SELECT * FROM habit_logs WHERE sourceTaskId = :taskId AND source = 'TASK'")
+    suspend fun logsForTask(taskId: String): List<HabitLogEntity>
 }
 
 @Dao

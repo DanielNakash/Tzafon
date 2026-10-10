@@ -46,12 +46,13 @@ import com.thefoxworks.tzafon.ui.components.Fab
 import com.thefoxworks.tzafon.ui.components.GroupHeader
 import com.thefoxworks.tzafon.ui.components.PillButton
 import com.thefoxworks.tzafon.ui.components.RustHeader
-import com.thefoxworks.tzafon.ui.components.StateSheet
 import com.thefoxworks.tzafon.ui.components.TaskCheckbox
 import com.thefoxworks.tzafon.ui.components.TaskRow
 import com.thefoxworks.tzafon.ui.components.TzIcons
 import com.thefoxworks.tzafon.ui.components.pressable
 import com.thefoxworks.tzafon.ui.nav.AppMenuSheet
+import com.thefoxworks.tzafon.ui.status.TaskStatusSheets
+import com.thefoxworks.tzafon.ui.status.rememberTaskStatusControls
 import com.thefoxworks.tzafon.ui.theme.Tz
 import com.thefoxworks.tzafon.ui.theme.DenType
 import com.thefoxworks.tzafon.ui.theme.a
@@ -79,20 +80,7 @@ fun PlanningScreen(
     // FR-PLAN-6.7 — survives configuration change, dies on navigation away
     var query by rememberSaveable { mutableStateOf("") }
     val searching = query.isNotBlank()
-    // FR-PLAN-4 — the overdue action-row's third pill opens StateSheet
-    var changeStatusFor by remember { mutableStateOf<Task?>(null) }
-    var amountTask by remember { mutableStateOf<Task?>(null) } // DM-HABIT-5 prompt
-
-    fun requestToggle(t: Task) {
-        val habit = state.habitsById[t.habitId]
-        if (t.state != com.thefoxworks.tzafon.domain.model.TaskState.DONE &&
-            com.thefoxworks.tzafon.domain.attribution.Attribution.needsAmountPrompt(t, habit, state.goalsById)
-        ) {
-            amountTask = t
-        } else {
-            vm.toggleDone(t.id)
-        }
-    }
+    val status = rememberTaskStatusControls() // v2.13.0 tap rule, hold, sheet
 
     Box(Modifier.fillMaxSize().background(Tz.colors.bg)) {
         Column(Modifier.fillMaxSize()) {
@@ -212,10 +200,11 @@ fun PlanningScreen(
                                     today = state.today,
                                     last = i == state.overdue.lastIndex,
                                     onOpen = { onOpenTask(t.id) },
-                                    onToggle = { requestToggle(t) },
+                                    onToggle = { status.tap(t) },
+                                    onHold = { status.hold(t) },
                                     onToday = { vm.doToday(t.id) },
                                     onReschedule = { rescheduleId = t.id },
-                                    onChangeStatus = { changeStatusFor = t },
+                                    onChangeStatus = { status.hold(t) },
                                 )
                             }
                         }
@@ -235,8 +224,9 @@ fun PlanningScreen(
                         TaskRow(
                             task = t,
                             today = state.today,
-                            onToggle = { requestToggle(t) },
+                            onToggle = { status.tap(t) },
                             onOpen = { onOpenTask(t.id) },
+                            onHold = { status.hold(t) },
                             habitLabel = state.habitsById[t.habitId]?.name,
                             last = t.id == tasks.last().id,
                         )
@@ -252,8 +242,9 @@ fun PlanningScreen(
                         TaskRow(
                             task = t,
                             today = state.today,
-                            onToggle = { requestToggle(t) },
+                            onToggle = { status.tap(t) },
                             onOpen = { onOpenTask(t.id) },
+                            onHold = { status.hold(t) },
                             habitLabel = state.habitsById[t.habitId]?.name,
                             last = t.id == state.inbox.last().id,
                         )
@@ -338,31 +329,14 @@ fun PlanningScreen(
             )
         }
     }
-    changeStatusFor?.let { t ->
-        StateSheet(
-            current = t.state,
-            isRecurring = t.seriesId != null,
-            onPick = { target -> vm.toState(t.id, target) },
-            onClose = { changeStatusFor = null },
-        )
-    }
-    amountTask?.let { t ->
-        val habit = state.habitsById[t.habitId]
-        com.thefoxworks.tzafon.ui.components.AmountSheet(
-            title = "How much? · ${habit?.name ?: t.title}",
-            unit = com.thefoxworks.tzafon.domain.attribution.Attribution.promptUnit(t, habit, state.goalsById),
-            suggested = habit?.target,
-            onConfirm = { vm.toggleDone(t.id, habitAmount = it) },
-            onClose = { amountTask = null },
-        )
-    }
+    TaskStatusSheets(status)
 }
 
 /**
  * An overdue row presented as a calm decision, not a debt (FR-PLAN-3).
  * FR-PLAN-4 — the pill row is `Today · Reschedule · Set status`; the
  * checkbox is an isolated tap target that marks the task Done through the
- * same `requestToggle` helper used by non-overdue rows (FR-PLAN-4.3).
+ * same tap rule as every other row (FR-PLAN-4.3, v2.13.0).
  */
 @Composable
 private fun DecideCard(
@@ -371,6 +345,7 @@ private fun DecideCard(
     last: Boolean,
     onOpen: () -> Unit,
     onToggle: () -> Unit,
+    onHold: () -> Unit,
     onToday: () -> Unit,
     onReschedule: () -> Unit,
     onChangeStatus: () -> Unit,
@@ -383,7 +358,7 @@ private fun DecideCard(
         ) {
             // FR-PLAN-4.3 / FR-PLAN-4.3.1 — the checkbox's own pressable consumes
             // the tap before the row's press area sees it (same pattern as TaskRow).
-            TaskCheckbox(task.state, onClick = onToggle)
+            TaskCheckbox(task.state, onClick = onToggle, title = task.title, onHold = onHold)
             Column(Modifier.weight(1f)) {
                 Text(
                     task.title,

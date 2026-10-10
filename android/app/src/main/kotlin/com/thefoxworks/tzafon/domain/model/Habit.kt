@@ -55,4 +55,7 @@ interface HabitRepository {
     /** Task-driven ledger writes (DM-ATTR-2): apply on Done, reverse exactly. */
     suspend fun logForTask(habitId: String, date: String, taskId: String, amount: Double?)
     suspend fun reverseForTask(taskId: String)
+
+    /** The task-sourced log rows [taskId] wrote (for an exact undo). */
+    suspend fun logsForTask(taskId: String): List<HabitLog>
 }

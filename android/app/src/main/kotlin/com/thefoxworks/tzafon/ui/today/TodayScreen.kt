@@ -2,7 +2,11 @@ package com.thefoxworks.tzafon.ui.today
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.awaitLongPressOrCancellation
+import androidx.compose.foundation.gestures.drag
+import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,6 +21,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateMapOf
@@ -55,11 +60,15 @@ import com.thefoxworks.tzafon.ui.components.Nudge
 import com.thefoxworks.tzafon.ui.components.PillButton
 import com.thefoxworks.tzafon.ui.components.RustHeader
 import com.thefoxworks.tzafon.ui.components.SectionLabel
+import com.thefoxworks.tzafon.ui.components.CheckboxPresses
+import com.thefoxworks.tzafon.ui.components.LocalCheckboxPresses
 import com.thefoxworks.tzafon.ui.components.TaskCheckbox
 import com.thefoxworks.tzafon.ui.components.TaskRow
 import com.thefoxworks.tzafon.ui.components.TzIcons
 import com.thefoxworks.tzafon.ui.components.pressable
 import com.thefoxworks.tzafon.ui.nav.AppMenuSheet
+import com.thefoxworks.tzafon.ui.status.TaskStatusSheets
+import com.thefoxworks.tzafon.ui.status.rememberTaskStatusControls
 import com.thefoxworks.tzafon.ui.theme.Tz
 import com.thefoxworks.tzafon.ui.theme.DenType
 import com.thefoxworks.tzafon.ui.theme.a
@@ -88,19 +97,7 @@ fun TodayScreen(
     var alsoCollapsed by remember { mutableStateOf(false) }
     var quickAdd by remember { mutableStateOf(false) }
     var menu by remember { mutableStateOf(false) }
-    var amountTask by remember { mutableStateOf<Task?>(null) } // DM-HABIT-5 prompt
-
-    // quantitative habits and direct accumulative goals ask "how much?" first
-    fun requestToggle(t: Task) {
-        val habit = state.habitsById[t.habitId]
-        if (t.state != com.thefoxworks.tzafon.domain.model.TaskState.DONE &&
-            com.thefoxworks.tzafon.domain.attribution.Attribution.needsAmountPrompt(t, habit, state.goalsById)
-        ) {
-            amountTask = t
-        } else {
-            vm.toggleDone(t.id)
-        }
-    }
+    val status = rememberTaskStatusControls() // v2.13.0 tap rule, hold, sheet
 
     val d = Dates.parse(state.today)
     val kicker = "${Dates.WD_FULL[Dates.dayOfWeek(d)]} · ${Dates.MO[d.monthValue - 1]} ${d.dayOfMonth}"
@@ -204,7 +201,8 @@ fun TodayScreen(
                             FocusItem(
                                 t = t,
                                 last = i == state.focus.lastIndex,
-                                onToggle = { requestToggle(t) },
+                                onToggle = { status.tap(t) },
+                                onHold = { status.hold(t) },
                                 onOpen = { onOpenTask(t.id) },
                                 onUnfocus = { vm.toggleFocus(t) },
                             )
@@ -243,7 +241,8 @@ fun TodayScreen(
                         ReorderableTaskList(
                             tasks = state.alsoToday,
                             today = state.today,
-                            onToggle = { id -> state.alsoToday.firstOrNull { it.id == id }?.let(::requestToggle) },
+                            onToggle = { id -> state.alsoToday.firstOrNull { it.id == id }?.let(status::tap) },
+                            onHold = { id -> state.alsoToday.firstOrNull { it.id == id }?.let(status::hold) },
                             onOpen = onOpenTask,
                             onPersist = { vm.persistOrder(it) },
                             habitLabel = { t -> state.habitsById[t.habitId]?.name },
@@ -266,8 +265,9 @@ fun TodayScreen(
                         TaskRow(
                             task = t,
                             today = state.today,
-                            onToggle = { requestToggle(t) },
+                            onToggle = { status.tap(t) },
                             onOpen = { onOpenTask(t.id) },
+                            onHold = { status.hold(t) },
                             habitLabel = state.habitsById[t.habitId]?.name,
                             last = i == state.weekPriorities.lastIndex,
                         )
@@ -318,8 +318,9 @@ fun TodayScreen(
                             TaskRow(
                                 task = t,
                                 today = state.today,
-                                onToggle = { vm.toggleDone(t.id) },
+                                onToggle = { status.tap(t) },
                                 onOpen = { onOpenTask(t.id) },
+                                onHold = { status.hold(t) },
                                 last = i == state.doneToday.lastIndex,
                             )
                         }
@@ -350,16 +351,7 @@ fun TodayScreen(
             onAbout = onOpenAbout,
         )
     }
-    amountTask?.let { t ->
-        val habit = state.habitsById[t.habitId]
-        com.thefoxworks.tzafon.ui.components.AmountSheet(
-            title = "How much? · ${habit?.name ?: t.title}",
-            unit = com.thefoxworks.tzafon.domain.attribution.Attribution.promptUnit(t, habit, state.goalsById),
-            suggested = habit?.target,
-            onConfirm = { vm.toggleDone(t.id, habitAmount = it) },
-            onClose = { amountTask = null },
-        )
-    }
+    TaskStatusSheets(status)
 }
 
 /** Focus row (design FocusItem): bold title, serves/cue meta, no chevron. */
@@ -368,6 +360,7 @@ private fun FocusItem(
     t: Task,
     last: Boolean,
     onToggle: () -> Unit,
+    onHold: () -> Unit,
     onOpen: () -> Unit,
     onUnfocus: (() -> Unit)? = null,
 ) {
@@ -376,7 +369,7 @@ private fun FocusItem(
             Modifier.fillMaxWidth().padding(vertical = 13.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            TaskCheckbox(t.state, onClick = onToggle)
+            TaskCheckbox(t.state, onClick = onToggle, title = t.title, onHold = onHold)
             Column(Modifier.weight(1f)) {
                 Text(
                     t.title,
@@ -409,6 +402,7 @@ internal fun ReorderableTaskList(
     onToggle: (String) -> Unit,
     onOpen: (String) -> Unit,
     onPersist: (List<String>) -> Unit,
+    onHold: (String) -> Unit = {},
     habitLabel: (Task) -> String? = { null },
     onFocusToggle: ((Task) -> Unit)? = null,
 ) {
@@ -417,6 +411,7 @@ internal fun ReorderableTaskList(
     var draggingId by remember { mutableStateOf<String?>(null) }
     var dragDelta by remember { mutableFloatStateOf(0f) }
     val heights = remember { mutableStateMapOf<String, Int>() }
+    val checkboxPresses = remember { CheckboxPresses() }
 
     // follow the VM order unless a local drag result covers the same ids
     val order = localOrder?.takeIf { it.toSet() == ids.toSet() } ?: ids
@@ -425,7 +420,7 @@ internal fun ReorderableTaskList(
     // read inside drag callbacks without restarting the gesture (stable key below)
     val currentOrder by rememberUpdatedState(order)
 
-    Column {
+    CompositionLocalProvider(LocalCheckboxPresses provides checkboxPresses) { Column {
         displayed.forEachIndexed { index, task ->
             val isDragged = task.id == draggingId
             Box(
@@ -443,18 +438,23 @@ internal fun ReorderableTaskList(
                     // keyed on the stable id — keying on the order list would
                     // restart this coroutine at the first swap and kill the drag
                     .pointerInput(task.id) {
-                        detectDragGesturesAfterLongPress(
-                            onDragStart = {
-                                localOrder = currentOrder
-                                draggingId = task.id
-                                dragDelta = 0f
-                            },
-                            onDrag = { change, amount ->
+                        // detectDragGesturesAfterLongPress, except that a press the
+                        // row's checkbox took (v2.13.0 hold-to-choose) never starts
+                        // a reorder
+                        awaitEachGesture {
+                            val down = awaitFirstDown(requireUnconsumed = false)
+                            if (checkboxPresses.owns(down.id)) return@awaitEachGesture
+                            val press = awaitLongPressOrCancellation(down.id) ?: return@awaitEachGesture
+                            localOrder = currentOrder
+                            draggingId = task.id
+                            dragDelta = 0f
+                            val finished = drag(press.id) { change ->
+                                val amount = change.positionChange()
                                 change.consume()
                                 dragDelta += amount.y
-                                val cur = localOrder ?: return@detectDragGesturesAfterLongPress
+                                val cur = localOrder ?: return@drag
                                 val idx = cur.indexOf(task.id)
-                                if (idx == -1) return@detectDragGesturesAfterLongPress
+                                if (idx == -1) return@drag
                                 // swap with the neighbour once past half its height
                                 if (dragDelta > 0 && idx < cur.lastIndex) {
                                     val nextH = heights[cur[idx + 1]] ?: 0
@@ -473,18 +473,15 @@ internal fun ReorderableTaskList(
                                         dragDelta += prevH
                                     }
                                 }
-                            },
-                            onDragEnd = {
+                            }
+                            if (finished) {
                                 localOrder?.let(onPersist)
-                                draggingId = null
-                                dragDelta = 0f
-                            },
-                            onDragCancel = {
-                                draggingId = null
-                                dragDelta = 0f
+                            } else {
                                 localOrder = null
-                            },
-                        )
+                            }
+                            draggingId = null
+                            dragDelta = 0f
+                        }
                     }
                     .alpha(if (isDragged) 0.95f else 1f),
             ) {
@@ -493,6 +490,7 @@ internal fun ReorderableTaskList(
                     today = today,
                     onToggle = { onToggle(task.id) },
                     onOpen = { onOpen(task.id) },
+                    onHold = { onHold(task.id) },
                     habitLabel = habitLabel(task),
                     last = index == displayed.lastIndex,
                     focused = false,
@@ -500,5 +498,5 @@ internal fun ReorderableTaskList(
                 )
             }
         }
-    }
+    } }
 }

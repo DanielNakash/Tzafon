@@ -64,6 +64,23 @@ interface TaskRepository {
     )
 
     /**
+     * v2.13.0 — the task with what it has ticked and moved, taken before a
+     * list status change so the toast's Undo can put it all back.
+     */
+    suspend fun statusSnapshot(id: String): com.thefoxworks.tzafon.domain.status.StatusSnapshot?
+
+    /**
+     * Undo a status change: if the task is still exactly [after], restore
+     * [before] (status, completion time, to-do date) and its ledger rows, so
+     * what it ticked and moved comes back or goes with the same amounts.
+     * Returns false, changing nothing, when the task has changed since.
+     */
+    suspend fun restoreStatus(
+        before: com.thefoxworks.tzafon.domain.status.StatusSnapshot,
+        after: Task,
+    ): Boolean
+
+    /**
      * Materialize missing occurrences for every live series up to the
      * effective horizon (FR-REC-3), incl. the FR-REC-1 nearest floor.
      * Idempotent; safe to call on every app start / horizon change.

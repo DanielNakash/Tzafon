@@ -55,4 +55,7 @@ class RoomGoalRepository(
         }
         dao.deleteContributionsFor(taskId)
     }
+
+    override suspend fun contributionsFor(taskId: String): List<Contribution> =
+        dao.contributionsFor(taskId).map { it.toDomain() }
 }

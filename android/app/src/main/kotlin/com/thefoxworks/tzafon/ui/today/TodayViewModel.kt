@@ -2,7 +2,6 @@ package com.thefoxworks.tzafon.ui.today
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.thefoxworks.tzafon.data.audio.ChimePlayer
 import com.thefoxworks.tzafon.data.settings.SettingsStore
 import com.thefoxworks.tzafon.domain.action.ActionLogic
 import com.thefoxworks.tzafon.domain.dates.Dates
@@ -20,7 +19,6 @@ import com.thefoxworks.tzafon.domain.review.ReviewLogic
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -51,7 +49,6 @@ class TodayViewModel(
     habitRepo: HabitRepository,
     goalRepo: GoalRepository,
     reviewRepo: ReviewRepository,
-    private val chimePlayer: ChimePlayer? = null,
 ) : ViewModel() {
 
     val today: String get() = Dates.todayIso()
@@ -123,23 +120,6 @@ class TodayViewModel(
             reviewInvite = invite,
             focusOverCap = focus.size > 3,
         )
-    }
-
-    /**
-     * FR-AUDIO-1.2 — the checkbox tap path (Today's list, done list, week
-     * priorities strip). Reads state before the write so we can play the chime
-     * exactly on Open → Done; toggles back on Done → Open are silent. The
-     * chime fires on the same coroutine as the state write but as a
-     * fire-and-forget side effect (FR-AUDIO-1.9 — never blocks or throttles).
-     */
-    fun toggleDone(id: String, habitAmount: Double? = null) {
-        viewModelScope.launch {
-            val wasOpen = repo.getTask(id)?.state == TaskState.OPEN
-            repo.toggleDone(id, habitAmount)
-            if (wasOpen && chimePlayer != null && settings.chimeEnabled.first()) {
-                chimePlayer.playDone()
-            }
-        }
     }
 
     /** DM-FOCUS-1 — point a task north for today (or unpoint it). */

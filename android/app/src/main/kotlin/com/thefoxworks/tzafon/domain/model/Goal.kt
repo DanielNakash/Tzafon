@@ -72,4 +72,7 @@ interface GoalRepository {
 
     /** DM-ATTR-1(4) — exact reversal of everything this task contributed. */
     suspend fun reverseForTask(taskId: String)
+
+    /** The ledger rows [taskId] wrote (for an exact undo). */
+    suspend fun contributionsFor(taskId: String): List<Contribution>
 }

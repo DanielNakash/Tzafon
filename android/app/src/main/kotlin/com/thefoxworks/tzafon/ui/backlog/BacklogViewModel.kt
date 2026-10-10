@@ -50,10 +50,6 @@ class BacklogViewModel(
     }
 
     /** Done ("did it without scheduling") / Closed ("decided against it"). */
-    fun setState(id: String, target: TaskState) {
-        viewModelScope.launch { repo.setState(id, target, today) }
-    }
-
     /**
      * FR-BACKLOG-5.1 — quick-adds from the Backlog view default to
      * `state = BACKLOG` and `toDoDate = null`. The Backlog surface is

@@ -25,6 +25,8 @@ import com.thefoxworks.tzafon.domain.model.TaskRepository
 import com.thefoxworks.tzafon.domain.model.TaskState
 import com.thefoxworks.tzafon.domain.recurrence.DueMode
 import com.thefoxworks.tzafon.domain.recurrence.Recurrence
+import com.thefoxworks.tzafon.domain.status.StatusSnapshot
+import com.thefoxworks.tzafon.domain.status.StatusUndo
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.util.UUID
@@ -429,6 +431,29 @@ class RoomTaskRepository(
         val fx = StateMachine.transition(t.state, target, series?.let { SeriesStatus.of(it, today) }, scope)
         if (t.state != target) flip(t, fx, today, habitAmount)
         if (series != null) applySeriesEffects(series, t, fx, today)
+    }
+
+    override suspend fun statusSnapshot(id: String): StatusSnapshot? {
+        val t = getTask(id) ?: return null
+        return StatusSnapshot(
+            task = t,
+            habitLogs = habits?.logsForTask(id).orEmpty(),
+            contributions = goals?.contributionsFor(id).orEmpty(),
+        )
+    }
+
+    override suspend fun restoreStatus(before: StatusSnapshot, after: Task): Boolean {
+        val id = after.id
+        if (!StatusUndo.canUndo(after, getTask(id))) return false
+        if (StatusUndo.touchesLedger(before.task.state, after.state)) {
+            // drop what the change wrote, then put the old rows back as they were
+            habits?.reverseForTask(id)
+            goals?.reverseForTask(id)
+            before.habitLogs.forEach { habits?.logForTask(it.habitId, it.date, id, it.amount) }
+            goals?.applyForTask(id, before.contributions)
+        }
+        taskDao.upsert(before.task.toEntity())
+        return true
     }
 
     /** The occurrence's own change: contribution up-flow or reversal, then the row. */

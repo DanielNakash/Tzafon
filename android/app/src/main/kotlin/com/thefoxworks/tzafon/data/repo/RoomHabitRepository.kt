@@ -53,4 +53,7 @@ class RoomHabitRepository(
     }
 
     override suspend fun reverseForTask(taskId: String) = dao.deleteLogsForTask(taskId)
+
+    override suspend fun logsForTask(taskId: String): List<HabitLog> =
+        dao.logsForTask(taskId).map { it.toDomain() }
 }

@@ -51,6 +51,7 @@ class EditScopesTest {
             logged += Triple(habitId, taskId, amount)
         }
         override suspend fun reverseForTask(taskId: String) = Unit
+        override suspend fun logsForTask(taskId: String): List<HabitLog> = emptyList()
     }
 
     private val tuesdays = Rule(pattern = Pattern.WEEKDAY, weekdays = listOf(2))

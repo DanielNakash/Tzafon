@@ -23,14 +23,17 @@ import com.thefoxworks.tzafon.data.sync.SyncSpec
 import com.thefoxworks.tzafon.data.transfer.DataExporter
 import com.thefoxworks.tzafon.data.transfer.DataImporter
 import com.thefoxworks.tzafon.data.transfer.RoomDataTransferRepository
+import com.thefoxworks.tzafon.domain.dates.Dates
 import com.thefoxworks.tzafon.domain.model.AuthRepository
 import com.thefoxworks.tzafon.domain.model.GoalRepository
 import com.thefoxworks.tzafon.domain.model.HabitRepository
 import com.thefoxworks.tzafon.domain.model.TaskRepository
 import com.thefoxworks.tzafon.domain.model.ThemeRepository
 import com.thefoxworks.tzafon.domain.recurrence.Recurrence
+import com.thefoxworks.tzafon.domain.status.StatusChanges
 import com.thefoxworks.tzafon.notify.Notify
 import com.thefoxworks.tzafon.notify.TopUpWorker
+import com.thefoxworks.tzafon.ui.status.StatusHost
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
@@ -38,6 +41,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 /**
@@ -61,6 +65,24 @@ class AppContainer(app: Application) {
 
     /** FR-AUDIO-1 — application-scoped chime player; single SoundPool. */
     val chimePlayer: ChimePlayer by lazy { ChimePlayer(app) }
+
+    /**
+     * v2.13.0 — every list status change (checkbox tap, status-sheet pick)
+     * and the app's one toast with its Undo. The chime plays on Open → Done
+     * (FR-AUDIO-1.2), fire-and-forget.
+     */
+    val statusHost: StatusHost by lazy {
+        StatusHost(
+            changes = StatusChanges(
+                tasks = taskRepository,
+                habits = habitRepository,
+                goals = goalRepository,
+                today = { Dates.todayIso() },
+                onDone = { if (settings.chimeEnabled.first()) chimePlayer.playDone() },
+            ),
+            scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate),
+        )
+    }
 
     // ── M9b: Firebase auth + offline-first Firestore sync ──
     val authRepository: AuthRepository by lazy { FirebaseAuthRepository(app) }
