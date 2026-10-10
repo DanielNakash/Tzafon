@@ -108,3 +108,14 @@ The trigger a task or habit hangs on: "when X, I will do Y", after a routine, at
 **Notes**:
 The free-text body of a task, under its title.
 _Avoid_: description
+
+### Editor
+
+**Pane**:
+One of the task editor's three tabs: Task (title, notes, status, delete), Timing (dates and repeat) or Alignment (habit, goals, cue).
+
+**Opening snapshot**:
+The task as the editor opened it, presets included. Changes are measured against it, so undoing an edit undoes the change.
+
+**Changed dot**:
+The dot on a pane's tab when that pane differs from the opening snapshot.

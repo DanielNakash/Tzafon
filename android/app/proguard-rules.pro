@@ -17,6 +17,11 @@
 -keep class com.thefoxworks.tzafon.data.transfer.Export** { *; }
 -keepclassmembers class com.thefoxworks.tzafon.data.transfer.Export** { <fields>; }
 
+# v2.13.0 — the open task editor is saved to its bundle as Gson JSON
+# (EditorSessionCodec), so its session class and pane enum keep their shape.
+-keep class com.thefoxworks.tzafon.domain.editor.EditorSession { *; }
+-keep enum com.thefoxworks.tzafon.domain.editor.Pane { *; }
+
 # Gson type machinery (safe alongside Gson's bundled consumer rules).
 -keep class com.google.gson.reflect.TypeToken { *; }
 -keep class * extends com.google.gson.reflect.TypeToken
