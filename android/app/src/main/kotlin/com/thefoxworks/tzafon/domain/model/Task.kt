@@ -115,7 +115,35 @@ data class TaskDraft(
     val commitment: String? = null,
     /** The "How much?" answer for a Done status waiting for Save; never stored on the task. */
     val habitAmount: Double? = null,
-)
+) {
+    companion object {
+        /**
+         * A stored task as the editor opens it, with its [series]' repeat
+         * settings. Save diffs a draft against this, so both read it the same way.
+         */
+        fun of(task: Task, series: Series?) = TaskDraft(
+            id = task.id,
+            title = task.title,
+            description = task.description,
+            toDoDate = task.toDoDate,
+            dueDate = task.dueDate,
+            state = task.state,
+            recurrence = series?.let {
+                RecurrenceDraft(
+                    rule = it.rule, endDate = it.endDate,
+                    dueMode = it.dueMode, dueRule = it.dueRule, dueOffsetDays = it.dueOffsetDays,
+                )
+            },
+            seriesId = task.seriesId,
+            occurrenceDate = task.occurrenceDate,
+            cue = task.cue,
+            themeId = task.themeId,
+            habitId = task.habitId,
+            goalIds = task.goalIds,
+            commitment = task.commitment,
+        )
+    }
+}
 
 /** The editor's flattened recurrence: the rule + its meta. */
 data class RecurrenceDraft(

@@ -31,7 +31,7 @@ object ScopeSheetCopy {
         val rule = draft.recurrence?.rule
         val movedTo = draft.toDoDate?.takeIf { changes.changes.any { it.field == ChangeField.TODO_DATE } }
         val one = when {
-            changes.touchesRepeatCard ->
+            !changes.allows(EditScope.ONE) ->
                 ScopeRow(EditScope.ONE, badge(occurrence), "Repeat changes reach the series.", enabled = false)
             movedTo != null && rule != null -> ScopeRow(
                 EditScope.ONE, badge(occurrence),
@@ -62,10 +62,10 @@ object ScopeSheetCopy {
                 ScopeRow(EditScope.FORWARD, null, forward),
                 ScopeRow(
                     EditScope.ALL, earlier.takeIf { it > 0 }?.toString(),
-                    "Rewrites every occurrence, past ones included, done ones too.$move", enabled = !off,
+                    "Rewrites every occurrence, past ones included, done ones too.$move", enabled = changes.allows(EditScope.ALL),
                 ),
             ),
-            default = if (one.enabled) EditScope.ONE else EditScope.FORWARD,
+            default = changes.defaultScope,
         )
     }
 

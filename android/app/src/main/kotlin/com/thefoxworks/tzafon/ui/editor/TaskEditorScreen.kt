@@ -44,6 +44,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.thefoxworks.tzafon.domain.dates.Dates
+import com.thefoxworks.tzafon.domain.editor.DraftDiff
 import com.thefoxworks.tzafon.domain.editor.EditorSession
 import com.thefoxworks.tzafon.domain.editor.Pane
 import com.thefoxworks.tzafon.domain.editor.SaveProblem
@@ -173,8 +174,12 @@ fun TaskEditorScreen(
                     .background(Tz.colors.cream)
                     .pressable {
                         val problem = session.saveProblem()
-                        if (problem == null) onSave(draft, scope)
-                        else {
+                        if (problem == null) {
+                            // interim, until scope is asked at Save: a scope the
+                            // changes can't take falls back to the sheet's default
+                            val changes = DraftDiff.of(session.snapshot, draft)
+                            onSave(draft, if (changes.allows(scope)) scope else changes.defaultScope)
+                        } else {
                             session = session.show(problem.pane)
                             focusProblem = problem
                         }

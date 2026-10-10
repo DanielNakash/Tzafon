@@ -29,7 +29,6 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.thefoxworks.tzafon.domain.dates.Dates
-import com.thefoxworks.tzafon.domain.model.RecurrenceDraft
 import com.thefoxworks.tzafon.domain.model.TaskDraft
 import com.thefoxworks.tzafon.ui.about.AboutScreen
 import com.thefoxworks.tzafon.ui.alltasks.AllTasksScreen
@@ -462,28 +461,7 @@ private fun TzafonMainNav(container: AppContainer, initialUser: TzafonUser?) {
                 val initial: TaskDraft? = taskId?.let {
                     runBlocking {
                         val t = repo.getTask(it) ?: return@runBlocking null
-                        val s = t.seriesId?.let { sid -> repo.getSeries(sid) }
-                        TaskDraft(
-                            id = t.id,
-                            title = t.title,
-                            description = t.description,
-                            toDoDate = t.toDoDate,
-                            dueDate = t.dueDate,
-                            state = t.state,
-                            recurrence = s?.let { series ->
-                                RecurrenceDraft(
-                                    rule = series.rule, endDate = series.endDate,
-                                    dueMode = series.dueMode, dueRule = series.dueRule, dueOffsetDays = series.dueOffsetDays,
-                                )
-                            },
-                            seriesId = t.seriesId,
-                            occurrenceDate = t.occurrenceDate,
-                            cue = t.cue,
-                            themeId = t.themeId,
-                            habitId = t.habitId,
-                            goalIds = t.goalIds,
-                            commitment = t.commitment,
-                        )
+                        TaskDraft.of(t, t.seriesId?.let { sid -> repo.getSeries(sid) })
                     }
                 } ?: run {
                     // New task. From Today (presetToday) it defaults toDoDate = today so it

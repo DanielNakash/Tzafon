@@ -1,6 +1,7 @@
 package com.thefoxworks.tzafon.domain.editor
 
 import com.thefoxworks.tzafon.domain.dates.Dates
+import com.thefoxworks.tzafon.domain.model.EditScope
 import com.thefoxworks.tzafon.domain.model.RecurrenceDraft
 import com.thefoxworks.tzafon.domain.model.TaskDraft
 import com.thefoxworks.tzafon.domain.model.TaskState
@@ -43,6 +44,27 @@ data class DraftChanges(val changes: List<Change>, val repeatTurnedOff: Boolean 
 
     /** Anything on the repeat card changed, so "Just this one" can't take it. */
     val touchesRepeatCard: Boolean get() = changes.any { it.repeatCard }
+
+    /**
+     * Whether a repeating task's save asks for a scope: not when nothing
+     * changed, nor when the only change is a status, which reaches this
+     * occurrence alone.
+     */
+    val asksScope: Boolean get() = changes.any { it.field != ChangeField.STATUS }
+
+    /**
+     * Which scopes these changes can be saved under: a repeat card change
+     * can't stay on just this one, and turning repeat off only ends the
+     * series from here on.
+     */
+    fun allows(scope: EditScope): Boolean = when (scope) {
+        EditScope.ONE -> !touchesRepeatCard
+        EditScope.FORWARD -> true
+        EditScope.ALL -> !repeatTurnedOff
+    }
+
+    /** The scope the sheet starts on: just this one where it can. */
+    val defaultScope: EditScope get() = if (allows(EditScope.ONE)) EditScope.ONE else EditScope.FORWARD
 }
 
 /**

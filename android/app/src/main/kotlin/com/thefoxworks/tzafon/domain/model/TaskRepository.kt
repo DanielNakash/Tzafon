@@ -16,8 +16,15 @@ interface TaskRepository {
     suspend fun getSeries(id: String): Series?
 
     /**
-     * Save an editor draft. `scope` applies to recurring edits only
-     * (v1.1.0 saveTask semantics: one / forward / all).
+     * Save an editor draft. What changed is measured against the task as
+     * stored; nothing is written when nothing changed. On a repeating task
+     * `scope` says how far the edits reach (one / forward / all), and a scope
+     * the changes don't allow (DraftChanges.allows) throws
+     * IllegalArgumentException. Turning repeat off ends the series the day
+     * before this occurrence, which carries on as a one-off. A to-do date
+     * move re-counts the rhythm only under Every N days; otherwise only this
+     * occurrence moves. A status waiting in the draft (with its "How much?"
+     * amount) applies last, to this occurrence only.
      */
     suspend fun saveDraft(draft: TaskDraft, scope: EditScope, today: String)
 
@@ -28,7 +35,11 @@ interface TaskRepository {
      */
     suspend fun countEarlierOccurrences(taskId: String, notDoneOnly: Boolean): Int
 
-    /** Delete a task or occurrence; ALL deletes the whole series. */
+    /**
+     * Delete a task or occurrence. FORWARD ends the series the day before
+     * this one and removes this and later occurrences; ALL removes the series.
+     * Either way Done occurrences stay (ALL keeps them as one-off tasks).
+     */
     suspend fun deleteTask(id: String, scope: EditScope)
 
     /**

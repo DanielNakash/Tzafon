@@ -168,6 +168,6 @@ class RecurringDateShiftTest {
         val after = seriesOccurrenceDates(taskDao, "S1")
         assertTrue("dates unchanged for no-op: 12-01/03/05/07/09 all present: $after",
             listOf("2026-12-01", "2026-12-03", "2026-12-05", "2026-12-07", "2026-12-09").all { it in after })
-        assertEquals("ruleAnchor stays on the original occurrence date", "2026-12-05", seriesDao.get("S1")?.toDomain()?.ruleAnchor)
+        assertEquals("v2.13.0: an edit that moves no date leaves the rule anchor alone", "2026-12-01", seriesDao.get("S1")?.toDomain()?.ruleAnchor)
     }
 }

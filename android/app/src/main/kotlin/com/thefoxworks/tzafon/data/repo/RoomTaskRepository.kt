@@ -6,6 +6,10 @@ import com.thefoxworks.tzafon.data.db.toDomain
 import com.thefoxworks.tzafon.data.db.toEntity
 import com.thefoxworks.tzafon.domain.attribution.Attribution
 import com.thefoxworks.tzafon.domain.dates.Dates
+import com.thefoxworks.tzafon.domain.editor.ChangeField
+import com.thefoxworks.tzafon.domain.editor.DraftChanges
+import com.thefoxworks.tzafon.domain.editor.DraftDiff
+import com.thefoxworks.tzafon.domain.editor.ScopeSheetCopy
 import com.thefoxworks.tzafon.domain.habits.HabitMath
 import com.thefoxworks.tzafon.domain.model.Contribution
 import com.thefoxworks.tzafon.domain.model.EditScope
@@ -103,19 +107,48 @@ class RoomTaskRepository(
 
     override suspend fun saveDraft(draft: TaskDraft, scope: EditScope, today: String) {
         val existing = draft.id?.let { taskDao.get(it)?.toDomain() }
+        // what Save changes, measured against the task as stored
+        val changes = existing?.let { t ->
+            DraftDiff.of(TaskDraft.of(t, t.seriesId?.let { seriesDao.get(it)?.toDomain() }), draft)
+        }
+        if (existing?.seriesId != null) {
+            require(changes!!.allows(scope)) { "$scope can't take these changes to a repeating task" }
+        }
+        // nothing but a status (or nothing at all) changed: no field is written
+        val savedId = if (changes != null && !changes.asksScope) existing.id
+        else saveFields(draft, scope, today, existing, changes)
+        // v2.13.0 — a single-task status waits in the draft and lands last, on
+        // this occurrence only, through the same path the lists use
+        if (existing != null && savedId != null && draft.state != existing.state) {
+            setState(savedId, draft.state, today, draft.habitAmount)
+        }
+    }
+
+    /**
+     * The field edits of [saveDraft]. Returns the id this task or occurrence
+     * has after the save, or null when it has none to take a status.
+     */
+    private suspend fun saveFields(
+        draft: TaskDraft,
+        scope: EditScope,
+        today: String,
+        existing: Task?,
+        changes: DraftChanges?,
+    ): String? {
         val rec = draft.recurrence
 
         // ── non-recurring result ──
         if (rec == null) {
-            if (existing?.seriesId != null && scope == EditScope.ALL) {
-                // recurrence turned off for the whole series → collapse to standalone
-                deleteSeriesAndOccurrences(existing.seriesId)
+            if (existing?.seriesId != null) {
+                // repeat turned off: the series ends the day before this one,
+                // which carries the edits on as a one-off (keeping its id, so
+                // what it ticked and moved stays linked)
+                endSeriesBefore(existing)
             }
-            val keepId = existing != null && !(existing.seriesId != null && scope == EditScope.ALL)
             // FR-BACKLOG-5: honor draft.state when creating a new task, so quick-adds
             // from Backlog land as BACKLOG (not OPEN). Existing tasks keep their state
             // — setState() is the sanctioned way to move between states.
-            val base = if (keepId) existing!! else Task(
+            val base = existing ?: Task(
                 id = UUID.randomUUID().toString(),
                 title = "",
                 state = draft.state,
@@ -138,7 +171,7 @@ class RoomTaskRepository(
                     commitment = draft.commitment,
                 ).toEntity()
             )
-            return
+            return base.id
         }
 
         // ── recurring result ──
@@ -168,42 +201,39 @@ class RoomTaskRepository(
             seriesDao.upsert(series.toEntity())
             if (existing != null) taskDao.delete(existing.id) // drop the old standalone row
             generate(series, emptySet(), today, Dates.addDays(today, Recurrence.HORIZON_DAYS))
-            return
+            return occurrenceId(series.id, anchor)
         }
 
         // editing an existing recurring occurrence
-        val series = seriesDao.get(existing.seriesId)?.toDomain() ?: return
+        val series = seriesDao.get(existing.seriesId)?.toDomain() ?: return null
 
         if (scope == EditScope.ONE) {
             // reschedule / edit this occurrence only — series untouched
-            taskDao.upsert(
-                existing.copy(
-                    title = draft.title.trim(),
-                    description = draft.description,
-                    toDoDate = draft.toDoDate,
-                    dueDate = draft.dueDate,
-                    overridden = true,
-                    cue = draft.cue,
-                    themeId = draft.themeId,
-                    habitId = draft.habitId,
-                    goalIds = draft.goalIds,
-                    commitment = draft.commitment,
-                ).toEntity()
-            )
-            return
+            editThisOne(existing, draft)
+            return existing.id
         }
 
         // FR-REC-6 — the original occurrence date bounds the "delete from here"
-        // prune; a user-typed toDoDate becomes the new rule anchor so the series'
-        // phase actually shifts. The two dates are deliberately separate.
+        // prune. A moved to-do date re-counts the rhythm only under Every N
+        // days, where it becomes the new rule anchor; on weekly and monthly
+        // rules only this occurrence moves (v2.13.0), and a new rule counts
+        // from this occurrence's slot.
         val originalOccurrenceDate = existing.occurrenceDate ?: existing.toDoDate ?: today
-        val newAnchor = draft.toDoDate ?: originalOccurrenceDate
+        val fields = changes!!.changes.map { it.field }.toSet()
+        val recounts = ChangeField.TODO_DATE in fields && ScopeSheetCopy.recountsOnMove(rec.rule)
+        val newAnchor = when {
+            recounts -> draft.toDoDate ?: originalOccurrenceDate
+            ChangeField.REPEAT in fields -> originalOccurrenceDate
+            else -> series.ruleAnchor ?: originalOccurrenceDate
+        }
+        // this occurrence's own dates changed without re-counting: it keeps
+        // them as an edited occurrence rather than being regenerated
+        val keepsOwnDates = !recounts &&
+            changes.changes.any { it.field in setOf(ChangeField.TODO_DATE, ChangeField.DEADLINE) && !it.repeatCard }
         val updated = series.copy(
             title = draft.title.trim(),
             description = draft.description,
             rule = rec.rule,
-            // FR-REC-6.1/6.3 — anchor at the user's new date so the rule
-            // re-enumerates from the shifted phase.
             ruleAnchor = newAnchor,
             // FR-REC-6.3 — ALL rewrites startDate to the new anchor (its
             // pre-anchor open non-settled rows are cleared by the loop below).
@@ -222,6 +252,7 @@ class RoomTaskRepository(
             goalIds = draft.goalIds,
         )
         seriesDao.upsert(updated.toEntity())
+        if (keepsOwnDates) editThisOne(existing, draft)
 
         // remove auto-generated, still-open occurrences the new rule replaces;
         // keep overridden/settled ones but refresh their text and links —
@@ -258,6 +289,26 @@ class RoomTaskRepository(
             today,
             Dates.addDays(today, Recurrence.HORIZON_DAYS),
         )
+        // a re-count regenerates this occurrence at its new date
+        return if (recounts) occurrenceId(series.id, newAnchor) else existing.id
+    }
+
+    /** This occurrence takes the draft as it stands, dates included, as an edited occurrence. */
+    private suspend fun editThisOne(occurrence: Task, draft: TaskDraft) {
+        taskDao.upsert(
+            occurrence.copy(
+                title = draft.title.trim(),
+                description = draft.description,
+                toDoDate = draft.toDoDate,
+                dueDate = draft.dueDate,
+                overridden = true,
+                cue = draft.cue,
+                themeId = draft.themeId,
+                habitId = draft.habitId,
+                goalIds = draft.goalIds,
+                commitment = draft.commitment,
+            ).toEntity()
+        )
     }
 
     override suspend fun countEarlierOccurrences(taskId: String, notDoneOnly: Boolean): Int {
@@ -269,11 +320,34 @@ class RoomTaskRepository(
         }
     }
 
+    /**
+     * End [occurrence]'s series the day before its slot: the series stops
+     * there, and this occurrence and every later one that isn't Done go.
+     * Earlier occurrences are untouched. The caller decides what becomes of
+     * [occurrence] itself; it is deleted here only if it isn't Done.
+     */
+    private suspend fun endSeriesBefore(occurrence: Task) {
+        val seriesId = occurrence.seriesId ?: return
+        val date = occurrence.occurrenceDate ?: return
+        seriesDao.get(seriesId)?.toDomain()?.let { s ->
+            seriesDao.upsert(s.copy(endDate = Dates.addDays(date, -1)).toEntity())
+        }
+        val gone = taskDao.occurrencesOf(seriesId).map { it.toDomain() }
+            .filter { (it.occurrenceDate ?: "") >= date && it.state != TaskState.DONE }
+        taskDao.deleteAll(gone.map { it.id })
+    }
+
     // ── deleting ──────────────────────────────────────────────
 
-    private suspend fun deleteSeriesAndOccurrences(seriesId: String) {
-        val occ = taskDao.occurrencesOf(seriesId)
-        taskDao.deleteAll(occ.map { it.id })
+    /**
+     * The whole series goes with every occurrence not Done. Done ones stay as
+     * one-off tasks, so what they ticked and moved stays where it is.
+     */
+    private suspend fun deleteSeriesKeepingDone(seriesId: String) {
+        val (done, rest) = taskDao.occurrencesOf(seriesId).map { it.toDomain() }
+            .partition { it.state == TaskState.DONE }
+        taskDao.deleteAll(rest.map { it.id })
+        taskDao.upsertAll(done.map { it.copy(seriesId = null, occurrenceDate = null, overridden = false).toEntity() })
         seriesDao.delete(seriesId)
     }
 
@@ -284,9 +358,10 @@ class RoomTaskRepository(
             taskDao.delete(id)
             return
         }
-        if (scope == EditScope.ALL) {
-            deleteSeriesAndOccurrences(seriesId)
-            return
+        when (scope) {
+            EditScope.ALL -> { deleteSeriesKeepingDone(seriesId); return }
+            EditScope.FORWARD -> { endSeriesBefore(existing); return }
+            EditScope.ONE -> Unit
         }
         // delete just this occurrence; record an exception so it never regenerates
         taskDao.delete(id)
