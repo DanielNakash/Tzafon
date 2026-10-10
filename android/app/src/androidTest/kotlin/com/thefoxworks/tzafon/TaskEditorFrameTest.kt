@@ -92,9 +92,12 @@ class TaskEditorFrameTest {
         rule.onNodeWithText("Delete task").assertDoesNotExist()
     }
 
-    /** FR-EDITOR-1, superseded: each field now lives in its pane; Serves still comes before the cue. */
+    /**
+     * FR-EDITOR-1, superseded: each field now lives in its pane. Inside
+     * Alignment the cue now comes first, as on slide 3 (FR-EDITOR-6.1).
+     */
     @Test
-    fun tabsShowTheirOwnFields_andAlignmentKeepsServesBeforeCue() {
+    fun tabsShowTheirOwnFields_andAlignmentPutsTheCueFirst() {
         editor()
         tab("Timing").performClick()
         tab("Timing").assertIsSelected()
@@ -104,9 +107,9 @@ class TaskEditorFrameTest {
         rule.onNodeWithText("TITLE").assertDoesNotExist()
 
         tab("Alignment").performClick()
-        val serves = rule.onNodeWithText("SERVES · ALIGNMENT (OPTIONAL)").assertIsDisplayed().getUnclippedBoundsInRoot()
-        val cue = rule.onNodeWithText("WHEN WILL YOU DO THIS? · CUE").assertIsDisplayed().getUnclippedBoundsInRoot()
-        assertTrue("Serves sits above the cue", serves.top < cue.top)
+        val cue = rule.onNodeWithText("CUE · WHEN X, I WILL DO Y").assertIsDisplayed().getUnclippedBoundsInRoot()
+        val habit = rule.onNodeWithText("TICKS A HABIT · ONE").assertIsDisplayed().getUnclippedBoundsInRoot()
+        assertTrue("the cue sits above the habit", cue.top < habit.top)
         rule.onNodeWithText("DATES · ONE CALENDAR, TWO FIELDS").assertDoesNotExist()
     }
 

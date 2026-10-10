@@ -63,11 +63,22 @@ class EditorSessionTest {
 
     @Test
     fun `presets are part of the snapshot, so an untouched quick-add closes silently`() {
-        val quickAdd = TaskDraft(id = null, title = "Call mum", toDoDate = "2026-10-10",
-            cue = Cue(CueType.AT_TIME, "", "18:00"))
+        val quickAdd = TaskDraft(id = null, title = "Call mum", toDoDate = "2026-10-10")
         val s = EditorSession.open(quickAdd)
         assertEquals(emptySet<Pane>(), s.changedPanes)
         assertFalse(s.asksBeforeClosing)
+    }
+
+    /** FR-EDITOR-6.10 — the owner's ruling on #28: a quick-add's parsed cue is an edit, not a preset. */
+    @Test
+    fun `a quick-add's parsed cue shows pre-filled and lights the Alignment dot`() {
+        val quickAdd = TaskDraft(id = null, title = "Call mum", toDoDate = "2026-10-10")
+        val cue = Cue(CueType.AT_TIME, "", "18:00")
+        val s = EditorSession.open(quickAdd, parsedCue = cue)
+        assertEquals(cue, s.draft.cue)
+        assertNull(s.snapshot.cue)
+        assertEquals(setOf(Pane.ALIGNMENT), s.changedPanes)
+        assertTrue(s.asksBeforeClosing)
     }
 
     @Test

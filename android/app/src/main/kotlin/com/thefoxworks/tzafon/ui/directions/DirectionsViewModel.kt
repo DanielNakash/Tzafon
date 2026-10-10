@@ -352,15 +352,4 @@ class DirectionsViewModel(
     fun deleteGoal(goalId: String) {
         viewModelScope.launch { goalRepo.delete(goalId) }
     }
-
-    /** DM-TASK auto-bridge: a quick aligned task straight from the theme. */
-    fun quickAddTask(title: String, themeId: String) {
-        viewModelScope.launch {
-            taskRepo.saveDraft(
-                com.thefoxworks.tzafon.domain.model.TaskDraft(id = null, title = title, themeId = themeId),
-                com.thefoxworks.tzafon.domain.model.EditScope.ONE,
-                today,
-            )
-        }
-    }
 }

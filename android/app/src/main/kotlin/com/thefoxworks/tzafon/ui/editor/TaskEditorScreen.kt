@@ -41,6 +41,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.thefoxworks.tzafon.domain.editor.Armed
+import com.thefoxworks.tzafon.domain.editor.CueDraft
+import com.thefoxworks.tzafon.domain.editor.CueSuggestions
 import com.thefoxworks.tzafon.domain.editor.DraftDiff
 import com.thefoxworks.tzafon.domain.editor.EditorSession
 import com.thefoxworks.tzafon.domain.editor.Pane
@@ -48,11 +50,13 @@ import com.thefoxworks.tzafon.domain.editor.SaveProblem
 import com.thefoxworks.tzafon.domain.editor.SaveStep
 import com.thefoxworks.tzafon.domain.editor.ScopeSheetCopy
 import com.thefoxworks.tzafon.domain.editor.SharedCalendar
+import com.thefoxworks.tzafon.domain.model.Cue
 import com.thefoxworks.tzafon.domain.model.EditScope
 import com.thefoxworks.tzafon.domain.model.SeriesStatus
 import com.thefoxworks.tzafon.domain.model.StatusScope
 import com.thefoxworks.tzafon.domain.model.Task
 import com.thefoxworks.tzafon.domain.model.TaskState
+import com.thefoxworks.tzafon.domain.model.Theme
 import com.thefoxworks.tzafon.domain.status.AmountPrompt
 import com.thefoxworks.tzafon.domain.status.StatusPick
 import com.thefoxworks.tzafon.domain.status.StatusSubject
@@ -98,17 +102,28 @@ fun TaskEditorScreen(
     goals: List<com.thefoxworks.tzafon.domain.model.Goal> = emptyList(),
     /** v2.13.0 — the scope sheets' whole-series badge: earlier occurrences (or only those not Done). */
     countEarlier: suspend (taskId: String, notDoneOnly: Boolean) -> Int = { _, _ -> 0 },
+    /** the themes the Alignment pane's inherited line names (FR-EDITOR-6.8) */
+    themes: List<Theme> = emptyList(),
+    /** every cue in use, for the Alignment pane's suggestion chips ([CueSuggestions.uses]) */
+    cueUses: List<Cue> = emptyList(),
+    /** a quick-add expand's parsed cue (FR-CAPTURE-3.6): an edit, so the Alignment dot shows */
+    parsedCue: Cue? = null,
 ) {
     // a quick-add expand passes a title-only draft (id = null) — still a new task
     val isNew = initial?.id == null
     var session by rememberSaveable(stateSaver = EditorSessionCodec.saver) {
         mutableStateOf(
-            EditorSession.open(initial ?: TaskDraft(id = null, title = "", toDoDate = null), openOn) // undated by default
+            EditorSession.open(initial ?: TaskDraft(id = null, title = "", toDoDate = null), openOn, parsedCue) // undated by default
         )
     }
+    // the Alignment pane's cue as typed; each edit also lands in the draft as the cue Save stores
+    var cue by rememberSaveable(stateSaver = CueDraftSaver) { mutableStateOf(CueDraft.of(session.draft.cue)) }
+    fun editCue(typed: CueDraft) { cue = typed; session = session.edit { it.copy(cue = typed.cue()) } }
+    var cueTimeFlagged by rememberSaveable { mutableStateOf(false) }
+    val cueTimeFocus = remember { FocusRequester() }
     val draft = session.draft
     fun update(change: (TaskDraft) -> TaskDraft) { session = session.edit(change) }
-    var sheet by rememberSaveable { mutableStateOf<String?>(null) } // end | scope | delete | confirmDelete | cue | habit | goals | status | amount | discard
+    var sheet by rememberSaveable { mutableStateOf<String?>(null) } // end | scope | delete | confirmDelete | status | amount | discard
     // the shared calendar: To do is armed on open (Reschedule too), and the month
     // only moves by its arrows; both outlive tab switches and rotation
     var armed by rememberSaveable { mutableStateOf(Armed.TODO) }
@@ -174,6 +189,13 @@ fun TaskEditorScreen(
             titleFocus.requestFocus()
             focusProblem = null
         }
+        if (focusProblem == SaveProblem.INCOMPLETE_CUE_TIME && session.tab == Pane.ALIGNMENT) {
+            // the cue sits at the top of the pane
+            scrolls.getValue(Pane.ALIGNMENT).animateScrollTo(0)
+            cueTimeFlagged = true
+            cueTimeFocus.requestFocus()
+            focusProblem = null
+        }
     }
 
     Column(Modifier.fillMaxSize().background(Tz.colors.bg)) {
@@ -204,7 +226,7 @@ fun TaskEditorScreen(
                     .clip(RoundedCornerShape(10.dp))
                     .background(Tz.colors.cream)
                     .pressable {
-                        val problem = session.saveProblem()
+                        val problem = session.saveProblem(cue)
                         if (problem == null) {
                             when (val step = session.saveStep) {
                                 SaveStep.Close -> onClose()
@@ -247,11 +269,17 @@ fun TaskEditorScreen(
                 )
                 Pane.ALIGNMENT -> AlignmentPane(
                     draft = draft,
+                    openedWithGoals = session.snapshot.goalIds,
+                    today = today,
                     habits = habits,
                     goals = goals,
-                    onHabit = { sheet = "habit" },
-                    onGoals = { sheet = "goals" },
-                    onCue = { sheet = "cue" },
+                    themes = themes,
+                    cueUses = cueUses,
+                    cue = cue,
+                    timeFlagged = cueTimeFlagged,
+                    timeFocus = cueTimeFocus,
+                    onCue = ::editCue,
+                    onEdit = ::update,
                 )
                 Pane.TIMING -> TimingPane(
                     draft = draft,
@@ -306,13 +334,6 @@ fun TaskEditorScreen(
                 onClose = { if (sheet == "amount") sheet = null; amountScope = null },
             )
         }
-        "cue" -> com.thefoxworks.tzafon.ui.components.CueSheet(
-            current = draft.cue,
-            onSave = { c -> update { it.copy(cue = c) } },
-            onClose = { sheet = null },
-        )
-        "habit" -> HabitSheet(draft, habits, onEdit = ::update, onClose = { sheet = null })
-        "goals" -> GoalsSheet(draft, goals, onEdit = ::update, onClose = { sheet = null })
         "discard" -> DenSheet("Discard your changes?", onClose = { sheet = null; seriesPending = null }) {
             Column {
                 Text(

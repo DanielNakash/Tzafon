@@ -1,5 +1,6 @@
 package com.thefoxworks.tzafon.domain.editor
 
+import com.thefoxworks.tzafon.domain.model.Cue
 import com.thefoxworks.tzafon.domain.model.EditScope
 import com.thefoxworks.tzafon.domain.model.SeriesStatus
 import com.thefoxworks.tzafon.domain.model.TaskDraft
@@ -104,8 +105,11 @@ data class EditorSession(
     companion object {
         /**
          * The editor opens on Task, except from Reschedule, which opens on
-         * Timing; the snapshot includes any presets.
+         * Timing; the snapshot includes any presets. A quick-add's
+         * [parsedCue] (FR-CAPTURE-3.6) is an edit, not a preset: it shows
+         * pre-filled and lights the Alignment dot (FR-EDITOR-6.10).
          */
-        fun open(draft: TaskDraft, tab: Pane = Pane.TASK) = EditorSession(snapshot = draft, draft = draft, tab = tab)
+        fun open(draft: TaskDraft, tab: Pane = Pane.TASK, parsedCue: Cue? = null) =
+            EditorSession(snapshot = draft, draft = draft.copy(cue = parsedCue ?: draft.cue), tab = tab)
     }
 }

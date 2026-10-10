@@ -492,8 +492,7 @@ private fun TzafonMainNav(container: AppContainer, initialUser: TzafonUser?) {
                         // New task. From Today (presetToday) it defaults toDoDate = today so it
                         // lands in the Today list; from Backlog (presetBacklog, FR-BACKLOG-5.2)
                         // it lands in Backlog state / undated; elsewhere it stays OPEN/undated
-                        // (FR-CAPTURE-2). presetCue (FR-CAPTURE-3.6) fills the cue slot with
-                        // the time parsed off the quick-add title, whatever the surface.
+                        // (FR-CAPTURE-2). presetCue (FR-CAPTURE-3.6) is passed on as parsedCue below.
                         if (presetTitle != null || presetToday || presetBacklog || presetCue != null) {
                             TaskDraft(
                                 id = null,
@@ -502,13 +501,16 @@ private fun TzafonMainNav(container: AppContainer, initialUser: TzafonUser?) {
                                     com.thefoxworks.tzafon.domain.model.TaskState.BACKLOG
                                 else com.thefoxworks.tzafon.domain.model.TaskState.OPEN,
                                 toDoDate = if (presetToday) today else null,
-                                cue = com.thefoxworks.tzafon.domain.action.QuickAddParse.cueFor(presetCue),
                             )
                         } else null
                     }
                     val habits by container.habitRepository.observeHabits()
                         .collectAsStateWithLifecycle(initialValue = emptyList())
                     val editorGoals by container.goalRepository.observeGoals()
+                        .collectAsStateWithLifecycle(initialValue = emptyList())
+                    val editorThemes by container.themeRepository.observeThemes()
+                        .collectAsStateWithLifecycle(initialValue = emptyList())
+                    val editorTasks by container.taskRepository.observeTasks()
                         .collectAsStateWithLifecycle(initialValue = emptyList())
                     TaskEditorScreen(
                         initial = initial,
@@ -537,6 +539,10 @@ private fun TzafonMainNav(container: AppContainer, initialUser: TzafonUser?) {
                         habits = habits,
                         goals = editorGoals,
                         countEarlier = container.taskRepository::countEarlierOccurrences,
+                        themes = editorThemes,
+                        cueUses = com.thefoxworks.tzafon.domain.editor.CueSuggestions.uses(editorTasks, habits),
+                        // the time parsed off the quick-add title, whatever the surface: an edit, not a preset
+                        parsedCue = com.thefoxworks.tzafon.domain.action.QuickAddParse.cueFor(presetCue),
                     )
                 }
             }
