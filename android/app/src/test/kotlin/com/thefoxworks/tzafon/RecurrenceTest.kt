@@ -40,7 +40,8 @@ class RecurrenceTest {
         dueRule: Rule? = null,
         dueSingular: String? = null,
         exceptions: List<String> = emptyList(),
-    ) = SeriesSpec(rule, anchor, anchor, endDate, dueMode, dueRule, dueSingular, exceptions)
+        dueOffsetDays: Int? = null,
+    ) = SeriesSpec(rule, anchor, anchor, endDate, dueMode, dueRule, dueSingular, exceptions, dueOffsetDays)
 
     // ── enumerateDates — interval ─────────────────────────────
 
@@ -160,6 +161,18 @@ class RecurrenceTest {
         )
     }
 
+    // ── v2.13.0 — per-occurrence deadline as an offset (ADR 0001) ──
+
+    @Test
+    fun `offset - each deadline falls N days after its own to-do date`() {
+        val s = spec(weekday(listOf(1)), dueMode = DueMode.OFFSET, dueOffsetDays = 3)
+        // Mondays Jun 1, 8, 15 → Thursdays Jun 4, 11, 18
+        assertEquals(
+            listOf("2026-06-04", "2026-06-11", "2026-06-18"),
+            Recurrence.computeDue(s, listOf("2026-06-01", "2026-06-08", "2026-06-15"), "2026-06-01", "2026-06-21"),
+        )
+    }
+
     // ── planOccurrences ───────────────────────────────────────
 
     @Test
@@ -248,6 +261,45 @@ class RecurrenceTest {
         // next Monday on/after Jun 9 is Jun 15 (index 2); its Friday is Jun 19
         assertEquals("2026-06-15", nearest?.occurrenceDate)
         assertEquals("2026-06-19", nearest?.due)
+    }
+
+    @Test
+    fun `an offset never ends the series - only a fixed deadline does`() {
+        // a stale dueSingular left over from a fixed deadline must not bound an OFFSET series
+        val s = spec(weekday(listOf(1)), dueMode = DueMode.OFFSET, dueOffsetDays = 1, dueSingular = "2026-06-10")
+        val plan = Recurrence.planOccurrences(s, horizon = "2026-06-30")
+        assertEquals(listOf("2026-06-01", "2026-06-08", "2026-06-15", "2026-06-22", "2026-06-29"), plan.create.map { it.toDo })
+        assertEquals(listOf("2026-06-02", "2026-06-09", "2026-06-16", "2026-06-23", "2026-06-30"), plan.create.map { it.due })
+        assertEquals("2026-06-30", plan.generatedThrough)
+    }
+
+    @Test
+    fun `switch to offset takes the next occurrence's gap`() {
+        // Mon to-do / Fri due rule; next Monday on/after Jun 9 is Jun 15, due Jun 19
+        val s = spec(weekday(listOf(1)), dueMode = DueMode.RECURRING, dueRule = weekday(listOf(5)))
+        assertEquals(4, Recurrence.switchToOffsetDays(s, "2026-06-09"))
+    }
+
+    @Test
+    fun `switch to offset raises a negative gap to 0`() {
+        // Fri to-do / Mon due rule, paired by index: Fri Jun 12 is due Mon Jun 8
+        val s = spec(weekday(listOf(5)), dueMode = DueMode.RECURRING, dueRule = weekday(listOf(1)))
+        assertEquals(0, Recurrence.switchToOffsetDays(s, "2026-06-09"))
+    }
+
+    @Test
+    fun `switch to offset caps a gap wider than 30 days at 30`() {
+        // Mon to-do / the 28th monthly due rule: Mon Jun 8 is index 1, due Jul 28 — 50 days
+        val s = spec(weekday(listOf(1)), dueMode = DueMode.RECURRING, dueRule = monthDate(28))
+        assertEquals(30, Recurrence.switchToOffsetDays(s, "2026-06-02"))
+    }
+
+    @Test
+    fun `floor gives the nearest occurrence its offset deadline`() {
+        val s = spec(weekday(listOf(1)), dueMode = DueMode.OFFSET, dueOffsetDays = 2)
+        val nearest = Recurrence.nearestOccurrence(s, "2026-06-09")
+        assertEquals("2026-06-15", nearest?.occurrenceDate)
+        assertEquals("2026-06-17", nearest?.due)
     }
 
     // ── FR-REC-2 — conditional year in labels ─────────────────

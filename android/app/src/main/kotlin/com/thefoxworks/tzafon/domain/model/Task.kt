@@ -70,6 +70,7 @@ data class Series(
     val dueMode: DueMode = DueMode.NONE,
     val dueRule: Rule? = null,
     val dueSingular: String? = null,
+    val dueOffsetDays: Int? = null,    // DueMode.OFFSET: 0..30 days after each to-do date
     val exceptions: List<String> = emptyList(),
     val generatedThrough: String? = null,
     val frozen: Boolean = false,       // FR-REC-5: freeze terminates generation
@@ -89,6 +90,7 @@ data class Series(
         dueRule = dueRule,
         dueSingular = dueSingular,
         exceptions = exceptions,
+        dueOffsetDays = dueOffsetDays,
     )
 }
 
@@ -119,6 +121,7 @@ data class RecurrenceDraft(
     val endDate: String? = null,
     val dueMode: DueMode = DueMode.NONE,
     val dueRule: Rule? = null,
+    val dueOffsetDays: Int? = null,
 )
 
 /** Recurring-edit scope, carried from v1.1.0: this one / this & future / all. */

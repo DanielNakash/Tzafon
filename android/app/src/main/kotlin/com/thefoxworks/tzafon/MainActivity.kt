@@ -471,7 +471,10 @@ private fun TzafonMainNav(container: AppContainer, initialUser: TzafonUser?) {
                             dueDate = t.dueDate,
                             state = t.state,
                             recurrence = s?.let { series ->
-                                RecurrenceDraft(rule = series.rule, endDate = series.endDate, dueMode = series.dueMode, dueRule = series.dueRule)
+                                RecurrenceDraft(
+                                    rule = series.rule, endDate = series.endDate,
+                                    dueMode = series.dueMode, dueRule = series.dueRule, dueOffsetDays = series.dueOffsetDays,
+                                )
                             },
                             seriesId = t.seriesId,
                             occurrenceDate = t.occurrenceDate,

@@ -293,6 +293,30 @@ class DataTransferTest {
         assertTrue("v1 file is flagged for a warning banner", (result as DataImporter.ParseResult.Ok).legacyVersion)
     }
 
+    // ── v2.13.0 — the per-occurrence deadline offset (ADR 0001) ──
+
+    @Test
+    fun `an offset series round-trips through the export`() {
+        val doc = fixture()
+        val offset = doc.collections.series.first().copy(dueMode = DueMode.OFFSET, dueOffsetDays = 3)
+        val withOffset = doc.copy(collections = doc.collections.copy(series = listOf(offset)))
+        val back = gson.fromJson(gson.toJson(withOffset), ExportDocument::class.java)
+        assertEquals(DueMode.OFFSET, back.collections.series.first().dueMode)
+        assertEquals(3, back.collections.series.first().dueOffsetDays)
+    }
+
+    @Test
+    fun `a v2_12 export with no dueOffsetDays still imports`() {
+        val importer = DataImporter(FakeTransfer())
+        val v212 = """{"manifest":{"format":"tzafon.export","formatVersion":2,"appVersion":"2.12.0","appVersionCode":13,"exportedAt":0,"exportedAtIso":"","counts":{"tasks":0,"series":1,"habits":0,"habitLogs":0,"goals":0,"themes":0,"reviews":0,"contributions":0}},"collections":{"tasks":[],"series":[{"id":"s1","title":"Clean desk","description":"","rule":{"pattern":"WEEKDAY","interval":1,"unit":"WEEK","weekdays":[1],"weekInterval":1,"monthMode":"DATE","monthDate":1,"monthWeekPos":1,"monthWeekday":0,"monthInterval":1},"ruleAnchor":"2026-07-06","startDate":"2026-07-06","dueMode":"RECURRING","dueRule":{"pattern":"WEEKDAY","interval":1,"unit":"WEEK","weekdays":[5],"weekInterval":1,"monthMode":"DATE","monthDate":1,"monthWeekPos":1,"monthWeekday":0,"monthInterval":1},"exceptions":[],"frozen":false,"goalIds":[],"createdAt":0}],"habits":[],"habitLogs":[],"goals":[],"themes":[],"reviews":[],"contributions":[]}}"""
+        val result = importer.parse(v212)
+        assertTrue(result is DataImporter.ParseResult.Ok)
+        val series = (result as DataImporter.ParseResult.Ok).document.collections.series.single()
+        assertEquals(DueMode.RECURRING, series.dueMode)
+        assertEquals(listOf(5), series.dueRule?.weekdays)
+        assertNull(series.dueOffsetDays)
+    }
+
     // ── FR-DATA-2.7 / FR-DATA-2.8 conflict policies ──
 
     @Test

@@ -18,8 +18,8 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         GoalEntity::class, ContributionEntity::class,
         ThemeEntity::class, ReviewEntity::class,
     ],
-    version = 5,
-    exportSchema = false,
+    version = 6,
+    exportSchema = true,
 )
 abstract class TzafonDatabase : RoomDatabase() {
     abstract fun taskDao(): TaskDao
@@ -121,9 +121,24 @@ abstract class TzafonDatabase : RoomDatabase() {
             }
         }
 
+        /**
+         * v2.13.0 — a per-occurrence deadline as an offset from each to-do
+         * date (`DueMode.OFFSET`, ADR 0001). One nullable column; the old
+         * deadline-rule columns stay for series saved before.
+         */
+        private val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE `series` ADD COLUMN `dueOffsetDays` INTEGER")
+            }
+        }
+
+        /** Every migration, oldest first — the app and MigrationTest run the same list. */
+        val MIGRATIONS: Array<Migration> =
+            arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
+
         fun build(context: Context): TzafonDatabase =
             Room.databaseBuilder(context, TzafonDatabase::class.java, "tzafon.db")
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+                .addMigrations(*MIGRATIONS)
                 .build()
     }
 }

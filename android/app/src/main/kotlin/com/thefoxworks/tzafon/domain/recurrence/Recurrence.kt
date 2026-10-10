@@ -20,7 +20,12 @@ import java.time.LocalDate
 enum class Pattern { INTERVAL, WEEKDAY, MONTHDAY }
 enum class IntervalUnit { DAY, WEEK, MONTH }
 enum class MonthMode { DATE, WEEKDAY }
-enum class DueMode { NONE, SINGULAR, RECURRING }
+/**
+ * How a series' occurrences get their deadline. OFFSET (v2.13.0) puts each
+ * one `dueOffsetDays` after its own to-do date. RECURRING (a second rule
+ * paired by index) is kept read-only for older series — see ADR 0001.
+ */
+enum class DueMode { NONE, SINGULAR, RECURRING, OFFSET }
 
 data class Rule(
     val pattern: Pattern = Pattern.WEEKDAY,
@@ -45,6 +50,7 @@ data class SeriesSpec(
     val dueRule: Rule? = null,
     val dueSingular: String? = null,
     val exceptions: List<String> = emptyList(),
+    val dueOffsetDays: Int? = null,
 )
 
 data class PlannedOccurrence(val occurrenceDate: String, val toDo: String, val due: String?)
@@ -57,6 +63,9 @@ object Recurrence {
 
     /** The rolling bulk-generation window, carried from v1.1.0 series.js. */
     const val HORIZON_DAYS = 60L
+
+    /** A per-occurrence deadline falls 0..30 days after its to-do date (ADR 0001). */
+    const val MAX_DUE_OFFSET_DAYS = 30
 
     fun defaultRule(today: LocalDate = LocalDate.now()): Rule = Rule(
         pattern = Pattern.WEEKDAY,
@@ -171,6 +180,9 @@ object Recurrence {
             val dues = enumerateDates(series.dueRule, anchor, anchor, end)
             return toDoList.mapIndexed { i, _ -> dues.getOrNull(i) }
         }
+        if (series.dueMode == DueMode.OFFSET && series.dueOffsetDays != null) {
+            return toDoList.map { Dates.addDays(it, series.dueOffsetDays.toLong()) }
+        }
         return toDoList.map { null }
     }
 
@@ -240,9 +252,21 @@ object Recurrence {
                 val idx = enumerateDates(series.rule, anchor, anchor, first).size - 1
                 enumerateDates(dueRule, anchor, anchor, farBound).getOrNull(idx)
             }
+            DueMode.OFFSET -> series.dueOffsetDays?.let { Dates.addDays(first, it.toLong()) }
             DueMode.NONE -> null
         }
         return PlannedOccurrence(first, first, due)
+    }
+
+    /**
+     * "Switch to offset" for a series on an old deadline rule (ADR 0001): the
+     * gap between the next occurrence's to-do date and its deadline, held to
+     * 0..[MAX_DUE_OFFSET_DAYS]. 0 when there is no next deadline to measure.
+     */
+    fun switchToOffsetDays(series: SeriesSpec, today: String): Int {
+        val next = nearestOccurrence(series, today) ?: return 0
+        val due = next.due ?: return 0
+        return Dates.dayDiff(due, next.toDo).toInt().coerceIn(0, MAX_DUE_OFFSET_DAYS)
     }
 
     // ── human-readable summary ────────────────────────────────

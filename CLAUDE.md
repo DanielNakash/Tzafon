@@ -121,9 +121,12 @@ ui/      today/ planning/ habits/ directions/ journey/   ← the five bottom-nav
 
 - The five tabs are defined in `ui/nav/BottomNav.kt`; All Tasks, Backlog, Settings and About ride
   the hamburger menu, not the bar (`FR-NAV-1`).
-- **Room is at version 5 and migrations are additive only** (`NFR-DATA-1`). A schema change means
-  bumping `version` *and* adding a `Migration(n, n+1)` in `TzafonDatabase.kt` — never a destructive
-  fallback; shipped installs carry real user data.
+- **Room is at version 6 and migrations are additive only** (`NFR-DATA-1`). A schema change means
+  bumping `version` *and* adding a `Migration(n, n+1)` to `TzafonDatabase.MIGRATIONS` — never a
+  destructive fallback; shipped installs carry real user data. The build exports each version's
+  schema to `android/app/schemas/` (commit the new JSON), and `MigrationTest` builds the old version
+  from it and migrates for real — add a case per migration. Never regenerate an older version's
+  JSON from newer entities.
 - The Firestore mirror writes **through the DAOs on purpose**, bypassing repository business logic —
   a mirror must not re-run attribution or state-machine effects.
 
@@ -192,8 +195,8 @@ outcomes against the design; don't screenshot what a log line already proves.
   `RecurringDateShiftTest`), the state machine, action logic, habit math, attribution, journey,
   review, notify, palettes, bidi, nav back-stack rules, and data export/import.
 - **Instrumented** — `./gradlew connectedDebugAndroidTest` (needs a running emulator).
-  the 8 suites in `app/src/androidTest/kotlin/…` cover behavioural UI: header menu, habit collapse/edit,
-  content direction, reorder, Directions creation, About.
+  the 9 suites in `app/src/androidTest/kotlin/…` cover behavioural UI (header menu, habit collapse/edit,
+  content direction, reorder, Directions creation, About) and Room migrations (`MigrationTest`).
 - A version is done only when its tests are green **and** it's verified on the emulator against the
   design. New behaviour lands with a test — regressions here are what the parity suites exist for.
 

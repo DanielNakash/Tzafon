@@ -56,6 +56,14 @@ android {
         compose = true
         buildConfig = true
     }
+
+    // NFR-DATA-1 — Room's exported schemas (one JSON per version) let
+    // MigrationTest build an old database and migrate it for real.
+    sourceSets.getByName("androidTest").assets.directories.add("$projectDir/schemas")
+}
+
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
 }
 
 dependencies {

@@ -1,0 +1,786 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 5,
+    "identityHash": "6030901e24cf8b895dbcf204bcfa4fd0",
+    "entities": [
+      {
+        "tableName": "tasks",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `title` TEXT NOT NULL, `description` TEXT NOT NULL, `toDoDate` TEXT, `dueDate` TEXT, `state` TEXT NOT NULL, `seriesId` TEXT, `occurrenceDate` TEXT, `overridden` INTEGER NOT NULL, `cueType` TEXT, `cueLabel` TEXT, `cueTime` TEXT, `themeId` TEXT, `habitId` TEXT, `goalIds` TEXT NOT NULL, `commitment` TEXT, `focusDate` TEXT, `focusWeekStart` TEXT, `sortOrder` INTEGER NOT NULL, `createdAt` INTEGER NOT NULL, `stateChangedAt` INTEGER NOT NULL, `completedAt` INTEGER, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "title",
+            "columnName": "title",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "description",
+            "columnName": "description",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "toDoDate",
+            "columnName": "toDoDate",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "dueDate",
+            "columnName": "dueDate",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "state",
+            "columnName": "state",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "seriesId",
+            "columnName": "seriesId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "occurrenceDate",
+            "columnName": "occurrenceDate",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "overridden",
+            "columnName": "overridden",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "cueType",
+            "columnName": "cueType",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "cueLabel",
+            "columnName": "cueLabel",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "cueTime",
+            "columnName": "cueTime",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "themeId",
+            "columnName": "themeId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "habitId",
+            "columnName": "habitId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "goalIds",
+            "columnName": "goalIds",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "commitment",
+            "columnName": "commitment",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "focusDate",
+            "columnName": "focusDate",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "focusWeekStart",
+            "columnName": "focusWeekStart",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "sortOrder",
+            "columnName": "sortOrder",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "stateChangedAt",
+            "columnName": "stateChangedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "completedAt",
+            "columnName": "completedAt",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "series",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `title` TEXT NOT NULL, `description` TEXT NOT NULL, `pattern` TEXT NOT NULL, `intervalN` INTEGER NOT NULL, `unit` TEXT NOT NULL, `weekdays` TEXT NOT NULL, `weekInterval` INTEGER NOT NULL, `monthMode` TEXT NOT NULL, `monthDate` INTEGER NOT NULL, `monthWeekPos` INTEGER NOT NULL, `monthWeekday` INTEGER NOT NULL, `monthInterval` INTEGER NOT NULL, `ruleAnchor` TEXT NOT NULL, `startDate` TEXT NOT NULL, `endDate` TEXT, `dueMode` TEXT NOT NULL, `dueSingular` TEXT, `duePattern` TEXT, `dueInterval` INTEGER, `dueUnit` TEXT, `dueWeekdays` TEXT, `dueWeekInterval` INTEGER, `dueMonthMode` TEXT, `dueMonthDate` INTEGER, `dueMonthWeekPos` INTEGER, `dueMonthWeekday` INTEGER, `dueMonthInterval` INTEGER, `exceptions` TEXT NOT NULL, `generatedThrough` TEXT, `frozen` INTEGER NOT NULL, `cueType` TEXT, `cueLabel` TEXT, `cueTime` TEXT, `themeId` TEXT, `habitId` TEXT, `goalIds` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "title",
+            "columnName": "title",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "description",
+            "columnName": "description",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "pattern",
+            "columnName": "pattern",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "interval",
+            "columnName": "intervalN",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "unit",
+            "columnName": "unit",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "weekdays",
+            "columnName": "weekdays",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "weekInterval",
+            "columnName": "weekInterval",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "monthMode",
+            "columnName": "monthMode",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "monthDate",
+            "columnName": "monthDate",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "monthWeekPos",
+            "columnName": "monthWeekPos",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "monthWeekday",
+            "columnName": "monthWeekday",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "monthInterval",
+            "columnName": "monthInterval",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ruleAnchor",
+            "columnName": "ruleAnchor",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "startDate",
+            "columnName": "startDate",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "endDate",
+            "columnName": "endDate",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "dueMode",
+            "columnName": "dueMode",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dueSingular",
+            "columnName": "dueSingular",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "duePattern",
+            "columnName": "duePattern",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "dueInterval",
+            "columnName": "dueInterval",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "dueUnit",
+            "columnName": "dueUnit",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "dueWeekdays",
+            "columnName": "dueWeekdays",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "dueWeekInterval",
+            "columnName": "dueWeekInterval",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "dueMonthMode",
+            "columnName": "dueMonthMode",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "dueMonthDate",
+            "columnName": "dueMonthDate",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "dueMonthWeekPos",
+            "columnName": "dueMonthWeekPos",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "dueMonthWeekday",
+            "columnName": "dueMonthWeekday",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "dueMonthInterval",
+            "columnName": "dueMonthInterval",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "exceptions",
+            "columnName": "exceptions",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "generatedThrough",
+            "columnName": "generatedThrough",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "frozen",
+            "columnName": "frozen",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "cueType",
+            "columnName": "cueType",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "cueLabel",
+            "columnName": "cueLabel",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "cueTime",
+            "columnName": "cueTime",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "themeId",
+            "columnName": "themeId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "habitId",
+            "columnName": "habitId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "goalIds",
+            "columnName": "goalIds",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "habits",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `name` TEXT NOT NULL, `kind` TEXT NOT NULL, `target` REAL NOT NULL, `unit` TEXT, `targetDays` INTEGER, `cueType` TEXT, `cueLabel` TEXT, `cueTime` TEXT, `primaryThemeId` TEXT, `themeIds` TEXT NOT NULL, `goalId` TEXT, `startedAt` INTEGER NOT NULL, `createdAt` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "kind",
+            "columnName": "kind",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "target",
+            "columnName": "target",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "unit",
+            "columnName": "unit",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "targetDays",
+            "columnName": "targetDays",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "cueType",
+            "columnName": "cueType",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "cueLabel",
+            "columnName": "cueLabel",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "cueTime",
+            "columnName": "cueTime",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "primaryThemeId",
+            "columnName": "primaryThemeId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "themeIds",
+            "columnName": "themeIds",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "goalId",
+            "columnName": "goalId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "startedAt",
+            "columnName": "startedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "habit_logs",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`habitId` TEXT NOT NULL, `date` TEXT NOT NULL, `done` INTEGER NOT NULL, `amount` REAL, `source` TEXT NOT NULL, `sourceTaskId` TEXT, PRIMARY KEY(`habitId`, `date`))",
+        "fields": [
+          {
+            "fieldPath": "habitId",
+            "columnName": "habitId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "date",
+            "columnName": "date",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "done",
+            "columnName": "done",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "amount",
+            "columnName": "amount",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "source",
+            "columnName": "source",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sourceTaskId",
+            "columnName": "sourceTaskId",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "habitId",
+            "date"
+          ]
+        }
+      },
+      {
+        "tableName": "goals",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `title` TEXT NOT NULL, `description` TEXT NOT NULL, `type` TEXT NOT NULL, `steps` TEXT NOT NULL, `targetQty` REAL NOT NULL, `unit` TEXT, `currentQty` REAL NOT NULL, `state` TEXT NOT NULL, `deadline` TEXT, `commitment` TEXT, `primaryThemeId` TEXT, `themeIds` TEXT NOT NULL, `lastActivityAt` INTEGER NOT NULL, `completedAt` INTEGER, `createdAt` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "title",
+            "columnName": "title",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "description",
+            "columnName": "description",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "type",
+            "columnName": "type",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "steps",
+            "columnName": "steps",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "targetQty",
+            "columnName": "targetQty",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "unit",
+            "columnName": "unit",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "currentQty",
+            "columnName": "currentQty",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "state",
+            "columnName": "state",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "deadline",
+            "columnName": "deadline",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "commitment",
+            "columnName": "commitment",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "primaryThemeId",
+            "columnName": "primaryThemeId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "themeIds",
+            "columnName": "themeIds",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastActivityAt",
+            "columnName": "lastActivityAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "completedAt",
+            "columnName": "completedAt",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "contributions",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `taskId` TEXT NOT NULL, `goalId` TEXT NOT NULL, `amount` REAL NOT NULL, `via` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "taskId",
+            "columnName": "taskId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "goalId",
+            "columnName": "goalId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "amount",
+            "columnName": "amount",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "via",
+            "columnName": "via",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "themes",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `name` TEXT NOT NULL, `why` TEXT NOT NULL, `windowStart` TEXT NOT NULL, `windowEnd` TEXT NOT NULL, `state` TEXT NOT NULL, `archivedOutcome` TEXT, `renewedToThemeId` TEXT, `accentSlot` INTEGER NOT NULL, `createdAt` INTEGER NOT NULL, `archivedAt` INTEGER, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "why",
+            "columnName": "why",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "windowStart",
+            "columnName": "windowStart",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "windowEnd",
+            "columnName": "windowEnd",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "state",
+            "columnName": "state",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "archivedOutcome",
+            "columnName": "archivedOutcome",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "renewedToThemeId",
+            "columnName": "renewedToThemeId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "accentSlot",
+            "columnName": "accentSlot",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "archivedAt",
+            "columnName": "archivedAt",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "reviews",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `kind` TEXT NOT NULL, `periodStart` TEXT NOT NULL, `periodEnd` TEXT NOT NULL, `status` TEXT NOT NULL, `reflectNote` TEXT, `snapshot` TEXT NOT NULL, `completedAt` INTEGER, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "kind",
+            "columnName": "kind",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "periodStart",
+            "columnName": "periodStart",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "periodEnd",
+            "columnName": "periodEnd",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "status",
+            "columnName": "status",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "reflectNote",
+            "columnName": "reflectNote",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "snapshot",
+            "columnName": "snapshot",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "completedAt",
+            "columnName": "completedAt",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '6030901e24cf8b895dbcf204bcfa4fd0')"
+    ]
+  }
+}
