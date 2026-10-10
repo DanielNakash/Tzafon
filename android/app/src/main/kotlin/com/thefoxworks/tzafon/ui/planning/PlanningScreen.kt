@@ -75,7 +75,6 @@ fun PlanningScreen(
     val state by vm.uiState.collectAsStateWithLifecycle()
     var quickAdd by remember { mutableStateOf(false) }
     var menu by remember { mutableStateOf(false) }
-    var rescheduleId by remember { mutableStateOf<String?>(null) }
     var customRange by remember { mutableStateOf(false) }
     // FR-PLAN-6.7 — survives configuration change, dies on navigation away
     var query by rememberSaveable { mutableStateOf("") }
@@ -203,7 +202,7 @@ fun PlanningScreen(
                                     onToggle = { status.tap(t) },
                                     onHold = { status.hold(t) },
                                     onToday = { vm.doToday(t.id) },
-                                    onReschedule = { rescheduleId = t.id },
+                                    onReschedule = { status.reschedule(t) },
                                     onChangeStatus = { status.hold(t) },
                                 )
                             }
@@ -311,15 +310,6 @@ fun PlanningScreen(
             onAbout = onOpenAbout,
         )
     }
-    rescheduleId?.let { id ->
-        DenSheet(title = "Move it to", onClose = { rescheduleId = null }) {
-            CalendarPicker(
-                value = null,
-                today = state.today,
-                onPick = { d -> vm.rescheduleTo(id, d); rescheduleId = null },
-            )
-        }
-    }
     if (customRange) {
         DenSheet(title = "Plan through", onClose = { customRange = false }) {
             CalendarPicker(
@@ -334,7 +324,8 @@ fun PlanningScreen(
 
 /**
  * An overdue row presented as a calm decision, not a debt (FR-PLAN-3).
- * FR-PLAN-4 — the pill row is `Today · Reschedule · Set status`; the
+ * FR-PLAN-4 — the pill row is `Today · Reschedule · Set status`; Reschedule
+ * opens the editor on Timing (v2.13.0), where the date applies at Save. The
  * checkbox is an isolated tap target that marks the task Done through the
  * same tap rule as every other row (FR-PLAN-4.3, v2.13.0).
  */

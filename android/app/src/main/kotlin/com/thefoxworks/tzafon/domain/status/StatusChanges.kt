@@ -1,7 +1,9 @@
 package com.thefoxworks.tzafon.domain.status
 
 import com.thefoxworks.tzafon.domain.attribution.Attribution
+import com.thefoxworks.tzafon.domain.model.Goal
 import com.thefoxworks.tzafon.domain.model.GoalRepository
+import com.thefoxworks.tzafon.domain.model.Habit
 import com.thefoxworks.tzafon.domain.model.HabitRepository
 import com.thefoxworks.tzafon.domain.model.SeriesStatus
 import com.thefoxworks.tzafon.domain.model.StateMachine
@@ -9,6 +11,7 @@ import com.thefoxworks.tzafon.domain.model.StatusScope
 import com.thefoxworks.tzafon.domain.model.Task
 import com.thefoxworks.tzafon.domain.model.TaskRepository
 import com.thefoxworks.tzafon.domain.model.TaskState
+import com.thefoxworks.tzafon.domain.recurrence.Recurrence
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,7 +22,19 @@ import kotlinx.coroutines.sync.withLock
 data class ShownToast(val id: Long, val text: String, val undoable: Boolean)
 
 /** The "How much?" prompt a Done waits on (DM-HABIT-5 / DM-GOAL-3). */
-data class AmountPrompt(val title: String, val unit: String?, val suggested: Double?)
+data class AmountPrompt(val title: String, val unit: String?, val suggested: Double?) {
+    companion object {
+        /** The prompt to put before marking [task] done with these links, or null if none is needed. */
+        fun of(task: Task, habit: Habit?, goalsById: Map<String, Goal>): AmountPrompt? {
+            if (!Attribution.needsAmountPrompt(task, habit, goalsById)) return null
+            return AmountPrompt(
+                title = "How much? · ${habit?.name ?: task.title}",
+                unit = Attribution.promptUnit(task, habit, goalsById),
+                suggested = habit?.target,
+            )
+        }
+    }
+}
 
 /**
  * v2.13.0 — every status change made from a list (a checkbox tap or a
@@ -44,16 +59,25 @@ class StatusChanges(
     private val _toast = MutableStateFlow<ShownToast?>(null)
     val toast: StateFlow<ShownToast?> = _toast.asStateFlow()
 
+    /** What the status sheet shows for [task]: its series' facts and the names of its links. */
+    suspend fun subject(task: Task): StatusSubject {
+        val series = task.seriesId?.let { tasks.getSeries(it) }
+        return StatusSubject(
+            title = task.title,
+            state = task.state,
+            toDoDate = task.toDoDate,
+            repeat = series?.let { Recurrence.summary(it.rule) },
+            series = series?.let { SeriesStatus.of(it, today()) },
+            habit = task.habitId?.let { habits?.getHabit(it)?.name },
+            goals = task.goalIds.mapNotNull { goals?.getGoal(it)?.title },
+        )
+    }
+
     /** The prompt to put before marking [task] done, or null if none is needed. */
     suspend fun amountPrompt(task: Task): AmountPrompt? {
         val habit = task.habitId?.let { habits?.getHabit(it) }
         val goalsById = task.goalIds.mapNotNull { goals?.getGoal(it) }.associateBy { it.id }
-        if (!Attribution.needsAmountPrompt(task, habit, goalsById)) return null
-        return AmountPrompt(
-            title = "How much? · ${habit?.name ?: task.title}",
-            unit = Attribution.promptUnit(task, habit, goalsById),
-            suggested = habit?.target,
-        )
+        return AmountPrompt.of(task, habit, goalsById)
     }
 
     /**

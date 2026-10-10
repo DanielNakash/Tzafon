@@ -51,7 +51,11 @@ import com.thefoxworks.tzafon.ui.planning.PlanningViewModel
 import com.thefoxworks.tzafon.ui.review.ReviewScreen
 import com.thefoxworks.tzafon.ui.review.ReviewViewModel
 import com.thefoxworks.tzafon.ui.settings.SettingsScreen
+import com.thefoxworks.tzafon.ui.status.LocalEditorOpener
 import com.thefoxworks.tzafon.ui.status.LocalStatusHost
+import com.thefoxworks.tzafon.domain.editor.Pane
+import com.thefoxworks.tzafon.domain.model.SeriesStatus
+import com.thefoxworks.tzafon.domain.model.StatusScope
 import com.thefoxworks.tzafon.ui.status.StatusToastHost
 import com.thefoxworks.tzafon.ui.theme.LocalPalette
 import com.thefoxworks.tzafon.ui.theme.paletteFor
@@ -284,9 +288,11 @@ private fun TzafonMainNav(container: AppContainer, initialUser: TzafonUser?) {
         presetToday: Boolean = false,
         presetBacklog: Boolean = false,
         presetCue: String? = null,
+        tab: Pane = Pane.TASK,
     ) {
         val params = buildList {
             if (taskId != null) add("taskId=$taskId")
+            if (tab != Pane.TASK) add("tab=${tab.name}")
             if (!title.isNullOrBlank()) add("title=${Uri.encode(title)}")
             if (presetToday) add("presetToday=true")
             if (presetBacklog) add("presetBacklog=true")
@@ -303,228 +309,244 @@ private fun TzafonMainNav(container: AppContainer, initialUser: TzafonUser?) {
     // away without pretending the reference view is a primary tab.
     val showBottomNav = activeTab != null || currentRoute in REFERENCE_ROUTES
 
-    Box(Modifier.fillMaxSize()) {
-        NavHost(
-            navController = nav,
-            startDestination = start,
-            modifier = Modifier.fillMaxSize(),
-        ) {
-            composable("welcome") {
-                WelcomeScreen(
-                    authRepository = container.authRepository,
-                    onSignedIn = {
-                        // FR-AUTH-1.3 — clear Welcome from the back stack so
-                        // Android back from Today does not return here.
-                        nav.navigate(Tab.TODAY.route) { popUpTo("welcome") { inclusive = true } }
-                    },
-                )
-            }
-
-            // ── the five tabs (FR-NAV-1; Today default, FR-NAV-2) ──
-            composable(Tab.TODAY.route) {
-                val vm: TodayViewModel = viewModel(factory = VmFactory(container))
-                TodayScreen(
-                    vm = vm,
-                    onOpenTask = { id -> openEditor(taskId = id) },
-                    // FR-CAPTURE-3.6 — EXPAND carries the parsed cue; the date rule is
-                    // Today's own (FR-TODAY-7) and is unchanged by the parse.
-                    onExpandAdd = { title, cueTime ->
-                        openEditor(title = title, presetToday = true, presetCue = cueTime)
-                    },
-                    onOpenPlanning = { goTab(Tab.PLANNING) },
-                    onOpenAllTasks = { goRef("alltasks") },
-                    onOpenBacklog = { goRef("backlog") },
-                    onOpenSettings = { nav.navigate("settings") },
-                    onOpenAbout = { nav.navigate("about") },
-                    onOpenReview = { nav.navigate("review") },
-                )
-            }
-
-            composable(Tab.PLANNING.route) {
-                val vm: PlanningViewModel = viewModel(factory = VmFactory(container))
-                PlanningScreen(
-                    vm = vm,
-                    onOpenTask = { id -> openEditor(taskId = id) },
-                    // FR-PLAN-7.4 — a parsed time opens the editor pre-set to today with
-                    // the cue filled; a bare capture still opens undated (FR-CAPTURE-2).
-                    onExpandAdd = { title, cueTime ->
-                        openEditor(title = title, presetToday = cueTime != null, presetCue = cueTime)
-                    },
-                    onOpenAllTasks = { goRef("alltasks") },
-                    onOpenBacklog = { goRef("backlog") },
-                    onOpenSettings = { nav.navigate("settings") },
-                    onOpenAbout = { nav.navigate("about") },
-                )
-            }
-
-            composable(Tab.HABITS.route) {
-                val vm: HabitsViewModel = viewModel(factory = VmFactory(container))
-                HabitsScreen(
-                    vm = vm,
-                    onOpenAllTasks = { goRef("alltasks") },
-                    onOpenBacklog = { goRef("backlog") },
-                    onOpenSettings = { nav.navigate("settings") },
-                    onOpenAbout = { nav.navigate("about") },
-                )
-            }
-            composable(Tab.DIRECTIONS.route) {
-                val vm: DirectionsViewModel = viewModel(factory = VmFactory(container))
-                DirectionsScreen(
-                    vm = vm,
-                    onOpenAllTasks = { goRef("alltasks") },
-                    onOpenBacklog = { goRef("backlog") },
-                    onOpenSettings = { nav.navigate("settings") },
-                    onOpenAbout = { nav.navigate("about") },
-                )
-            }
-            composable(Tab.JOURNEY.route) {
-                val vm: JourneyViewModel = viewModel(factory = VmFactory(container))
-                JourneyScreen(
-                    vm = vm,
-                    onOpenAllTasks = { goRef("alltasks") },
-                    onOpenBacklog = { goRef("backlog") },
-                    onOpenSettings = { nav.navigate("settings") },
-                    onOpenAbout = { nav.navigate("about") },
-                )
-            }
-
-            // ── reference views via the menu (FR-NAV-1) ──
-            composable("alltasks") {
-                val vm: AllTasksViewModel = viewModel(factory = VmFactory(container))
-                AllTasksScreen(
-                    vm = vm,
-                    onOpenTask = { id -> openEditor(taskId = id) },
-                    onAdd = { openEditor() },
-                    onOpenBacklog = { goRef("backlog") },
-                    onOpenAbout = { nav.navigate("about") },
-                )
-            }
-
-            composable("backlog") {
-                val vm: BacklogViewModel = viewModel(factory = VmFactory(container))
-                BacklogScreen(
-                    vm = vm,
-                    onOpenTask = { id -> openEditor(taskId = id) },
-                    // FR-BACKLOG-5.2 — the expand-to-full-form route from Backlog
-                    // opens the editor pre-set to Backlog state / undated; the state
-                    // and date preset are untouched by a parsed cue (FR-CAPTURE-3.8).
-                    onExpandAdd = { title, cueTime ->
-                        openEditor(title = title, presetBacklog = true, presetCue = cueTime)
-                    },
-                    onOpenAllTasks = { goRef("alltasks") },
-                    onOpenSettings = { nav.navigate("settings") },
-                    onOpenAbout = { nav.navigate("about") },
-                )
-            }
-
-            composable("review") {
-                val vm: ReviewViewModel = viewModel(factory = VmFactory(container))
-                ReviewScreen(vm = vm, onClose = { nav.popBackStack() })
-            }
-
-            composable("settings") {
-                SettingsScreen(
-                    settings = container.settings,
-                    auth = container.authRepository,
-                    exporter = container.dataExporter,
-                    importer = container.dataImporter,
-                    onClose = { nav.popBackStack() },
-                    onSignedOut = {
-                        // FR-AUTH-1.4 — sign-out returns to Welcome and clears
-                        // the entire main-tab back stack so back from Welcome
-                        // exits the app rather than returning to a signed-in tab.
-                        nav.navigate("welcome") {
-                            popUpTo(nav.graph.startDestinationId) { inclusive = true }
-                            launchSingleTop = true
-                        }
-                    },
-                )
-            }
-
-            composable("about") {
-                AboutScreen(onClose = { nav.popBackStack() })
-            }
-
-            composable(
-                route = "editor?taskId={taskId}&title={title}&presetToday={presetToday}&presetBacklog={presetBacklog}&presetCue={presetCue}",
-                arguments = listOf(
-                    navArgument("taskId") { type = NavType.StringType; nullable = true; defaultValue = null },
-                    navArgument("title") { type = NavType.StringType; nullable = true; defaultValue = null },
-                    navArgument("presetToday") { type = NavType.BoolType; defaultValue = false },
-                    navArgument("presetBacklog") { type = NavType.BoolType; defaultValue = false },
-                    navArgument("presetCue") { type = NavType.StringType; nullable = true; defaultValue = null },
-                ),
-            ) { backStack ->
-                val taskId = backStack.arguments?.getString("taskId")
-                val presetTitle = backStack.arguments?.getString("title")
-                val presetToday = backStack.arguments?.getBoolean("presetToday") == true
-                val presetBacklog = backStack.arguments?.getBoolean("presetBacklog") == true
-                val presetCue = backStack.arguments?.getString("presetCue")
-                val repo = container.taskRepository
-                // hydrate the draft synchronously off the DB (small row; simple M0 path)
-                val initial: TaskDraft? = taskId?.let {
-                    runBlocking {
-                        val t = repo.getTask(it) ?: return@runBlocking null
-                        TaskDraft.of(t, t.seriesId?.let { sid -> repo.getSeries(sid) })
-                    }
-                } ?: run {
-                    // New task. From Today (presetToday) it defaults toDoDate = today so it
-                    // lands in the Today list; from Backlog (presetBacklog, FR-BACKLOG-5.2)
-                    // it lands in Backlog state / undated; elsewhere it stays OPEN/undated
-                    // (FR-CAPTURE-2). presetCue (FR-CAPTURE-3.6) fills the cue slot with
-                    // the time parsed off the quick-add title, whatever the surface.
-                    if (presetTitle != null || presetToday || presetBacklog || presetCue != null) {
-                        TaskDraft(
-                            id = null,
-                            title = presetTitle ?: "",
-                            state = if (presetBacklog)
-                                com.thefoxworks.tzafon.domain.model.TaskState.BACKLOG
-                            else com.thefoxworks.tzafon.domain.model.TaskState.OPEN,
-                            toDoDate = if (presetToday) today else null,
-                            cue = com.thefoxworks.tzafon.domain.action.QuickAddParse.cueFor(presetCue),
-                        )
-                    } else null
+    // v2.13.0 — the status sheet's footer and Planning's Reschedule open the editor through this
+    val editorOpener: (String, Pane) -> Unit = { id, tab -> openEditor(taskId = id, tab = tab) }
+    CompositionLocalProvider(LocalEditorOpener provides editorOpener) {
+        Box(Modifier.fillMaxSize()) {
+            NavHost(
+                navController = nav,
+                startDestination = start,
+                modifier = Modifier.fillMaxSize(),
+            ) {
+                composable("welcome") {
+                    WelcomeScreen(
+                        authRepository = container.authRepository,
+                        onSignedIn = {
+                            // FR-AUTH-1.3 — clear Welcome from the back stack so
+                            // Android back from Today does not return here.
+                            nav.navigate(Tab.TODAY.route) { popUpTo("welcome") { inclusive = true } }
+                        },
+                    )
                 }
-                val habits by container.habitRepository.observeHabits()
-                    .collectAsStateWithLifecycle(initialValue = emptyList())
-                val editorGoals by container.goalRepository.observeGoals()
-                    .collectAsStateWithLifecycle(initialValue = emptyList())
-                TaskEditorScreen(
-                    initial = initial,
-                    today = today,
-                    onSave = { draft, editScope ->
-                        scope.launch {
-                            container.taskRepository.saveDraft(draft, editScope, today)
+
+                // ── the five tabs (FR-NAV-1; Today default, FR-NAV-2) ──
+                composable(Tab.TODAY.route) {
+                    val vm: TodayViewModel = viewModel(factory = VmFactory(container))
+                    TodayScreen(
+                        vm = vm,
+                        onOpenTask = { id -> openEditor(taskId = id) },
+                        // FR-CAPTURE-3.6 — EXPAND carries the parsed cue; the date rule is
+                        // Today's own (FR-TODAY-7) and is unchanged by the parse.
+                        onExpandAdd = { title, cueTime ->
+                            openEditor(title = title, presetToday = true, presetCue = cueTime)
+                        },
+                        onOpenPlanning = { goTab(Tab.PLANNING) },
+                        onOpenAllTasks = { goRef("alltasks") },
+                        onOpenBacklog = { goRef("backlog") },
+                        onOpenSettings = { nav.navigate("settings") },
+                        onOpenAbout = { nav.navigate("about") },
+                        onOpenReview = { nav.navigate("review") },
+                    )
+                }
+
+                composable(Tab.PLANNING.route) {
+                    val vm: PlanningViewModel = viewModel(factory = VmFactory(container))
+                    PlanningScreen(
+                        vm = vm,
+                        onOpenTask = { id -> openEditor(taskId = id) },
+                        // FR-PLAN-7.4 — a parsed time opens the editor pre-set to today with
+                        // the cue filled; a bare capture still opens undated (FR-CAPTURE-2).
+                        onExpandAdd = { title, cueTime ->
+                            openEditor(title = title, presetToday = cueTime != null, presetCue = cueTime)
+                        },
+                        onOpenAllTasks = { goRef("alltasks") },
+                        onOpenBacklog = { goRef("backlog") },
+                        onOpenSettings = { nav.navigate("settings") },
+                        onOpenAbout = { nav.navigate("about") },
+                    )
+                }
+
+                composable(Tab.HABITS.route) {
+                    val vm: HabitsViewModel = viewModel(factory = VmFactory(container))
+                    HabitsScreen(
+                        vm = vm,
+                        onOpenAllTasks = { goRef("alltasks") },
+                        onOpenBacklog = { goRef("backlog") },
+                        onOpenSettings = { nav.navigate("settings") },
+                        onOpenAbout = { nav.navigate("about") },
+                    )
+                }
+                composable(Tab.DIRECTIONS.route) {
+                    val vm: DirectionsViewModel = viewModel(factory = VmFactory(container))
+                    DirectionsScreen(
+                        vm = vm,
+                        onOpenAllTasks = { goRef("alltasks") },
+                        onOpenBacklog = { goRef("backlog") },
+                        onOpenSettings = { nav.navigate("settings") },
+                        onOpenAbout = { nav.navigate("about") },
+                    )
+                }
+                composable(Tab.JOURNEY.route) {
+                    val vm: JourneyViewModel = viewModel(factory = VmFactory(container))
+                    JourneyScreen(
+                        vm = vm,
+                        onOpenAllTasks = { goRef("alltasks") },
+                        onOpenBacklog = { goRef("backlog") },
+                        onOpenSettings = { nav.navigate("settings") },
+                        onOpenAbout = { nav.navigate("about") },
+                    )
+                }
+
+                // ── reference views via the menu (FR-NAV-1) ──
+                composable("alltasks") {
+                    val vm: AllTasksViewModel = viewModel(factory = VmFactory(container))
+                    AllTasksScreen(
+                        vm = vm,
+                        onOpenTask = { id -> openEditor(taskId = id) },
+                        onAdd = { openEditor() },
+                        onOpenBacklog = { goRef("backlog") },
+                        onOpenAbout = { nav.navigate("about") },
+                    )
+                }
+
+                composable("backlog") {
+                    val vm: BacklogViewModel = viewModel(factory = VmFactory(container))
+                    BacklogScreen(
+                        vm = vm,
+                        onOpenTask = { id -> openEditor(taskId = id) },
+                        // FR-BACKLOG-5.2 — the expand-to-full-form route from Backlog
+                        // opens the editor pre-set to Backlog state / undated; the state
+                        // and date preset are untouched by a parsed cue (FR-CAPTURE-3.8).
+                        onExpandAdd = { title, cueTime ->
+                            openEditor(title = title, presetBacklog = true, presetCue = cueTime)
+                        },
+                        onOpenAllTasks = { goRef("alltasks") },
+                        onOpenSettings = { nav.navigate("settings") },
+                        onOpenAbout = { nav.navigate("about") },
+                    )
+                }
+
+                composable("review") {
+                    val vm: ReviewViewModel = viewModel(factory = VmFactory(container))
+                    ReviewScreen(vm = vm, onClose = { nav.popBackStack() })
+                }
+
+                composable("settings") {
+                    SettingsScreen(
+                        settings = container.settings,
+                        auth = container.authRepository,
+                        exporter = container.dataExporter,
+                        importer = container.dataImporter,
+                        onClose = { nav.popBackStack() },
+                        onSignedOut = {
+                            // FR-AUTH-1.4 — sign-out returns to Welcome and clears
+                            // the entire main-tab back stack so back from Welcome
+                            // exits the app rather than returning to a signed-in tab.
+                            nav.navigate("welcome") {
+                                popUpTo(nav.graph.startDestinationId) { inclusive = true }
+                                launchSingleTop = true
+                            }
+                        },
+                    )
+                }
+
+                composable("about") {
+                    AboutScreen(onClose = { nav.popBackStack() })
+                }
+
+                composable(
+                    route = "editor?taskId={taskId}&title={title}&presetToday={presetToday}&presetBacklog={presetBacklog}&presetCue={presetCue}&tab={tab}",
+                    arguments = listOf(
+                        navArgument("taskId") { type = NavType.StringType; nullable = true; defaultValue = null },
+                        navArgument("title") { type = NavType.StringType; nullable = true; defaultValue = null },
+                        navArgument("presetToday") { type = NavType.BoolType; defaultValue = false },
+                        navArgument("presetBacklog") { type = NavType.BoolType; defaultValue = false },
+                        navArgument("presetCue") { type = NavType.StringType; nullable = true; defaultValue = null },
+                        navArgument("tab") { type = NavType.StringType; nullable = true; defaultValue = null },
+                    ),
+                ) { backStack ->
+                    val taskId = backStack.arguments?.getString("taskId")
+                    val presetTitle = backStack.arguments?.getString("title")
+                    val presetToday = backStack.arguments?.getBoolean("presetToday") == true
+                    val presetBacklog = backStack.arguments?.getBoolean("presetBacklog") == true
+                    val presetCue = backStack.arguments?.getString("presetCue")
+                    val openOn = backStack.arguments?.getString("tab")?.let(Pane::valueOf) ?: Pane.TASK
+                    val repo = container.taskRepository
+                    // hydrate the draft synchronously off the DB (small row; simple M0 path),
+                    // with the series' facts the status strip asks its scope from
+                    val opened: Pair<TaskDraft, SeriesStatus?>? = taskId?.let {
+                        runBlocking {
+                            val t = repo.getTask(it) ?: return@runBlocking null
+                            val series = t.seriesId?.let { sid -> repo.getSeries(sid) }
+                            TaskDraft.of(t, series) to series?.let { s -> SeriesStatus.of(s, today) }
                         }
-                        nav.popBackStack()
-                    },
-                    onDelete = { id, editScope ->
-                        scope.launch { container.taskRepository.deleteTask(id, editScope) }
-                        nav.popBackStack()
-                    },
-                    onSetState = { id, target ->
-                        scope.launch { container.taskRepository.setState(id, target, today) }
-                    },
-                    onClose = { nav.popBackStack() },
-                    habits = habits,
-                    goals = editorGoals,
-                    countEarlier = container.taskRepository::countEarlierOccurrences,
+                    }
+                    val initial: TaskDraft? = opened?.first ?: run {
+                        // New task. From Today (presetToday) it defaults toDoDate = today so it
+                        // lands in the Today list; from Backlog (presetBacklog, FR-BACKLOG-5.2)
+                        // it lands in Backlog state / undated; elsewhere it stays OPEN/undated
+                        // (FR-CAPTURE-2). presetCue (FR-CAPTURE-3.6) fills the cue slot with
+                        // the time parsed off the quick-add title, whatever the surface.
+                        if (presetTitle != null || presetToday || presetBacklog || presetCue != null) {
+                            TaskDraft(
+                                id = null,
+                                title = presetTitle ?: "",
+                                state = if (presetBacklog)
+                                    com.thefoxworks.tzafon.domain.model.TaskState.BACKLOG
+                                else com.thefoxworks.tzafon.domain.model.TaskState.OPEN,
+                                toDoDate = if (presetToday) today else null,
+                                cue = com.thefoxworks.tzafon.domain.action.QuickAddParse.cueFor(presetCue),
+                            )
+                        } else null
+                    }
+                    val habits by container.habitRepository.observeHabits()
+                        .collectAsStateWithLifecycle(initialValue = emptyList())
+                    val editorGoals by container.goalRepository.observeGoals()
+                        .collectAsStateWithLifecycle(initialValue = emptyList())
+                    TaskEditorScreen(
+                        initial = initial,
+                        today = today,
+                        openOn = openOn,
+                        series = opened?.second,
+                        onSave = { draft, editScope ->
+                            scope.launch {
+                                container.taskRepository.saveDraft(draft, editScope, today)
+                            }
+                            nav.popBackStack()
+                        },
+                        onDelete = { id, editScope ->
+                            scope.launch { container.taskRepository.deleteTask(id, editScope) }
+                            nav.popBackStack()
+                        },
+                        // a whole-series status acts at once, with the no-Undo toast, and closes the editor
+                        onSeriesStatus = { id, target, amount ->
+                            val host = container.statusHost
+                            host.scope.launch {
+                                host.changes.change(id, target, habitAmount = amount, scope = StatusScope.WHOLE_SERIES)
+                            }
+                            nav.popBackStack()
+                        },
+                        onClose = { nav.popBackStack() },
+                        habits = habits,
+                        goals = editorGoals,
+                        countEarlier = container.taskRepository::countEarlierOccurrences,
+                    )
+                }
+            }
+
+            if (showBottomNav) {
+                DenBottomNav(
+                    active = activeTab,
+                    onSelect = { goTab(it) },
+                    modifier = Modifier.align(Alignment.BottomCenter),
                 )
             }
-        }
-
-        if (showBottomNav) {
-            DenBottomNav(
-                active = activeTab,
-                onSelect = { goTab(it) },
+            // v2.13.0 — the one status toast, outside the NavHost so it survives tab switches
+            StatusToastHost(
+                host = container.statusHost,
+                aboveNav = if (showBottomNav) BOTTOM_NAV_HEIGHT else 0.dp,
                 modifier = Modifier.align(Alignment.BottomCenter),
             )
         }
-        // v2.13.0 — the one status toast, outside the NavHost so it survives tab switches
-        StatusToastHost(
-            host = container.statusHost,
-            aboveNav = if (showBottomNav) BOTTOM_NAV_HEIGHT else 0.dp,
-            modifier = Modifier.align(Alignment.BottomCenter),
-        )
     }
 }

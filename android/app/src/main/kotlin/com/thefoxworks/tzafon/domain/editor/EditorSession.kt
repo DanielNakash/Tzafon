@@ -1,8 +1,11 @@
 package com.thefoxworks.tzafon.domain.editor
 
 import com.thefoxworks.tzafon.domain.model.EditScope
+import com.thefoxworks.tzafon.domain.model.SeriesStatus
 import com.thefoxworks.tzafon.domain.model.TaskDraft
 import com.thefoxworks.tzafon.domain.model.TaskState
+import com.thefoxworks.tzafon.domain.status.StatusPick
+import com.thefoxworks.tzafon.domain.status.StatusSheet
 
 /** What stops Save, in the order Save reports them, and the pane that holds each. */
 enum class SaveProblem(val pane: Pane) { BLANK_TITLE(Pane.TASK), INCOMPLETE_CUE_TIME(Pane.ALIGNMENT) }
@@ -57,11 +60,32 @@ data class EditorSession(
     fun show(pane: Pane) = copy(tab = pane)
 
     /**
-     * A status the interim status sheet has already written to the task, so
-     * it is no longer a change and Discard can't throw it away. Goes once the
-     * Task pane's status strip holds the status in the draft until Save.
+     * What tapping a status chip does: into the draft, the scope panel, or
+     * nothing. [series] is the stored series' facts (null for a one-off).
+     * Going back to the status the editor opened with only undoes a draft
+     * change, so it never asks.
      */
-    fun stored(state: TaskState) = copy(snapshot = snapshot.copy(state = state), draft = draft.copy(state = state))
+    fun chip(target: TaskState, series: SeriesStatus?): StatusPick =
+        if (target == snapshot.state && target != draft.state) StatusPick.Apply(target)
+        else StatusSheet.pick(draft.state, target, series)
+
+    /**
+     * A single-task status into the draft, applied at Save after the field
+     * edits. Done waits with its "How much?" [amount]; Backlog clears the
+     * to-do date (FR-BACKLOG-1).
+     */
+    fun status(target: TaskState, amount: Double? = null) = edit {
+        it.copy(
+            state = target,
+            habitAmount = amount.takeIf { target == TaskState.DONE },
+            toDoDate = if (target == TaskState.BACKLOG) null else it.toDoDate,
+        )
+    }
+
+    /** A to-do date picked or cleared; a date brings a Backlog draft back to Open (FR-BACKLOG-5). */
+    fun toDo(date: String?) = edit {
+        it.copy(toDoDate = date, state = if (date != null && it.state == TaskState.BACKLOG) TaskState.OPEN else it.state)
+    }
 
     /**
      * The first thing stopping Save, or null when it can save. A blank title
@@ -75,7 +99,10 @@ data class EditorSession(
     }
 
     companion object {
-        /** The editor always opens on Task; the snapshot includes any presets. */
-        fun open(draft: TaskDraft) = EditorSession(snapshot = draft, draft = draft, tab = Pane.TASK)
+        /**
+         * The editor opens on Task, except from Reschedule, which opens on
+         * Timing; the snapshot includes any presets.
+         */
+        fun open(draft: TaskDraft, tab: Pane = Pane.TASK) = EditorSession(snapshot = draft, draft = draft, tab = tab)
     }
 }

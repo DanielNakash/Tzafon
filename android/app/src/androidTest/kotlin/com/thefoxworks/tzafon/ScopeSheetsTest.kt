@@ -58,7 +58,6 @@ class ScopeSheetsTest {
                     today = "2026-09-16",
                     onSave = { d, s -> saved = d to s },
                     onDelete = { id, s -> deleted = id to s },
-                    onSetState = { _, _ -> },
                     onClose = { },
                     countEarlier = { _, notDoneOnly -> counted = notDoneOnly; if (notDoneOnly) 4 else 26 },
                 )

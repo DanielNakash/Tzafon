@@ -47,10 +47,13 @@ import com.thefoxworks.tzafon.ui.theme.DenType
 import com.thefoxworks.tzafon.ui.theme.a
 import java.time.LocalDate
 
-/** Den bottom-sheet shell (CalendarPicker.jsx Sheet). */
+/**
+ * The Den bottom sheet with no title row: the drag handle, then [content].
+ * The status sheet uses it to lead with the task itself.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DenSheet(title: String, onClose: () -> Unit, content: @Composable () -> Unit) {
+fun DenSheetFrame(onClose: () -> Unit, content: @Composable () -> Unit) {
     ModalBottomSheet(
         onDismissRequest = onClose,
         containerColor = Tz.colors.surface,
@@ -64,6 +67,16 @@ fun DenSheet(title: String, onClose: () -> Unit, content: @Composable () -> Unit
         // imePadding lifts the sheet content (incl. the primary confirm button) above the
         // soft keyboard; without it, focusing a text field pushes the button out of view.
         Column(Modifier.padding(horizontal = 18.dp).navigationBarsPadding().imePadding()) {
+            content()
+        }
+    }
+}
+
+/** Den bottom-sheet shell (CalendarPicker.jsx Sheet). */
+@Composable
+fun DenSheet(title: String, onClose: () -> Unit, content: @Composable () -> Unit) {
+    DenSheetFrame(onClose) {
+        Column {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(title, style = TextStyle(fontFamily = DenType.serif, fontSize = 23.sp, fontWeight = FontWeight.SemiBold), color = Tz.colors.ink)
                 Box(Modifier.weight(1f))

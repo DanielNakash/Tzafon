@@ -80,6 +80,12 @@ _Avoid_: reopen (for a single task; reopening is what a closed series does), com
 **Status sheet**:
 The sheet that shows all five statuses and what each one does, reached by holding a task's checkbox. A change to just this task applies the moment it's picked; a change that reaches a series asks for a scope first.
 
+**Scope panel**:
+What the status sheet turns into when a pick reaches a series: the chosen status, its "Just this one" / "The whole series" choices, and a button named for the choice ("Close this one", "Thaw series"). Back returns without changing anything. Freeze series has a single choice, because freezing always takes the whole series.
+
+**Status strip**:
+The five status chips on the editor's Task pane. A chip changes only the draft, applied at Save, unless the status reaches a series: then it opens the scope panel, and a whole-series choice applies at once and closes the editor.
+
 **Undo**:
 Taking back a status change while its toast is showing: the task returns exactly as it was, and what it ticked or moved is taken back by the same amount. A whole-series change can't be undone.
 

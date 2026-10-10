@@ -126,10 +126,6 @@ class PlanningViewModel(
         viewModelScope.launch { repo.reschedule(id, today) }
     }
 
-    fun rescheduleTo(id: String, date: String) {
-        viewModelScope.launch { repo.reschedule(id, date) }
-    }
-
     /** "Drop" — a calm skip, not a failure (Closed keeps its links). */
     fun drop(id: String) {
         viewModelScope.launch { repo.setState(id, TaskState.CLOSED, today) }

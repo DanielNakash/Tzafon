@@ -2,6 +2,10 @@ package com.thefoxworks.tzafon.ui.editor
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.ui.draw.alpha
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -52,6 +56,16 @@ import com.thefoxworks.tzafon.domain.editor.SaveProblem
 import com.thefoxworks.tzafon.domain.editor.SaveStep
 import com.thefoxworks.tzafon.domain.editor.ScopeSheetCopy
 import com.thefoxworks.tzafon.domain.model.EditScope
+import com.thefoxworks.tzafon.domain.model.SeriesStatus
+import com.thefoxworks.tzafon.domain.model.StatusScope
+import com.thefoxworks.tzafon.domain.model.Task
+import com.thefoxworks.tzafon.domain.model.TaskState
+import com.thefoxworks.tzafon.domain.status.AmountPrompt
+import com.thefoxworks.tzafon.domain.status.StatusPick
+import com.thefoxworks.tzafon.domain.status.StatusSheet
+import com.thefoxworks.tzafon.domain.status.StatusSubject
+import com.thefoxworks.tzafon.ui.components.AmountSheet
+import com.thefoxworks.tzafon.ui.status.TaskStatusSheet
 import com.thefoxworks.tzafon.domain.model.RecurrenceDraft
 import com.thefoxworks.tzafon.domain.model.TaskDraft
 import com.thefoxworks.tzafon.domain.recurrence.DueMode
@@ -109,8 +123,13 @@ fun TaskEditorScreen(
     today: String,
     onSave: (TaskDraft, EditScope) -> Unit,
     onDelete: (String, EditScope) -> Unit,
-    onSetState: ((String, com.thefoxworks.tzafon.domain.model.TaskState) -> Unit)? = null,
     onClose: () -> Unit,
+    /** Task, or Timing from Reschedule (with the to-do date armed) */
+    openOn: Pane = Pane.TASK,
+    /** the stored series' facts, which the status strip asks its scope from; null for a one-off */
+    series: SeriesStatus? = null,
+    /** a whole-series status from the strip: applied at once, then the editor closes */
+    onSeriesStatus: ((id: String, target: TaskState, amount: Double?) -> Unit)? = null,
     /** M4 — the habits available to link (DM-REL: at most one per task). */
     habits: List<com.thefoxworks.tzafon.domain.model.Habit> = emptyList(),
     /** M5 — goals to link (many allowed, one typical — DM-TASK-5). */
@@ -122,12 +141,13 @@ fun TaskEditorScreen(
     val isNew = initial?.id == null
     var session by rememberSaveable(stateSaver = EditorSessionCodec.saver) {
         mutableStateOf(
-            EditorSession.open(initial ?: TaskDraft(id = null, title = "", toDoDate = null)) // undated by default
+            EditorSession.open(initial ?: TaskDraft(id = null, title = "", toDoDate = null), openOn) // undated by default
         )
     }
     val draft = session.draft
     fun update(change: (TaskDraft) -> TaskDraft) { session = session.edit(change) }
-    var sheet by rememberSaveable { mutableStateOf<String?>(null) } // todo | due | end | scope | delete | confirmDelete | cue | habit | goals | state | discard
+    // Reschedule arms the to-do date: until the shared calendar lands, that's its picker, open
+    var sheet by rememberSaveable { mutableStateOf(if (openOn == Pane.TIMING) "todo" else null) } // todo | due | end | scope | delete | confirmDelete | cue | habit | goals | status | amount | discard
     // the row picked on the scope or delete sheet; null = the sheet's default, never remembered between openings
     var chosen by rememberSaveable { mutableStateOf<EditScope?>(null) }
     val earlier by produceState(0, sheet) {
@@ -141,6 +161,44 @@ fun TaskEditorScreen(
     val scrolls = Pane.entries.associateWith { rememberScrollState() }
     val titleFocus = remember { FocusRequester() }
     var focusProblem by remember { mutableStateOf<SaveProblem?>(null) }
+
+    // the status strip: the status whose scope panel is open, the scope a "How much?" waits
+    // to apply Done with, and a whole-series status waiting on "Discard your changes?"
+    var statusPanel by rememberSaveable { mutableStateOf<TaskState?>(null) }
+    var amountScope by rememberSaveable { mutableStateOf<StatusScope?>(null) }
+    var seriesPending by rememberSaveable { mutableStateOf<TaskState?>(null) }
+    var seriesAmount by rememberSaveable { mutableStateOf<Double?>(null) }
+    val amountPrompt = {
+        AmountPrompt.of(
+            Task(id = draft.id ?: "", title = draft.title, habitId = draft.habitId, goalIds = draft.goalIds),
+            habits.find { it.id == draft.habitId },
+            goals.associateBy { it.id },
+        )
+    }
+    fun seriesStatus(target: TaskState, amount: Double?) {
+        if (session.asksBeforeClosing) {
+            seriesPending = target; seriesAmount = amount; sheet = "discard"
+        } else {
+            onSeriesStatus?.invoke(draft.id!!, target, amount)
+        }
+    }
+    // a settled status: "this one" into the draft, the whole series at once; Done asks "How much?" first
+    fun commitStatus(target: TaskState, scope: StatusScope) {
+        if (target == TaskState.DONE && draft.state != TaskState.DONE && amountPrompt() != null) {
+            amountScope = scope; sheet = "amount"
+        } else if (scope == StatusScope.WHOLE_SERIES) {
+            seriesStatus(target, null)
+        } else {
+            session = session.status(target)
+        }
+    }
+    fun onChip(target: TaskState) {
+        when (val pick = session.chip(target, series)) {
+            is StatusPick.Apply -> commitStatus(pick.target, StatusScope.THIS_ONE)
+            is StatusPick.AskScope -> { statusPanel = target; sheet = "status" }
+            StatusPick.Stay -> {}
+        }
+    }
 
     val requestClose = { if (session.asksBeforeClosing) sheet = "discard" else onClose() }
     // system Back and predictive back ask the same as Cancel; with no changes
@@ -233,38 +291,21 @@ fun TaskEditorScreen(
                         minLines = 3,
                     )
 
-                    // status row — opens the "Where does this stand?" sheet (M1) until the
-                    // Task pane's status strip replaces it; never on a new task
-                    if (!isNew && onSetState != null) {
+                    // ── status strip (slide 1): chips pick into the draft; a status
+                    // that reaches the series opens its scope panel. Never on a new task.
+                    if (!isNew) {
                         EdSection("Status")
-                        Row(
-                            Modifier.fillMaxWidth()
-                                .clip(RoundedCornerShape(13.dp))
-                                .background(Tz.colors.card)
-                                .border(1.dp, Tz.colors.line, RoundedCornerShape(13.dp))
-                                .pressable { sheet = "state" }
-                                .padding(14.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(13.dp),
-                        ) {
-                            com.thefoxworks.tzafon.ui.components.TaskCheckbox(draft.state)
-                            Column(Modifier.weight(1f)) {
-                                Text(
-                                    when (draft.state) {
-                                        com.thefoxworks.tzafon.domain.model.TaskState.OPEN -> "Open"
-                                        com.thefoxworks.tzafon.domain.model.TaskState.DONE -> "Done"
-                                        com.thefoxworks.tzafon.domain.model.TaskState.CLOSED -> "Closed"
-                                        com.thefoxworks.tzafon.domain.model.TaskState.FROZEN -> "Frozen"
-                                        com.thefoxworks.tzafon.domain.model.TaskState.BACKLOG -> "Backlog"
-                                    },
-                                    style = TextStyle(fontFamily = DenType.body, fontSize = 16.sp),
-                                    color = Tz.colors.ink,
-                                )
-                            }
+                        StatusStrip(
+                            current = draft.state,
+                            repeats = series != null,
+                            onPick = ::onChip,
+                        )
+                        if (series != null) {
                             Text(
-                                "CHANGE",
-                                style = TextStyle(fontFamily = DenType.mono, fontSize = 10.5.sp),
-                                color = Tz.colors.rust,
+                                "Backlog is unavailable while this repeats — freeze it instead.",
+                                style = TextStyle(fontFamily = DenType.body, fontSize = 12.5.sp, lineHeight = 17.sp),
+                                color = Tz.colors.muted,
+                                modifier = Modifier.padding(top = 9.dp, start = 2.dp),
                             )
                         }
                     }
@@ -411,7 +452,7 @@ fun TaskEditorScreen(
                             placeholder = "None — undated",
                             today = today,
                             onClick = { sheet = "todo" },
-                            onClear = { update { it.copy(toDoDate = null) } },
+                            onClear = { session = session.toDo(null) },
                         )
                         DateRow(
                             label = if (singular) "Due Date · singular" else "Due Date",
@@ -460,18 +501,6 @@ fun TaskEditorScreen(
                             )
                         }
                     }
-                    // FR-BACKLOG-5.3 — one-line hint whenever a task has recurrence:
-                    // Backlog is not selectable for a series. Mirrors the reverse-direction
-                    // guard the StateSheet already shows (FR-BACKLOG-2).
-                    if (repeat) {
-                        Text(
-                            "Backlog is for non-recurring tasks — a recurring series can't be “someday”.",
-                            style = TextStyle(fontFamily = DenType.body, fontSize = 12.sp, lineHeight = 16.sp),
-                            color = Tz.colors.faint,
-                            modifier = Modifier.padding(top = 6.dp),
-                        )
-                    }
-
                     if (repeat) {
                         Column(
                             Modifier.fillMaxWidth().padding(top = 11.dp)
@@ -594,8 +623,8 @@ fun TaskEditorScreen(
     when (sheet) {
         "todo" -> DenSheet("To Do Date", onClose = { sheet = null }) {
             CalendarPicker(draft.toDoDate, today,
-                onPick = { d -> update { it.copy(toDoDate = d) }; sheet = null },
-                onClear = { update { it.copy(toDoDate = null) }; sheet = null })
+                onPick = { d -> session = session.toDo(d); sheet = null },
+                onClear = { session = session.toDo(null); sheet = null })
         }
         "due" -> DenSheet("Due Date", onClose = { sheet = null }) {
             CalendarPicker(draft.dueDate, today,
@@ -613,16 +642,37 @@ fun TaskEditorScreen(
                 onPick = { d -> update { it.copy(recurrence = rec!!.copy(endDate = d)) }; sheet = null },
                 onClear = { update { it.copy(recurrence = rec!!.copy(endDate = null)) }; sheet = null })
         }
-        "state" -> com.thefoxworks.tzafon.ui.components.StateSheet(
-            current = draft.state,
-            isRecurring = draft.seriesId != null,
-            onPick = { target ->
-                // the interim sheet writes the status at once, so it's no draft change
-                onSetState?.invoke(draft.id!!, target)
-                session = session.stored(target)
-            },
-            onClose = { sheet = null },
-        )
+        "status" -> statusPanel?.let { target ->
+            TaskStatusSheet(
+                subject = StatusSubject(
+                    title = draft.title,
+                    state = draft.state,
+                    toDoDate = draft.toDoDate,
+                    repeat = draft.recurrence?.takeIf { series != null }?.let { Recurrence.summary(it.rule) },
+                    series = series,
+                    habit = habits.find { it.id == draft.habitId }?.name,
+                    goals = goals.filter { it.id in draft.goalIds }.map { it.title },
+                ),
+                panelFor = target,
+                onApply = { picked, scope -> sheet = null; statusPanel = null; commitStatus(picked, scope) },
+                onClose = { sheet = null; statusPanel = null },
+            )
+        }
+        "amount" -> amountPrompt()?.let { prompt ->
+            AmountSheet(
+                title = prompt.title,
+                unit = prompt.unit,
+                suggested = prompt.suggested,
+                onConfirm = { amount ->
+                    val scope = amountScope
+                    amountScope = null
+                    if (scope == StatusScope.WHOLE_SERIES) seriesStatus(TaskState.DONE, amount)
+                    else session = session.status(TaskState.DONE, amount)
+                },
+                // cancelling leaves the chip as it was
+                onClose = { if (sheet == "amount") sheet = null; amountScope = null },
+            )
+        }
         "cue" -> com.thefoxworks.tzafon.ui.components.CueSheet(
             current = draft.cue,
             onSave = { c -> update { it.copy(cue = c) } },
@@ -723,7 +773,7 @@ fun TaskEditorScreen(
                 }
             }
         }
-        "discard" -> DenSheet("Discard your changes?", onClose = { sheet = null }) {
+        "discard" -> DenSheet("Discard your changes?", onClose = { sheet = null; seriesPending = null }) {
             Column {
                 Text(
                     "Your edits to this task haven't been saved.",
@@ -735,7 +785,7 @@ fun TaskEditorScreen(
                     Modifier.fillMaxWidth().height(52.dp)
                         .clip(RoundedCornerShape(13.dp))
                         .background(Tz.colors.rust)
-                        .pressable { sheet = null },
+                        .pressable { sheet = null; seriesPending = null },
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center,
                 ) {
@@ -746,7 +796,12 @@ fun TaskEditorScreen(
                     Modifier.fillMaxWidth().height(52.dp)
                         .clip(RoundedCornerShape(13.dp))
                         .border(1.dp, Tz.colors.due.a(0.45f), RoundedCornerShape(13.dp))
-                        .pressable { sheet = null; onClose() },
+                        .pressable {
+                            sheet = null
+                            // a whole-series status waiting on this prompt acts now and closes the editor
+                            val pending = seriesPending
+                            if (pending != null) onSeriesStatus?.invoke(draft.id!!, pending, seriesAmount) else onClose()
+                        },
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center,
                 ) {
@@ -831,6 +886,49 @@ private fun EditorTabs(active: Pane, changed: Set<Pane>, onSelect: (Pane) -> Uni
             }
         }
         Box(Modifier.fillMaxWidth().height(1.dp).background(Tz.colors.line))
+    }
+}
+
+/**
+ * v2.13.0 — the Task pane's status strip (slide 1): five chips, the current
+ * one rust. Backlog is dimmed on a repeating task. Each chip is one TalkBack
+ * radio stop.
+ */
+@Composable
+private fun StatusStrip(current: TaskState, repeats: Boolean, onPick: (TaskState) -> Unit) {
+    Row(Modifier.fillMaxWidth().selectableGroup(), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+        listOf(TaskState.OPEN, TaskState.DONE, TaskState.CLOSED, TaskState.FROZEN, TaskState.BACKLOG).forEach { status ->
+            val on = status == current
+            val enabled = !(repeats && status == TaskState.BACKLOG)
+            val shape = RoundedCornerShape(12.dp)
+            Column(
+                Modifier.weight(1f)
+                    .clip(shape)
+                    .background(if (on) Tz.colors.rust.a(0.12f) else Tz.colors.card)
+                    .border(1.dp, if (on) Tz.colors.rust.a(0.55f) else Tz.colors.line, shape)
+                    .selectable(
+                        selected = on,
+                        enabled = enabled,
+                        role = Role.RadioButton,
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        onClick = { onPick(status) },
+                    )
+                    .semantics { if (!enabled) stateDescription = "Unavailable while this repeats" }
+                    .alpha(if (enabled) 1f else 0.4f)
+                    .padding(vertical = 12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                com.thefoxworks.tzafon.ui.components.TaskCheckbox(status)
+                Text(
+                    StatusSheet.name(status).uppercase(),
+                    style = TextStyle(fontFamily = DenType.mono, fontSize = 10.sp, letterSpacing = 0.6.sp, fontWeight = if (on) FontWeight.Bold else FontWeight.Normal),
+                    color = if (on) Tz.colors.rust else Tz.colors.muted,
+                    maxLines = 1,
+                )
+            }
+        }
     }
 }
 

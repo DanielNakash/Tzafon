@@ -8,7 +8,9 @@ import com.thefoxworks.tzafon.domain.editor.SaveStep
 import com.thefoxworks.tzafon.domain.model.EditScope
 import com.thefoxworks.tzafon.domain.model.Cue
 import com.thefoxworks.tzafon.domain.model.CueType
+import com.thefoxworks.tzafon.domain.model.SeriesStatus
 import com.thefoxworks.tzafon.domain.model.TaskDraft
+import com.thefoxworks.tzafon.domain.status.StatusPick
 import com.thefoxworks.tzafon.domain.model.TaskState
 import com.thefoxworks.tzafon.domain.model.RecurrenceDraft
 import com.thefoxworks.tzafon.domain.recurrence.DueMode
@@ -74,11 +76,53 @@ class EditorSessionTest {
         assertEquals(setOf(Pane.TASK), s.changedPanes)
     }
 
+    // ── the status strip ──────────────────────────────────────
+
+    private val live = SeriesStatus(frozen = false, ended = false)
+    private val frozenSeries = SeriesStatus(frozen = true, ended = false)
+
     @Test
-    fun `a status already stored by the interim status sheet is no change`() {
-        val s = EditorSession.open(task).edit { it.copy(title = "New title") }.stored(TaskState.FROZEN)
-        assertEquals(TaskState.FROZEN, s.draft.state)
-        assertEquals(listOf("Title changed"), DraftDiff.of(s.snapshot, s.draft).changes.map { it.line })
+    fun `Reschedule opens the editor on Timing`() {
+        assertEquals(Pane.TIMING, EditorSession.open(task, Pane.TIMING).tab)
+    }
+
+    @Test
+    fun `a chip picks into the draft, Done with its amount`() {
+        val s = EditorSession.open(task.copy(toDoDate = "2026-09-17"))
+        assertEquals(StatusPick.Apply(TaskState.DONE), s.chip(TaskState.DONE, null))
+        val done = s.status(TaskState.DONE, amount = 2.5)
+        assertEquals(TaskState.DONE, done.draft.state)
+        assertEquals(2.5, done.draft.habitAmount!!, 0.0)
+        // leaving Done drops the amount it waited with
+        assertNull(done.status(TaskState.OPEN).draft.habitAmount)
+    }
+
+    @Test
+    fun `a chip that reaches the series opens the scope panel`() {
+        val s = EditorSession.open(occurrence)
+        val freeze = (s.chip(TaskState.FROZEN, live) as StatusPick.AskScope).panel
+        assertEquals("Freeze series", freeze.option(freeze.default).action)
+        assertEquals(StatusPick.Stay, s.chip(TaskState.BACKLOG, live))
+    }
+
+    @Test
+    fun `going back to the status the editor opened with is just a draft change`() {
+        // thawed "just this one" into the draft, then back to Frozen: no Freeze series panel
+        val s = EditorSession.open(occurrence.copy(state = TaskState.FROZEN)).status(TaskState.OPEN)
+        assertEquals(StatusPick.Apply(TaskState.FROZEN), s.chip(TaskState.FROZEN, frozenSeries))
+        assertEquals(StatusPick.Stay, s.chip(TaskState.OPEN, frozenSeries))
+    }
+
+    @Test
+    fun `the Backlog chip clears the to-do date, and a to-do date brings it back to Open`() {
+        val s = EditorSession.open(task.copy(toDoDate = "2026-09-17")).status(TaskState.BACKLOG)
+        assertNull(s.draft.toDoDate)
+        assertEquals(setOf(Pane.TASK, Pane.TIMING), s.changedPanes)
+        val dated = s.toDo("2026-09-20")
+        assertEquals(TaskState.OPEN, dated.draft.state)
+        assertEquals("2026-09-20", dated.draft.toDoDate)
+        // Undated leaves an Open task Open
+        assertEquals(TaskState.OPEN, dated.toDo(null).draft.state)
     }
 
     @Test

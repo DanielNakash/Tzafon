@@ -155,52 +155,75 @@ private fun Intro(text: String) {
 private fun ScopeRows(rows: List<ScopeRow>, chosen: EditScope, onChoose: (EditScope) -> Unit) {
     Column(Modifier.selectableGroup(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         rows.forEach { row ->
-            val on = row.scope == chosen
-            val shape = RoundedCornerShape(14.dp)
-            Row(
-                Modifier.fillMaxWidth()
-                    .clip(shape)
-                    .background(if (on) Tz.colors.rust.a(0.1f) else Tz.colors.card)
-                    .border(1.dp, if (on) Tz.colors.rust.a(0.45f) else Tz.colors.line, shape)
-                    .selectable(
-                        selected = on,
-                        enabled = row.enabled,
-                        role = Role.RadioButton,
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null,
-                        onClick = { onChoose(row.scope) },
-                    )
-                    .alpha(if (row.enabled) 1f else 0.5f)
-                    .padding(horizontal = 14.dp, vertical = 13.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                Radio(on)
-                Column(Modifier.weight(1f)) {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text(
-                            ScopeSheetCopy.label(row.scope),
-                            style = TextStyle(fontFamily = DenType.body, fontSize = 16.sp, fontWeight = FontWeight.Medium),
-                            color = Tz.colors.ink,
-                        )
-                        row.badge?.let { badge ->
-                            Text(
-                                badge,
-                                style = TextStyle(fontFamily = DenType.mono, fontSize = 11.sp),
-                                color = Tz.colors.muted,
-                                modifier = Modifier
-                                    .border(1.dp, Tz.colors.line, RoundedCornerShape(5.dp))
-                                    .padding(horizontal = 6.dp, vertical = 1.dp),
-                            )
-                        }
-                    }
+            RadioRow(
+                label = ScopeSheetCopy.label(row.scope),
+                line = row.line,
+                selected = row.scope == chosen,
+                enabled = row.enabled,
+                badge = row.badge,
+                onClick = { onChoose(row.scope) },
+            )
+        }
+    }
+}
+
+/**
+ * One scope choice: a radio, its label (and count badge), and what it does.
+ * A single TalkBack stop with role RadioButton; a disabled row is dimmed and
+ * inert. Put a run of them in a `selectableGroup`.
+ */
+@Composable
+internal fun RadioRow(
+    label: String,
+    line: String,
+    selected: Boolean,
+    enabled: Boolean,
+    onClick: () -> Unit,
+    badge: String? = null,
+) {
+    val shape = RoundedCornerShape(14.dp)
+    Row(
+        Modifier.fillMaxWidth()
+            .clip(shape)
+            .background(if (selected) Tz.colors.rust.a(0.1f) else Tz.colors.card)
+            .border(1.dp, if (selected) Tz.colors.rust.a(0.45f) else Tz.colors.line, shape)
+            .selectable(
+                selected = selected,
+                enabled = enabled,
+                role = Role.RadioButton,
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onClick,
+            )
+            .alpha(if (enabled) 1f else 0.5f)
+            .padding(horizontal = 14.dp, vertical = 13.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Radio(selected)
+        Column(Modifier.weight(1f)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    label,
+                    style = TextStyle(fontFamily = DenType.body, fontSize = 16.sp, fontWeight = FontWeight.Medium),
+                    color = Tz.colors.ink,
+                )
+                badge?.let {
                     Text(
-                        row.line,
-                        style = TextStyle(fontFamily = DenType.body, fontSize = 13.5.sp, lineHeight = 19.sp),
+                        it,
+                        style = TextStyle(fontFamily = DenType.mono, fontSize = 11.sp),
                         color = Tz.colors.muted,
-                        modifier = Modifier.padding(top = 3.dp),
+                        modifier = Modifier
+                            .border(1.dp, Tz.colors.line, RoundedCornerShape(5.dp))
+                            .padding(horizontal = 6.dp, vertical = 1.dp),
                     )
                 }
             }
+            Text(
+                line,
+                style = TextStyle(fontFamily = DenType.body, fontSize = 13.5.sp, lineHeight = 19.sp),
+                color = Tz.colors.muted,
+                modifier = Modifier.padding(top = 3.dp),
+            )
         }
     }
 }
@@ -217,9 +240,9 @@ private fun Radio(on: Boolean) {
     }
 }
 
-/** Keep editing / Keep on the left, the action filled on the right (slide 4). */
+/** Keep editing / Keep / Back on the left, the action filled on the right (slides 4 and 8). */
 @Composable
-private fun SheetButtons(
+internal fun SheetButtons(
     secondary: String,
     onSecondary: () -> Unit,
     primary: String,

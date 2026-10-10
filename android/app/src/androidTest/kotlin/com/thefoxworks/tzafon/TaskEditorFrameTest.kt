@@ -51,7 +51,6 @@ class TaskEditorFrameTest {
                     today = today,
                     onSave = { _, _ -> saves++ },
                     onDelete = { _, _ -> },
-                    onSetState = { _, _ -> },
                     onClose = { closes++ },
                 )
             }
@@ -182,7 +181,7 @@ class TaskEditorFrameTest {
             TzafonTheme {
                 TaskEditorScreen(
                     initial = task, today = today,
-                    onSave = { _, _ -> saves++ }, onDelete = { _, _ -> }, onSetState = { _, _ -> },
+                    onSave = { _, _ -> saves++ }, onDelete = { _, _ -> },
                     onClose = { closes++ },
                 )
             }
