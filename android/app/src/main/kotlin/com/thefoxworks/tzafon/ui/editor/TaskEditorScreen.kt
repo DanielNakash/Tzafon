@@ -24,6 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -48,6 +49,8 @@ import com.thefoxworks.tzafon.domain.editor.DraftDiff
 import com.thefoxworks.tzafon.domain.editor.EditorSession
 import com.thefoxworks.tzafon.domain.editor.Pane
 import com.thefoxworks.tzafon.domain.editor.SaveProblem
+import com.thefoxworks.tzafon.domain.editor.SaveStep
+import com.thefoxworks.tzafon.domain.editor.ScopeSheetCopy
 import com.thefoxworks.tzafon.domain.model.EditScope
 import com.thefoxworks.tzafon.domain.model.RecurrenceDraft
 import com.thefoxworks.tzafon.domain.model.TaskDraft
@@ -112,6 +115,8 @@ fun TaskEditorScreen(
     habits: List<com.thefoxworks.tzafon.domain.model.Habit> = emptyList(),
     /** M5 — goals to link (many allowed, one typical — DM-TASK-5). */
     goals: List<com.thefoxworks.tzafon.domain.model.Goal> = emptyList(),
+    /** v2.13.0 — the scope sheets' whole-series badge: earlier occurrences (or only those not Done). */
+    countEarlier: suspend (taskId: String, notDoneOnly: Boolean) -> Int = { _, _ -> 0 },
 ) {
     // a quick-add expand passes a title-only draft (id = null) — still a new task
     val isNew = initial?.id == null
@@ -122,8 +127,13 @@ fun TaskEditorScreen(
     }
     val draft = session.draft
     fun update(change: (TaskDraft) -> TaskDraft) { session = session.edit(change) }
-    var scope by rememberSaveable { mutableStateOf(EditScope.ALL) }
-    var sheet by rememberSaveable { mutableStateOf<String?>(null) } // todo | due | end | delete | cue | habit | goals | state | discard
+    var sheet by rememberSaveable { mutableStateOf<String?>(null) } // todo | due | end | scope | delete | confirmDelete | cue | habit | goals | state | discard
+    // the row picked on the scope or delete sheet; null = the sheet's default, never remembered between openings
+    var chosen by rememberSaveable { mutableStateOf<EditScope?>(null) }
+    val earlier by produceState(0, sheet) {
+        value = 0
+        if (sheet == "scope" || sheet == "delete") value = countEarlier(session.snapshot.id!!, sheet == "delete")
+    }
     val rec = draft.recurrence
     val repeat = rec != null
     val singular = repeat && rec!!.dueMode == DueMode.SINGULAR
@@ -175,10 +185,11 @@ fun TaskEditorScreen(
                     .pressable {
                         val problem = session.saveProblem()
                         if (problem == null) {
-                            // interim, until scope is asked at Save: a scope the
-                            // changes can't take falls back to the sheet's default
-                            val changes = DraftDiff.of(session.snapshot, draft)
-                            onSave(draft, if (changes.allows(scope)) scope else changes.defaultScope)
+                            when (val step = session.saveStep) {
+                                SaveStep.Close -> onClose()
+                                is SaveStep.Write -> onSave(draft, step.scope)
+                                SaveStep.AskScope -> { chosen = null; sheet = "scope" }
+                            }
                         } else {
                             session = session.show(problem.pane)
                             focusProblem = problem
@@ -202,44 +213,6 @@ fun TaskEditorScreen(
         ) {
             when (session.tab) {
                 Pane.TASK -> {
-                    // ── recurring edit scope (until scope is asked at Save) ──
-                    if (!isNew && repeat) {
-                        Column(
-                            Modifier.fillMaxWidth().padding(top = 14.dp)
-                                .clip(RoundedCornerShape(13.dp))
-                                .background(Tz.colors.amber.a(0.14f))
-                                .border(1.dp, Tz.colors.amber.a(0.4f), RoundedCornerShape(13.dp))
-                                .padding(horizontal = 14.dp, vertical = 13.dp),
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-                                TzIcons.Repeat(15.dp, Tz.colors.rust)
-                                Text(
-                                    buildString { append("Repeating task. Apply changes to:") },
-                                    style = TextStyle(fontFamily = DenType.body, fontSize = 13.5.sp, fontWeight = FontWeight.SemiBold),
-                                    color = Tz.colors.ink,
-                                )
-                            }
-                            Box(Modifier.padding(top = 10.dp)) {
-                                Segmented(
-                                    options = listOf(EditScope.ONE to "This one", EditScope.FORWARD to "This & future", EditScope.ALL to "All"),
-                                    value = scope,
-                                    onSelect = { scope = it },
-                                    small = true,
-                                )
-                            }
-                            Text(
-                                when (scope) {
-                                    EditScope.ONE -> "Reschedules or edits only this occurrence — the series is untouched."
-                                    EditScope.FORWARD -> "Edits this and every future occurrence in place. The series is not split."
-                                    EditScope.ALL -> "Edits the whole series, past and future occurrences alike."
-                                },
-                                style = TextStyle(fontFamily = DenType.body, fontSize = 12.sp),
-                                color = Tz.colors.muted,
-                                modifier = Modifier.padding(top = 8.dp),
-                            )
-                        }
-                    }
-
                     // ── title ──
                     EdSection("Title")
                     EdInput(
@@ -303,7 +276,8 @@ fun TaskEditorScreen(
                                 .clip(RoundedCornerShape(13.dp))
                                 .border(1.dp, Tz.colors.due.a(0.45f), RoundedCornerShape(13.dp))
                                 .pressable {
-                                    if (repeat) sheet = "delete" else onDelete(draft.id!!, EditScope.ONE)
+                                    chosen = null
+                                    sheet = if (session.repeats) "delete" else "confirmDelete"
                                 },
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
@@ -780,37 +754,32 @@ fun TaskEditorScreen(
                 }
             }
         }
-        "delete" -> DenSheet("Delete repeating task", onClose = { sheet = null }) {
-            Column {
-                Text(
-                    "This task repeats — choose what to remove.",
-                    style = TextStyle(fontFamily = DenType.body, fontSize = 14.5.sp, lineHeight = 21.sp),
-                    color = Tz.colors.muted,
-                    modifier = Modifier.padding(bottom = 16.dp),
-                )
-                Row(
-                    Modifier.fillMaxWidth().height(52.dp)
-                        .clip(RoundedCornerShape(13.dp))
-                        .border(1.dp, Tz.colors.due.a(0.45f), RoundedCornerShape(13.dp))
-                        .pressable { sheet = null; onDelete(draft.id!!, EditScope.ONE) },
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center,
-                ) {
-                    Text("Delete this occurrence", style = TextStyle(fontFamily = DenType.body, fontSize = 15.5.sp, fontWeight = FontWeight.SemiBold), color = Tz.colors.due)
-                }
-                Box(Modifier.height(10.dp))
-                Row(
-                    Modifier.fillMaxWidth().height(52.dp)
-                        .clip(RoundedCornerShape(13.dp))
-                        .background(Tz.colors.due)
-                        .pressable { sheet = null; onDelete(draft.id!!, EditScope.ALL) },
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center,
-                ) {
-                    Text("Delete all occurrences", style = TextStyle(fontFamily = DenType.body, fontSize = 15.5.sp, fontWeight = FontWeight.SemiBold), color = Color.White)
-                }
-            }
+        "scope" -> {
+            val changes = DraftDiff.of(session.snapshot, draft, habits.find { it.id == draft.habitId }?.unit)
+            val pick = chosen?.takeIf(changes::allows) ?: changes.defaultScope
+            SaveScopeSheet(
+                // rebuilt per pick: the "· this one only" suffix depends on the chosen row
+                sheet = ScopeSheetCopy.save(draft, changes, earlier, pick),
+                chosen = pick,
+                onChoose = { chosen = it },
+                onKeepEditing = { sheet = null },
+                onSave = { sheet = null; onSave(draft, pick) },
+            )
         }
+        "delete" -> {
+            val pick = chosen ?: EditScope.ONE
+            DeleteScopeSheet(
+                rows = ScopeSheetCopy.delete(session.snapshot.occurrenceDate ?: session.snapshot.toDoDate!!, earlier),
+                chosen = pick,
+                onChoose = { chosen = it },
+                onKeep = { sheet = null },
+                onDelete = { sheet = null; onDelete(draft.id!!, pick) },
+            )
+        }
+        "confirmDelete" -> DeleteConfirmSheet(
+            onKeep = { sheet = null },
+            onDelete = { sheet = null; onDelete(draft.id!!, EditScope.ONE) },
+        )
     }
 }
 

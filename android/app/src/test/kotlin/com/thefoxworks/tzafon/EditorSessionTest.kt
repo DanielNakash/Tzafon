@@ -4,6 +4,8 @@ import com.thefoxworks.tzafon.domain.editor.DraftDiff
 import com.thefoxworks.tzafon.domain.editor.EditorSession
 import com.thefoxworks.tzafon.domain.editor.Pane
 import com.thefoxworks.tzafon.domain.editor.SaveProblem
+import com.thefoxworks.tzafon.domain.editor.SaveStep
+import com.thefoxworks.tzafon.domain.model.EditScope
 import com.thefoxworks.tzafon.domain.model.Cue
 import com.thefoxworks.tzafon.domain.model.CueType
 import com.thefoxworks.tzafon.domain.model.TaskDraft
@@ -112,6 +114,52 @@ class EditorSessionTest {
     fun `a blank title is reported before an incomplete cue time`() {
         val p = EditorSession.open(task).edit { it.copy(title = "") }.saveProblem(cueTimeIncomplete = true)
         assertEquals(SaveProblem.BLANK_TITLE, p)
+    }
+
+    // ── Save: what it does once nothing stops it ──────────────
+
+    private val occurrence = TaskDraft(
+        id = "S1__2026-09-17", title = "Water plants", toDoDate = "2026-09-17",
+        seriesId = "S1", occurrenceDate = "2026-09-17",
+        recurrence = RecurrenceDraft(rule = Rule(pattern = Pattern.WEEKDAY, weekdays = listOf(2, 4))),
+    )
+
+    @Test
+    fun `a field edit to a repeating task asks where it lands`() {
+        val s = EditorSession.open(occurrence).edit { it.copy(title = "Water the plants") }
+        assertEquals(SaveStep.AskScope, s.saveStep)
+    }
+
+    @Test
+    fun `an untouched existing task closes and writes nothing`() {
+        assertEquals(SaveStep.Close, EditorSession.open(occurrence).saveStep)
+        assertEquals(SaveStep.Close, EditorSession.open(task).saveStep)
+    }
+
+    @Test
+    fun `an untouched new task still saves, presets and all`() {
+        val quickAdd = TaskDraft(id = null, title = "Call mum", toDoDate = "2026-10-10")
+        assertEquals(SaveStep.Write(EditScope.ONE), EditorSession.open(quickAdd).saveStep)
+    }
+
+    @Test
+    fun `a status-only save on a repeating task lands on this one without asking`() {
+        val s = EditorSession.open(occurrence).edit { it.copy(state = TaskState.DONE) }
+        assertEquals(SaveStep.Write(EditScope.ONE), s.saveStep)
+    }
+
+    @Test
+    fun `a one-off turned repeating starts a new series without asking`() {
+        val s = EditorSession.open(task).edit { it.copy(recurrence = occurrence.recurrence) }
+        assertFalse(s.repeats)
+        assertTrue(s.saveStep is SaveStep.Write)
+    }
+
+    @Test
+    fun `turning repeat off on an occurrence still asks, since the series ends`() {
+        val s = EditorSession.open(occurrence).edit { it.copy(recurrence = null) }
+        assertTrue(s.repeats)
+        assertEquals(SaveStep.AskScope, s.saveStep)
     }
 
     // ── surviving rotation and process death ──────────────────

@@ -21,6 +21,13 @@ data class SaveSheet(val youChanged: List<String>, val rows: List<ScopeRow>, val
  */
 object ScopeSheetCopy {
 
+    /** The deck's scope labels, the same wherever a scope is asked. */
+    fun label(scope: EditScope): String = when (scope) {
+        EditScope.ONE -> "Just this one"
+        EditScope.FORWARD -> "This and every future one"
+        EditScope.ALL -> "The whole series"
+    }
+
     /**
      * [earlier] counts this series' occurrences dated before this one, Done
      * included; it badges the whole-series row, which always shows.

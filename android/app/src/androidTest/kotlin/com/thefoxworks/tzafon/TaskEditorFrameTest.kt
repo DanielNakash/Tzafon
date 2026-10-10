@@ -159,10 +159,20 @@ class TaskEditorFrameTest {
     }
 
     @Test
-    fun saveWithATitle_saves() {
+    fun saveWithAnEdit_saves() {
         editor()
+        titleField().performTextReplacement("Write the final report")
         rule.onNodeWithText("Save").performClick()
         assertEquals(1, saves)
+    }
+
+    /** v2.13.0 — Save with nothing changed just closes the editor and writes nothing. */
+    @Test
+    fun saveWithNoChanges_closesWithoutWriting() {
+        editor()
+        rule.onNodeWithText("Save").performClick()
+        assertEquals(0, saves)
+        assertEquals(1, closes)
     }
 
     @Test

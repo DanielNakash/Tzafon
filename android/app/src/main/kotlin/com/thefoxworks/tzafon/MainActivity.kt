@@ -508,6 +508,7 @@ private fun TzafonMainNav(container: AppContainer, initialUser: TzafonUser?) {
                     onClose = { nav.popBackStack() },
                     habits = habits,
                     goals = editorGoals,
+                    countEarlier = container.taskRepository::countEarlierOccurrences,
                 )
             }
         }
