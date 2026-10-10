@@ -33,6 +33,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.thefoxworks.tzafon.domain.editor.CueTime
 import com.thefoxworks.tzafon.domain.model.Cue
 import com.thefoxworks.tzafon.domain.model.CueType
 import com.thefoxworks.tzafon.ui.theme.Tz
@@ -40,13 +41,8 @@ import com.thefoxworks.tzafon.ui.theme.DenType
 import com.thefoxworks.tzafon.ui.theme.a
 import com.thefoxworks.tzafon.ui.theme.contentDir
 
-/**
- * FR-CUE-1.4 — canonical HH:mm gate for the AT_TIME variant of CueSheet.
- * Accepts 00:00..23:59, zero-padded, with the colon required. Leading/trailing
- * whitespace is trimmed before matching, mirroring the sheet's onSave.
- */
-private val HH_MM_REGEX = Regex("""^([01]\d|2[0-3]):[0-5]\d$""")
-fun isValidHhMm(s: String): Boolean = HH_MM_REGEX.matches(s.trim())
+/** FR-CUE-1.4 — canonical HH:mm gate for the AT_TIME variant of CueSheet (see [CueTime]). */
+fun isValidHhMm(s: String): Boolean = CueTime.isValid(s)
 
 /**
  * FR-CUE-2 — per-trigger save gate for CueSheet. AT_TIME requires only a valid

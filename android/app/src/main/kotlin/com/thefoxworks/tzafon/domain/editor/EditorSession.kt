@@ -98,6 +98,9 @@ data class EditorSession(
         else -> null
     }
 
+    /** [saveProblem] over the Alignment pane's [cue] as typed. */
+    fun saveProblem(cue: CueDraft): SaveProblem? = saveProblem(cueTimeIncomplete = cue.timeIncomplete)
+
     companion object {
         /**
          * The editor opens on Task, except from Reschedule, which opens on
