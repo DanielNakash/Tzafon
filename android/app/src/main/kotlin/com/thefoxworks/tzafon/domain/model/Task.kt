@@ -113,6 +113,8 @@ data class TaskDraft(
     val habitId: String? = null,
     val goalIds: List<String> = emptyList(),
     val commitment: String? = null,
+    /** The "How much?" answer for a Done status waiting for Save; never stored on the task. */
+    val habitAmount: Double? = null,
 )
 
 /** The editor's flattened recurrence: the rule + its meta. */

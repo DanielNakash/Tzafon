@@ -260,6 +260,15 @@ class RoomTaskRepository(
         )
     }
 
+    override suspend fun countEarlierOccurrences(taskId: String, notDoneOnly: Boolean): Int {
+        val t = taskDao.get(taskId)?.toDomain() ?: return 0
+        val seriesId = t.seriesId ?: return 0
+        val date = t.occurrenceDate ?: return 0
+        return taskDao.occurrencesOf(seriesId).map { it.toDomain() }.count { o ->
+            (o.occurrenceDate ?: "") < date && !(notDoneOnly && o.state == TaskState.DONE)
+        }
+    }
+
     // ── deleting ──────────────────────────────────────────────
 
     private suspend fun deleteSeriesAndOccurrences(seriesId: String) {

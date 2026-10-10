@@ -21,6 +21,13 @@ interface TaskRepository {
      */
     suspend fun saveDraft(draft: TaskDraft, scope: EditScope, today: String)
 
+    /**
+     * v2.13.0 — the whole-series badge on the scope sheets: how many of this
+     * occurrence's series are dated before it, or with [notDoneOnly] only
+     * those not Done. 0 for a one-off task.
+     */
+    suspend fun countEarlierOccurrences(taskId: String, notDoneOnly: Boolean): Int
+
     /** Delete a task or occurrence; ALL deletes the whole series. */
     suspend fun deleteTask(id: String, scope: EditScope)
 
