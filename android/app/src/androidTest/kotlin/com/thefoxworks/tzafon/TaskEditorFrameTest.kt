@@ -103,7 +103,7 @@ class TaskEditorFrameTest {
         tab("Timing").assertIsSelected()
         tab("Task").assertIsNotSelected()
         rule.onNodeWithText("DATES · ONE CALENDAR, TWO FIELDS").assertIsDisplayed()
-        rule.onNodeWithText("RECURRENCE").performScrollTo().assertIsDisplayed()
+        rule.onNodeWithText("REPEAT").performScrollTo().assertIsDisplayed()
         rule.onNodeWithText("TITLE").assertDoesNotExist()
 
         tab("Alignment").performClick()

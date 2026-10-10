@@ -41,6 +41,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.thefoxworks.tzafon.domain.editor.Armed
+import com.thefoxworks.tzafon.domain.editor.CardBody
 import com.thefoxworks.tzafon.domain.editor.CueDraft
 import com.thefoxworks.tzafon.domain.editor.CueSuggestions
 import com.thefoxworks.tzafon.domain.editor.DraftDiff
@@ -53,6 +54,7 @@ import com.thefoxworks.tzafon.domain.editor.SharedCalendar
 import com.thefoxworks.tzafon.domain.model.Cue
 import com.thefoxworks.tzafon.domain.model.EditScope
 import com.thefoxworks.tzafon.domain.model.SeriesStatus
+import com.thefoxworks.tzafon.domain.recurrence.SeriesSpec
 import com.thefoxworks.tzafon.domain.model.StatusScope
 import com.thefoxworks.tzafon.domain.model.Task
 import com.thefoxworks.tzafon.domain.model.TaskState
@@ -64,7 +66,6 @@ import com.thefoxworks.tzafon.ui.components.AmountSheet
 import com.thefoxworks.tzafon.ui.status.TaskStatusSheet
 import com.thefoxworks.tzafon.domain.model.TaskDraft
 import com.thefoxworks.tzafon.domain.recurrence.Recurrence
-import com.thefoxworks.tzafon.ui.components.CalendarPicker
 import com.thefoxworks.tzafon.ui.components.DenSheet
 import com.thefoxworks.tzafon.ui.components.LocalWeekStart
 import com.thefoxworks.tzafon.ui.components.TzIcons
@@ -94,6 +95,8 @@ fun TaskEditorScreen(
     openOn: Pane = Pane.TASK,
     /** the stored series' facts, which the status strip asks its scope from; null for a one-off */
     series: SeriesStatus? = null,
+    /** the stored series itself, which the repeat card's "Switch to offset" reads; null for a one-off */
+    seriesSpec: SeriesSpec? = null,
     /** a whole-series status from the strip: applied at once, then the editor closes */
     onSeriesStatus: ((id: String, target: TaskState, amount: Double?) -> Unit)? = null,
     /** M4 — the habits available to link (DM-REL: at most one per task). */
@@ -123,18 +126,19 @@ fun TaskEditorScreen(
     val cueTimeFocus = remember { FocusRequester() }
     val draft = session.draft
     fun update(change: (TaskDraft) -> TaskDraft) { session = session.edit(change) }
-    var sheet by rememberSaveable { mutableStateOf<String?>(null) } // end | scope | delete | confirmDelete | status | amount | discard
+    var sheet by rememberSaveable { mutableStateOf<String?>(null) } // scope | delete | confirmDelete | status | amount | discard
     // the shared calendar: To do is armed on open (Reschedule too), and the month
     // only moves by its arrows; both outlive tab switches and rotation
     var armed by rememberSaveable { mutableStateOf(Armed.TODO) }
     var month by rememberSaveable { mutableStateOf(SharedCalendar.openingMonth(session.snapshot, today).toString()) }
+    // the repeat card's body (the rule, or Ends / Deadline swapped in), remembered like the armed field
+    var cardBody by rememberSaveable { mutableStateOf(CardBody.RULE) }
     // the row picked on the scope or delete sheet; null = the sheet's default, never remembered between openings
     var chosen by rememberSaveable { mutableStateOf<EditScope?>(null) }
     val earlier by produceState(0, sheet) {
         value = 0
         if (sheet == "scope" || sheet == "delete") value = countEarlier(session.snapshot.id!!, sheet == "delete")
     }
-    val rec = draft.recurrence
     // each pane keeps its own scroll position while tabs switch
     val scrolls = Pane.entries.associateWith { rememberScrollState() }
     val titleFocus = remember { FocusRequester() }
@@ -286,11 +290,13 @@ fun TaskEditorScreen(
                     today = today,
                     armed = armed,
                     month = YearMonth.parse(month),
+                    cardBody = cardBody,
                     weekStart = LocalWeekStart.current,
+                    series = seriesSpec,
                     onArm = { armed = it },
                     onMonth = { month = it.toString() },
+                    onCardBody = { cardBody = it },
                     onEdit = ::update,
-                    onEnd = { sheet = "end" },
                 )
             }
         }
@@ -298,11 +304,6 @@ fun TaskEditorScreen(
 
     // ── sheets ──
     when (sheet) {
-        "end" -> DenSheet("Recurrence ends", onClose = { sheet = null }) {
-            CalendarPicker(rec?.endDate, today,
-                onPick = { d -> update { it.copy(recurrence = rec!!.copy(endDate = d)) }; sheet = null },
-                onClear = { update { it.copy(recurrence = rec!!.copy(endDate = null)) }; sheet = null })
-        }
         "status" -> statusPanel?.let { target ->
             TaskStatusSheet(
                 subject = StatusSubject(

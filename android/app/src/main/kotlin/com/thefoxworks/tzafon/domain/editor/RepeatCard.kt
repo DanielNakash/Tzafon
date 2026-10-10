@@ -60,10 +60,6 @@ object RepeatCard {
     /** One half of the footer, "Ends never" or "Deadline one fixed": its words and whether a tap opens it. */
     data class Half(val label: String, val value: String, val tappable: Boolean)
 
-    /** The callout under the folded card, shown only for one fixed deadline. */
-    const val FIXED_CALLOUT =
-        "One fixed deadline also ends the series. For a fresh deadline each time, switch to per occurrence."
-
     /** The per-occurrence offset stepper's range, in days after each to-do date. */
     val OFFSET_RANGE = 0..Recurrence.MAX_DUE_OFFSET_DAYS
 
@@ -88,7 +84,7 @@ object RepeatCard {
         val body: CardBody,
         /** the one-row card while the Deadline tile is armed, e.g. "Every Tue & Thu · ONE FIXED DEADLINE"; null unfolded */
         val folded: String?,
-        /** [FIXED_CALLOUT] under the folded card for one fixed deadline, else null */
+        /** the callout under the folded card for one fixed deadline ([fixedCallout]), else null */
         val callout: String?,
     )
 
@@ -148,7 +144,7 @@ object RepeatCard {
                 DeadlineKind.PER_OCCURRENCE -> "DEADLINE " + offsetWords(offsetOf(draft)).uppercase()
                 DeadlineKind.CUSTOM_RULE -> "CUSTOM DEADLINE RULE"
             },
-            callout = FIXED_CALLOUT.takeIf { folded && kind == DeadlineKind.FIXED },
+            callout = if (folded && kind == DeadlineKind.FIXED) fixedCallout(rule, draft.dueDate!!) else null,
         )
     }
 
@@ -359,6 +355,22 @@ object RepeatCard {
         if (rule.pattern != Pattern.WEEKDAY || rule.weekdays.size !in 1..2) return Recurrence.summary(rule)
         val days = rule.weekdays.sorted().joinToString(" & ") { Dates.WD[it] }
         return "Every $days" + if (rule.weekInterval > 1) ", every ${rule.weekInterval} weeks" else ""
+    }
+
+    /**
+     * The deck's callout, filled in: the deadline's day, and the rule's
+     * weekdays in full ("Tuesday and Thursday"), or "occurrence" for any
+     * other rule.
+     */
+    private fun fixedCallout(rule: Rule, deadline: String): String {
+        val days = rule.weekdays.sorted().map { Dates.WD_FULL[it] }
+        val every = if (rule.pattern != Pattern.WEEKDAY || days.isEmpty() || days.size == 7) "occurrence"
+        else if (days.size == 1) days[0]
+        else days.dropLast(1).joinToString(", ") + " and " + days.last()
+        val day = Dates.parse(deadline)
+        return "One fixed deadline also ends the series — no occurrences are generated after " +
+            "${Dates.WD[Dates.dayOfWeek(day)]} ${day.dayOfMonth}. " +
+            "Switch the repeat to per occurrence to give every $every its own."
     }
 
     /** "3rd Thursday" or "last Friday". */

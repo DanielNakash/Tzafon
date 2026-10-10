@@ -56,6 +56,7 @@ import com.thefoxworks.tzafon.ui.status.LocalEditorOpener
 import com.thefoxworks.tzafon.ui.status.LocalStatusHost
 import com.thefoxworks.tzafon.domain.editor.Pane
 import com.thefoxworks.tzafon.domain.model.SeriesStatus
+import com.thefoxworks.tzafon.domain.recurrence.SeriesSpec
 import com.thefoxworks.tzafon.domain.model.StatusScope
 import com.thefoxworks.tzafon.ui.status.StatusToastHost
 import com.thefoxworks.tzafon.ui.theme.LocalPalette
@@ -481,11 +482,11 @@ private fun TzafonMainNav(container: AppContainer, initialUser: TzafonUser?) {
                     val repo = container.taskRepository
                     // hydrate the draft synchronously off the DB (small row; simple M0 path),
                     // with the series' facts the status strip asks its scope from
-                    val opened: Pair<TaskDraft, SeriesStatus?>? = taskId?.let {
+                    val opened: Triple<TaskDraft, SeriesStatus?, SeriesSpec?>? = taskId?.let {
                         runBlocking {
                             val t = repo.getTask(it) ?: return@runBlocking null
                             val series = t.seriesId?.let { sid -> repo.getSeries(sid) }
-                            TaskDraft.of(t, series) to series?.let { s -> SeriesStatus.of(s, today) }
+                            Triple(TaskDraft.of(t, series), series?.let { s -> SeriesStatus.of(s, today) }, series?.toSpec())
                         }
                     }
                     val initial: TaskDraft? = opened?.first ?: run {
@@ -517,6 +518,7 @@ private fun TzafonMainNav(container: AppContainer, initialUser: TzafonUser?) {
                         today = today,
                         openOn = openOn,
                         series = opened?.second,
+                        seriesSpec = opened?.third,
                         onSave = { draft, editScope ->
                             scope.launch {
                                 container.taskRepository.saveDraft(draft, editScope, today)

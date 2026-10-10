@@ -183,6 +183,14 @@ class CalendarRulesTest {
     }
 
     @Test
+    fun `the first fixed deadline clears the end date, since it is the end`() {
+        val ending = repeating.copy(recurrence = repeating.recurrence!!.copy(endDate = "2026-10-20"))
+        val set = cal(ending, Armed.DEADLINE).tap("2026-10-30")
+        assertEquals(DueMode.SINGULAR, set.recurrence!!.dueMode)
+        assertNull(set.recurrence!!.endDate)
+    }
+
+    @Test
     fun `an old custom deadline rule is read-only on the calendar`() {
         val custom = repeating.copy(
             dueDate = "2026-10-15",

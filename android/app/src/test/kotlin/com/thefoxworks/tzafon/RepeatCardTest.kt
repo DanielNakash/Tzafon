@@ -373,7 +373,26 @@ class RepeatCardTest {
     fun `armed on a fixed deadline the card folds, with the callout`() {
         val card = RepeatCard.of(withDeadline(DueMode.SINGULAR, due = "2026-10-30"), deadlineArmed = true)!!
         assertEquals("Every Tue & Thu · ONE FIXED DEADLINE", card.folded)
-        assertEquals(RepeatCard.FIXED_CALLOUT, card.callout)
+        assertEquals(
+            "One fixed deadline also ends the series — no occurrences are generated after Fri 30. " +
+                "Switch the repeat to per occurrence to give every Tuesday and Thursday its own.",
+            card.callout,
+        )
+    }
+
+    @Test
+    fun `the callout names three or more days in a list, and any other rule's occurrences`() {
+        val mwf = Rule(pattern = Pattern.WEEKDAY, weekdays = listOf(5, 1, 3))
+        val weekly = repeating(mwf).copy(dueDate = "2026-10-30", recurrence = RecurrenceDraft(rule = mwf, dueMode = DueMode.SINGULAR))
+        assertTrue(RepeatCard.of(weekly, deadlineArmed = true)!!.callout!!.endsWith("to give every Monday, Wednesday and Friday its own."))
+
+        val every3 = Rule(pattern = Pattern.INTERVAL, unit = IntervalUnit.DAY, interval = 3)
+        val interval = repeating(every3).copy(dueDate = "2026-10-30", recurrence = RecurrenceDraft(rule = every3, dueMode = DueMode.SINGULAR))
+        assertEquals(
+            "One fixed deadline also ends the series — no occurrences are generated after Fri 30. " +
+                "Switch the repeat to per occurrence to give every occurrence its own.",
+            RepeatCard.of(interval, deadlineArmed = true)!!.callout,
+        )
     }
 
     @Test

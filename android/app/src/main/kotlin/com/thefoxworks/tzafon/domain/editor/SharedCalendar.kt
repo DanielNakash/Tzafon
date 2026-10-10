@@ -239,7 +239,9 @@ class SharedCalendar(val draft: TaskDraft, val armed: Armed, val today: String) 
                 val gap = Dates.dayDiff(day, toDo).toInt().coerceIn(0, Recurrence.MAX_DUE_OFFSET_DAYS)
                 draft.copy(dueDate = Dates.addDays(toDo, gap.toLong()), recurrence = rec.copy(dueOffsetDays = gap))
             }
-            else -> draft.copy(dueDate = day, recurrence = rec.copy(dueMode = DueMode.SINGULAR))
+            // the first fixed deadline is the series' end, so an earlier end date goes (as RepeatCard's One fixed)
+            dueMode == DueMode.SINGULAR && draft.dueDate != null -> draft.copy(dueDate = day)
+            else -> draft.copy(dueDate = day, recurrence = rec.copy(dueMode = DueMode.SINGULAR, endDate = null))
         }
     }
 

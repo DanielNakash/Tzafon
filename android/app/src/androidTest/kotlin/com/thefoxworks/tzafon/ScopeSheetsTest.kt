@@ -122,7 +122,8 @@ class ScopeSheetsTest {
     fun turningRepeatOff_leavesOnlyThisAndEveryFutureOne() {
         editor(occurrence)
         rule.onNodeWithText("Timing").performClick()
-        rule.onNodeWithText("Repeat this task").performScrollTo().performClick()
+        // the repeat card's header reads the summary; its switch turns repeat off
+        rule.onNode(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Switch)).performScrollTo().performClick()
         rule.onNodeWithText("Save").performClick()
 
         radio("Just this one").assertIsNotEnabled()
