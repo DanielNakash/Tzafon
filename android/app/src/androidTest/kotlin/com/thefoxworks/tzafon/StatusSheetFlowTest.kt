@@ -206,7 +206,10 @@ class StatusSheetFlowTest {
         rule.onNode(
             SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Tab).and(hasText("Timing")),
         ).assertIsSelected()
-        rule.onNodeWithText("To Do Date").assertIsDisplayed()
+        // the shared calendar, with To do armed
+        rule.onNode(
+            SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.RadioButton).and(hasText("TO-DO")),
+        ).assertIsSelected()
     }
 
     private fun radio(label: String) =

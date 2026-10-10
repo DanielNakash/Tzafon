@@ -40,12 +40,14 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.thefoxworks.tzafon.domain.editor.Armed
 import com.thefoxworks.tzafon.domain.editor.DraftDiff
 import com.thefoxworks.tzafon.domain.editor.EditorSession
 import com.thefoxworks.tzafon.domain.editor.Pane
 import com.thefoxworks.tzafon.domain.editor.SaveProblem
 import com.thefoxworks.tzafon.domain.editor.SaveStep
 import com.thefoxworks.tzafon.domain.editor.ScopeSheetCopy
+import com.thefoxworks.tzafon.domain.editor.SharedCalendar
 import com.thefoxworks.tzafon.domain.model.EditScope
 import com.thefoxworks.tzafon.domain.model.SeriesStatus
 import com.thefoxworks.tzafon.domain.model.StatusScope
@@ -57,15 +59,16 @@ import com.thefoxworks.tzafon.domain.status.StatusSubject
 import com.thefoxworks.tzafon.ui.components.AmountSheet
 import com.thefoxworks.tzafon.ui.status.TaskStatusSheet
 import com.thefoxworks.tzafon.domain.model.TaskDraft
-import com.thefoxworks.tzafon.domain.recurrence.DueMode
 import com.thefoxworks.tzafon.domain.recurrence.Recurrence
 import com.thefoxworks.tzafon.ui.components.CalendarPicker
 import com.thefoxworks.tzafon.ui.components.DenSheet
+import com.thefoxworks.tzafon.ui.components.LocalWeekStart
 import com.thefoxworks.tzafon.ui.components.TzIcons
 import com.thefoxworks.tzafon.ui.components.pressable
 import com.thefoxworks.tzafon.ui.theme.Tz
 import com.thefoxworks.tzafon.ui.theme.DenType
 import com.thefoxworks.tzafon.ui.theme.a
+import java.time.YearMonth
 
 /**
  * Full-screen task editor. v2.13.0: three panes behind a tab row —
@@ -105,8 +108,11 @@ fun TaskEditorScreen(
     }
     val draft = session.draft
     fun update(change: (TaskDraft) -> TaskDraft) { session = session.edit(change) }
-    // Reschedule arms the to-do date: until the shared calendar lands, that's its picker, open
-    var sheet by rememberSaveable { mutableStateOf(if (openOn == Pane.TIMING) "todo" else null) } // todo | due | end | scope | delete | confirmDelete | cue | habit | goals | status | amount | discard
+    var sheet by rememberSaveable { mutableStateOf<String?>(null) } // end | scope | delete | confirmDelete | cue | habit | goals | status | amount | discard
+    // the shared calendar: To do is armed on open (Reschedule too), and the month
+    // only moves by its arrows; both outlive tab switches and rotation
+    var armed by rememberSaveable { mutableStateOf(Armed.TODO) }
+    var month by rememberSaveable { mutableStateOf(SharedCalendar.openingMonth(session.snapshot, today).toString()) }
     // the row picked on the scope or delete sheet; null = the sheet's default, never remembered between openings
     var chosen by rememberSaveable { mutableStateOf<EditScope?>(null) }
     val earlier by produceState(0, sheet) {
@@ -250,10 +256,12 @@ fun TaskEditorScreen(
                 Pane.TIMING -> TimingPane(
                     draft = draft,
                     today = today,
+                    armed = armed,
+                    month = YearMonth.parse(month),
+                    weekStart = LocalWeekStart.current,
+                    onArm = { armed = it },
+                    onMonth = { month = it.toString() },
                     onEdit = ::update,
-                    onToDo = { sheet = "todo" },
-                    onClearToDo = { session = session.toDo(null) },
-                    onDue = { sheet = "due" },
                     onEnd = { sheet = "end" },
                 )
             }
@@ -262,22 +270,6 @@ fun TaskEditorScreen(
 
     // ── sheets ──
     when (sheet) {
-        "todo" -> DenSheet("To Do Date", onClose = { sheet = null }) {
-            CalendarPicker(draft.toDoDate, today,
-                onPick = { d -> session = session.toDo(d); sheet = null },
-                onClear = { session = session.toDo(null); sheet = null })
-        }
-        "due" -> DenSheet("Due Date", onClose = { sheet = null }) {
-            CalendarPicker(draft.dueDate, today,
-                onPick = { picked ->
-                    update { it.copy(
-                        dueDate = picked,
-                        recurrence = rec?.copy(dueMode = if (rec.dueMode == DueMode.NONE) DueMode.SINGULAR else rec.dueMode),
-                    ) }
-                    sheet = null
-                },
-                onClear = { update { it.copy(dueDate = null) }; sheet = null })
-        }
         "end" -> DenSheet("Recurrence ends", onClose = { sheet = null }) {
             CalendarPicker(rec?.endDate, today,
                 onPick = { d -> update { it.copy(recurrence = rec!!.copy(endDate = d)) }; sheet = null },

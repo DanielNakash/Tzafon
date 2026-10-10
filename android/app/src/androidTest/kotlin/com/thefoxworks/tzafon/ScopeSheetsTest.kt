@@ -12,6 +12,7 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextReplacement
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.thefoxworks.tzafon.domain.model.EditScope
@@ -121,7 +122,7 @@ class ScopeSheetsTest {
     fun turningRepeatOff_leavesOnlyThisAndEveryFutureOne() {
         editor(occurrence)
         rule.onNodeWithText("Timing").performClick()
-        rule.onNodeWithText("Repeat this task").performClick()
+        rule.onNodeWithText("Repeat this task").performScrollTo().performClick()
         rule.onNodeWithText("Save").performClick()
 
         radio("Just this one").assertIsNotEnabled()

@@ -23,6 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.thefoxworks.tzafon.domain.dates.Dates
+import com.thefoxworks.tzafon.domain.editor.Armed
 import com.thefoxworks.tzafon.domain.model.RecurrenceDraft
 import com.thefoxworks.tzafon.domain.model.TaskDraft
 import com.thefoxworks.tzafon.domain.model.TaskState
@@ -37,6 +38,7 @@ import com.thefoxworks.tzafon.ui.components.pressable
 import com.thefoxworks.tzafon.ui.theme.DenType
 import com.thefoxworks.tzafon.ui.theme.Tz
 import com.thefoxworks.tzafon.ui.theme.a
+import java.time.YearMonth
 
 /**
  * FR-BACKLOG-5.3 — toggling recurrence on the editor draft. Adding recurrence to a
@@ -61,18 +63,21 @@ internal fun toggleRecurrence(draft: TaskDraft, today: String): TaskDraft =
     }
 
 /**
- * v2.13.0 — the Timing pane: the to-do date and deadline, then the repeat card.
- * The date rows open the frame's date sheets; everything else edits the draft.
+ * v2.13.0 — the Timing pane: the shared calendar for the to-do date and the
+ * deadline, then the repeat card. Everything edits the draft; the Ends row
+ * still opens the frame's end-date sheet until the repeat card lands.
  * Emits into the editor's scrolling column.
  */
 @Composable
 internal fun TimingPane(
     draft: TaskDraft,
     today: String,
+    armed: Armed,
+    month: YearMonth,
+    weekStart: String,
+    onArm: (Armed) -> Unit,
+    onMonth: (YearMonth) -> Unit,
     onEdit: ((TaskDraft) -> TaskDraft) -> Unit,
-    onToDo: () -> Unit,
-    onClearToDo: () -> Unit,
-    onDue: () -> Unit,
     onEnd: () -> Unit,
 ) {
     val rec = draft.recurrence
@@ -80,37 +85,8 @@ internal fun TimingPane(
     val singular = repeat && rec!!.dueMode == DueMode.SINGULAR
 
     // ── dates ──
-    EdSection("Dates")
-    Column(verticalArrangement = Arrangement.spacedBy(11.dp)) {
-        DateRow(
-            label = "To Do Date",
-            value = draft.toDoDate,
-            placeholder = "None — undated",
-            today = today,
-            onClick = onToDo,
-            onClear = onClearToDo,
-        )
-        DateRow(
-            label = if (singular) "Due Date · singular" else "Due Date",
-            value = draft.dueDate,
-            placeholder = "None",
-            today = today,
-            onClick = onDue,
-            onClear = {
-                onEdit { it.copy(
-                    dueDate = null,
-                    recurrence = rec?.copy(dueMode = DueMode.NONE),
-                ) }
-            },
-            note = when {
-                draft.dueDate != null && draft.toDoDate != null && draft.dueDate == draft.toDoDate ->
-                    "Scheduled date is also the deadline"
-                draft.dueDate == today -> "Due today"
-                else -> null
-            },
-        )
-
-    }
+    EdSection("Dates · one calendar, two fields")
+    TimingCalendar(draft, today, armed, month, weekStart, onArm, onMonth, onEdit)
 
     // ── recurrence ──
     EdSection("Recurrence")
@@ -246,59 +222,6 @@ internal fun TimingPane(
                         TzIcons.Chevron(18.dp, Tz.colors.ink.a(0.3f))
                     }
                 }
-            }
-        }
-    }
-}
-
-@Composable
-private fun DateRow(
-    label: String,
-    value: String?,
-    placeholder: String,
-    today: String,
-    onClick: () -> Unit,
-    onClear: () -> Unit,
-    note: String? = null,
-) {
-    Column {
-        Row(
-            Modifier.fillMaxWidth()
-                .clip(RoundedCornerShape(13.dp))
-                .background(Tz.colors.card)
-                .border(1.dp, Tz.colors.line, RoundedCornerShape(13.dp))
-                .pressable(onClick)
-                .padding(14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(13.dp),
-        ) {
-            TzIcons.Calendar(19.dp, Tz.colors.rust)
-            Column(Modifier.weight(1f)) {
-                SectionLabel(label)
-                Text(
-                    value?.let { Dates.fmtLong(it, today) } ?: placeholder,
-                    style = TextStyle(fontFamily = DenType.body, fontSize = 16.sp),
-                    color = if (value != null) Tz.colors.ink else Tz.colors.faint,
-                    modifier = Modifier.padding(top = 2.dp),
-                )
-            }
-            if (value != null) {
-                Box(
-                    Modifier.size(30.dp).clip(RoundedCornerShape(8.dp)).background(Tz.colors.surfaceAlt).pressable(onClear),
-                    contentAlignment = Alignment.Center,
-                ) { TzIcons.X(14.dp, Tz.colors.muted) }
-            } else {
-                TzIcons.Chevron(18.dp, Tz.colors.ink.a(0.3f))
-            }
-        }
-        if (note != null) {
-            Row(
-                Modifier.padding(top = 8.dp, start = 4.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(5.dp),
-            ) {
-                TzIcons.Alert(13.dp, Tz.colors.due)
-                Text(note, style = TextStyle(fontFamily = DenType.mono, fontSize = 12.5.sp), color = Tz.colors.due)
             }
         }
     }

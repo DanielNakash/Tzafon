@@ -41,15 +41,36 @@ class SharedCalendar(val draft: TaskDraft, val armed: Armed, val today: String) 
 
     val caption: String
         get() = when (armed) {
-            Armed.TODO -> if (repeating) "A repeating task always has a to-do date" else "A TAP SETS TO DO"
+            Armed.TODO -> if (repeating) "A repeating task always has a to-do date" else "A TAP SETS TO-DO"
             Armed.DEADLINE -> "A TAP SETS THE DEADLINE"
             Armed.END -> "A TAP SETS THE END"
+        }
+
+    /** The line under the legend: what a tap does for the armed field, here. */
+    val hint: String
+        get() = when (armed) {
+            Armed.TODO -> {
+                val toDo = draft.toDoDate
+                when {
+                    backlog -> "Picking a day brings it out of Backlog."
+                    repeating -> "A tap moves this occurrence's to-do date."
+                    toDo == null -> "An undated task waits in Planning. Tap a day to plan it."
+                    else -> "Tapping ${short(toDo)} again clears the to-do date. The task becomes undated" +
+                        if (toDo == today) " and leaves Today." else "."
+                }
+            }
+            Armed.DEADLINE -> when {
+                deadlineLocked -> "An old custom rule sets these deadlines, so the calendar can't change them."
+                offset != null -> "Each occurrence is due ${days(offset!!)} after its to-do date. A tap sets the gap."
+                else -> "Deadlines are optional. \u201cNone\u201d removes the ring and the shading; the to-do date is untouched."
+            }
+            Armed.END -> "The series stops after the day you tap. \u201cNever\u201d keeps it going."
         }
 
     val toDoTile: String
         get() = when {
             backlog -> "Backlog"
-            else -> draft.toDoDate?.let(::short) ?: "Undated"
+            else -> draft.toDoDate?.let { if (it == today) "Today · ${short(it)}" else short(it) } ?: "Undated"
         }
 
     val deadlineTile: String
@@ -153,8 +174,24 @@ class SharedCalendar(val draft: TaskDraft, val armed: Armed, val today: String) 
         )
     }
 
-    /** "You plan to work on this after it's due."; [fixable] false hides the fix. */
-    data class Conflict(val warning: String, val fixable: Boolean)
+    /** What TalkBack reads for [day]: "Thursday 17 September, to-do date", then any other marks. */
+    fun describe(day: String): String {
+        val d = Dates.parse(day)
+        val m = mark(day)
+        val name = "${Dates.WD_FULL[Dates.dayOfWeek(d)]} ${d.dayOfMonth} ${Dates.MO_FULL[d.monthValue - 1]}"
+        val marks = listOfNotNull(
+            "to-do date".takeIf { m.toDo },
+            "deadline".takeIf { m.deadline },
+            "in the window".takeIf { m.window },
+            "end date".takeIf { m.end },
+            "today".takeIf { m.today },
+            "not available".takeIf { !m.enabled },
+        )
+        return (listOf(name) + marks).joinToString(", ")
+    }
+
+    /** "You plan to work on this after it's due."; [fixable] false hides the [fix] button. */
+    data class Conflict(val warning: String, val fixable: Boolean, val fix: String)
 
     /**
      * A one-off or fixed deadline strictly earlier than the to-do date. Never
@@ -166,7 +203,7 @@ class SharedCalendar(val draft: TaskDraft, val armed: Armed, val today: String) 
             val toDo = draft.toDoDate ?: return null
             val due = draft.dueDate ?: return null
             if (dueMode == DueMode.OFFSET || deadlineLocked || due >= toDo) return null
-            return Conflict("You plan to work on this after it's due.", fixable = due >= today)
+            return Conflict("You plan to work on this after it's due.", fixable = due >= today, fix = "Move the to-do date to ${short(due)}")
         }
 
     /** The one-tap fix: the to-do date moves to the deadline. */
@@ -216,6 +253,8 @@ class SharedCalendar(val draft: TaskDraft, val armed: Armed, val today: String) 
         fun openingMonth(draft: TaskDraft, today: String): YearMonth =
             YearMonth.from(Dates.parse(draft.toDoDate ?: draft.dueDate ?: today))
     }
+
+    private fun days(n: Int) = if (n == 1) "1 day" else "$n days"
 
     private fun short(iso: String) = "${Dates.WD[Dates.dayOfWeek(iso)]} ${Dates.parse(iso).dayOfMonth}"
 }

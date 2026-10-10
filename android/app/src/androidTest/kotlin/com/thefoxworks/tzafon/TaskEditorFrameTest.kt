@@ -14,6 +14,7 @@ import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextReplacement
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.thefoxworks.tzafon.domain.model.TaskDraft
@@ -98,15 +99,15 @@ class TaskEditorFrameTest {
         tab("Timing").performClick()
         tab("Timing").assertIsSelected()
         tab("Task").assertIsNotSelected()
-        rule.onNodeWithText("DATES").assertIsDisplayed()
-        rule.onNodeWithText("RECURRENCE").assertIsDisplayed()
+        rule.onNodeWithText("DATES · ONE CALENDAR, TWO FIELDS").assertIsDisplayed()
+        rule.onNodeWithText("RECURRENCE").performScrollTo().assertIsDisplayed()
         rule.onNodeWithText("TITLE").assertDoesNotExist()
 
         tab("Alignment").performClick()
         val serves = rule.onNodeWithText("SERVES · ALIGNMENT (OPTIONAL)").assertIsDisplayed().getUnclippedBoundsInRoot()
         val cue = rule.onNodeWithText("WHEN WILL YOU DO THIS? · CUE").assertIsDisplayed().getUnclippedBoundsInRoot()
         assertTrue("Serves sits above the cue", serves.top < cue.top)
-        rule.onNodeWithText("DATES").assertDoesNotExist()
+        rule.onNodeWithText("DATES · ONE CALENDAR, TWO FIELDS").assertDoesNotExist()
     }
 
     @Test

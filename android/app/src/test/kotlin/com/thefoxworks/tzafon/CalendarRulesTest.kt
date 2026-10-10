@@ -408,7 +408,7 @@ class CalendarRulesTest {
 
     @Test
     fun `the caption follows the armed field`() {
-        assertEquals("A TAP SETS TO DO", cal(open, Armed.TODO).caption)
+        assertEquals("A TAP SETS TO-DO", cal(open, Armed.TODO).caption)
         assertEquals("A TAP SETS THE DEADLINE", cal(open, Armed.DEADLINE).caption)
         assertEquals("A TAP SETS THE END", cal(repeating, Armed.END).caption)
     }
@@ -419,5 +419,58 @@ class CalendarRulesTest {
         assertEquals(YearMonth.of(2027, 1), SharedCalendar.openingMonth(open.copy(dueDate = "2027-01-05"), today))
         assertEquals(YearMonth.of(2026, 10), SharedCalendar.openingMonth(open, today))
         assertEquals(YearMonth.of(2026, 10), SharedCalendar.openingMonth(open.copy(state = TaskState.BACKLOG), today))
+    }
+
+    // ── What the Timing pane reads out (#27) ──
+
+    @Test
+    fun `the to-do tile leads with Today when the to-do date is today`() {
+        assertEquals("Today · Sat 10", cal(open.copy(toDoDate = today)).toDoTile)
+        assertEquals("Mon 12", cal(open.copy(toDoDate = "2026-10-12")).toDoTile)
+    }
+
+    @Test
+    fun `the hint under the legend follows the armed field`() {
+        assertEquals(
+            "Tapping Mon 12 again clears the to-do date. The task becomes undated.",
+            cal(open.copy(toDoDate = "2026-10-12")).hint,
+        )
+        assertEquals(
+            "Tapping Sat 10 again clears the to-do date. The task becomes undated and leaves Today.",
+            cal(open.copy(toDoDate = today)).hint,
+        )
+        assertEquals("An undated task waits in Planning. Tap a day to plan it.", cal(open).hint)
+        assertEquals("Picking a day brings it out of Backlog.", cal(open.copy(state = TaskState.BACKLOG)).hint)
+        assertEquals("A tap moves this occurrence's to-do date.", cal(repeating).hint)
+        assertEquals(
+            "Deadlines are optional. \u201cNone\u201d removes the ring and the shading; the to-do date is untouched.",
+            cal(open, Armed.DEADLINE).hint,
+        )
+        val each = repeating.copy(recurrence = repeating.recurrence!!.copy(dueMode = DueMode.OFFSET, dueOffsetDays = 2))
+        assertEquals("Each occurrence is due 2 days after its to-do date. A tap sets the gap.", cal(each, Armed.DEADLINE).hint)
+        val custom = repeating.copy(recurrence = repeating.recurrence!!.copy(dueMode = DueMode.RECURRING, dueRule = tueThu))
+        assertEquals("An old custom rule sets these deadlines, so the calendar can't change them.", cal(custom, Armed.DEADLINE).hint)
+        assertEquals("The series stops after the day you tap. \u201cNever\u201d keeps it going.", cal(repeating, Armed.END).hint)
+    }
+
+    @Test
+    fun `the fix names the day it moves the to-do date to`() {
+        val late = open.copy(toDoDate = "2026-10-20", dueDate = "2026-10-16")
+        assertEquals("Move the to-do date to Fri 16", cal(late).conflict!!.fix)
+    }
+
+    @Test
+    fun `TalkBack reads each day with its marks`() {
+        val window = open.copy(toDoDate = "2026-10-12", dueDate = "2026-10-16")
+        assertEquals("Monday 12 October, to-do date", cal(window).describe("2026-10-12"))
+        assertEquals("Friday 16 October, deadline", cal(window).describe("2026-10-16"))
+        assertEquals("Wednesday 14 October, in the window", cal(window).describe("2026-10-14"))
+        assertEquals("Saturday 10 October, today", cal(window).describe(today))
+        assertEquals("Tuesday 20 October", cal(window).describe("2026-10-20"))
+        assertEquals("Monday 12 October, to-do date, deadline", cal(open.copy(toDoDate = "2026-10-12", dueDate = "2026-10-12")).describe("2026-10-12"))
+        val each = repeating.copy(recurrence = repeating.recurrence!!.copy(dueMode = DueMode.OFFSET, dueOffsetDays = 2))
+        assertEquals("Monday 12 October, not available", cal(each, Armed.DEADLINE).describe("2026-10-12"))
+        val ends = repeating.copy(recurrence = repeating.recurrence!!.copy(endDate = "2026-12-20"))
+        assertEquals("Sunday 20 December, end date", cal(ends).describe("2026-12-20"))
     }
 }
