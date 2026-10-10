@@ -78,7 +78,7 @@ A tap on a task's checkbox: an Open task becomes Done, a Done task becomes Open.
 _Avoid_: reopen (for a single task; reopening is what a closed series does), complete / uncomplete
 
 **Status sheet**:
-The sheet that shows all five statuses and what each one does, reached by holding a task's checkbox.
+The sheet that shows all five statuses and what each one does, reached by holding a task's checkbox. A change to just this task applies the moment it's picked; a change that reaches a series asks for a scope first.
 
 **Undo**:
 Taking back a status change while its toast is showing: the task returns exactly as it was, and what it ticked or moved is taken back by the same amount. A whole-series change can't be undone.
