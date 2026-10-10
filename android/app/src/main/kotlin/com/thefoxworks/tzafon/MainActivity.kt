@@ -36,6 +36,7 @@ import com.thefoxworks.tzafon.ui.alltasks.AllTasksScreen
 import com.thefoxworks.tzafon.ui.alltasks.AllTasksViewModel
 import com.thefoxworks.tzafon.ui.backlog.BacklogScreen
 import com.thefoxworks.tzafon.ui.backlog.BacklogViewModel
+import com.thefoxworks.tzafon.ui.components.LocalWeekStart
 import com.thefoxworks.tzafon.ui.directions.DirectionsScreen
 import com.thefoxworks.tzafon.ui.directions.DirectionsViewModel
 import com.thefoxworks.tzafon.ui.editor.TaskEditorScreen
@@ -77,7 +78,13 @@ class MainActivity : ComponentActivity() {
             // on the next frame (no restart). Defaults to Den before first emission.
             val paletteName by container.settings.palette.collectAsStateWithLifecycle(initialValue = "den")
             val palette = paletteFor(paletteName)
-            CompositionLocalProvider(LocalPalette provides palette, LocalStatusHost provides container.statusHost) {
+            // v2.13.0 FR-SET-1.1 — every calendar follows the week start, provided the same way.
+            val weekStart by container.settings.weekStart.collectAsStateWithLifecycle(initialValue = "SUNDAY")
+            CompositionLocalProvider(
+                LocalPalette provides palette,
+                LocalStatusHost provides container.statusHost,
+                LocalWeekStart provides weekStart,
+            ) {
                 TzafonTheme(palette = palette) {
                     TzafonNavHost(container)
                 }

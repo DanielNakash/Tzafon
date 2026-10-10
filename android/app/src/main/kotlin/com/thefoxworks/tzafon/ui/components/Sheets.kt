@@ -31,6 +31,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,10 +43,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.thefoxworks.tzafon.domain.dates.Dates
+import com.thefoxworks.tzafon.domain.dates.MonthGrid
 import com.thefoxworks.tzafon.ui.theme.Tz
 import com.thefoxworks.tzafon.ui.theme.DenType
 import com.thefoxworks.tzafon.ui.theme.a
-import java.time.LocalDate
+import java.time.YearMonth
 
 /**
  * The Den bottom sheet with no title row: the drag handle, then [content].
@@ -97,7 +99,15 @@ fun DenSheet(title: String, onClose: () -> Unit, content: @Composable () -> Unit
 }
 
 /**
- * Month calendar + quick picks + clear (CalendarPicker.jsx).
+ * v2.13.0 — the week-start setting (SUNDAY | MONDAY | SATURDAY), provided at
+ * the composition root like the palette, so every calendar follows it
+ * without each caller threading it through (FR-SET-1.1). Sunday when unset.
+ */
+val LocalWeekStart = staticCompositionLocalOf { "SUNDAY" }
+
+/**
+ * Month calendar + quick picks + clear (CalendarPicker.jsx). The grid starts
+ * on [LocalWeekStart] (v2.13.0, `MonthGrid`).
  *
  * `maxDate` (FR-HAB-8.2) — when set, dates strictly after it are disabled:
  * quick picks past `maxDate` are omitted, grid cells past it render greyed
@@ -173,12 +183,10 @@ fun CalendarPicker(
             ) { TzIcons.Chevron(18.dp, Tz.colors.ink) }
         }
 
-        // weekday header + day grid
-        val first = LocalDate.of(viewYear, viewMonth, 1)
-        val startPad = Dates.dayOfWeek(first)
-        val daysInMonth = first.lengthOfMonth()
+        // weekday header + day grid, from the week start
+        val grid = MonthGrid.of(YearMonth.of(viewYear, viewMonth), LocalWeekStart.current)
         Row(Modifier.fillMaxWidth()) {
-            Dates.WD.forEach { d ->
+            grid.header.forEach { d ->
                 Text(
                     d.take(1),
                     style = TextStyle(fontFamily = DenType.mono, fontSize = 10.5.sp, letterSpacing = 0.5.sp),
@@ -188,8 +196,7 @@ fun CalendarPicker(
                 )
             }
         }
-        val cells: List<String?> = List(startPad) { null } + (1..daysInMonth).map { Dates.iso(LocalDate.of(viewYear, viewMonth, it)) }
-        cells.chunked(7).forEach { week ->
+        grid.weeks.forEach { week ->
             Row(Modifier.fillMaxWidth()) {
                 week.forEach { c ->
                     if (c == null) {
