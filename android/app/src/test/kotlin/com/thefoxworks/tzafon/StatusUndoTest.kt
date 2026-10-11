@@ -165,6 +165,26 @@ class StatusUndoTest {
     }
 
     @Test
+    fun chime_onlyOnOpenToDone_neverOnUndo() = runBlocking {
+        seed()
+        changes.change("T2", TaskState.DONE)
+        assertEquals(1, chimes)
+
+        changes.undo(toastId())
+        assertEquals(1, chimes)
+
+        changes.change("T2", TaskState.DONE)
+        changes.change("T2", TaskState.OPEN)
+        changes.undo(toastId()) // back to Done, silently
+        assertEquals(TaskState.DONE, task("T2").state)
+        assertEquals(2, chimes)
+
+        changes.change("T2", TaskState.CLOSED)
+        changes.change("T2", TaskState.DONE)
+        assertEquals(2, chimes)
+    }
+
+    @Test
     fun subject_readsTheRepeatCardsShortSummary() = runBlocking {
         val series = Series(
             id = "S1", title = "Run", rule = Rule(pattern = Pattern.WEEKDAY, weekdays = listOf(2, 4)),

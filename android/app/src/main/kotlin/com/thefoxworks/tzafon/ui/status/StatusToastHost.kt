@@ -24,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.platform.AccessibilityManager
 import androidx.compose.ui.platform.LocalAccessibilityManager
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
@@ -47,6 +48,12 @@ import kotlinx.coroutines.launch
 /** v2.13.0 — how long the status toast shows before TalkBack lengthens it. */
 const val TOAST_MILLIS = 6_000L
 
+/** How long a toast stays: [TOAST_MILLIS], or what TalkBack recommends (the Undo is a control). */
+fun toastMillis(a11y: AccessibilityManager?, undoable: Boolean): Long =
+    a11y?.calculateRecommendedTimeoutMillis(
+        TOAST_MILLIS, containsIcons = true, containsText = true, containsControls = undoable,
+    ) ?: TOAST_MILLIS
+
 /**
  * The app's one status toast, above the bottom nav (pass its height as
  * [aboveNav]). It lives outside the NavHost, so it survives tab switches;
@@ -63,10 +70,7 @@ fun StatusToastHost(host: StatusHost, aboveNav: Dp, modifier: Modifier = Modifie
 
     toast?.let { t ->
         LaunchedEffect(t.id) {
-            val timeout = a11y?.calculateRecommendedTimeoutMillis(
-                TOAST_MILLIS, containsIcons = true, containsText = true, containsControls = t.undoable,
-            ) ?: TOAST_MILLIS
-            delay(timeout)
+            delay(toastMillis(a11y, t.undoable))
             host.changes.dismiss(t.id)
         }
     }
