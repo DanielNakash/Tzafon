@@ -4,22 +4,29 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextReplacement
 import androidx.compose.ui.unit.dp
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.thefoxworks.tzafon.data.db.TzafonDatabase
+import com.thefoxworks.tzafon.data.repo.RoomHabitRepository
 import com.thefoxworks.tzafon.data.repo.RoomTaskRepository
 import com.thefoxworks.tzafon.domain.editor.Pane
 import com.thefoxworks.tzafon.domain.model.EditScope
+import com.thefoxworks.tzafon.domain.model.Habit
+import com.thefoxworks.tzafon.domain.model.HabitKind
 import com.thefoxworks.tzafon.domain.model.RecurrenceDraft
 import com.thefoxworks.tzafon.domain.model.SeriesStatus
 import com.thefoxworks.tzafon.domain.model.StatusScope
@@ -210,6 +217,126 @@ class StatusSheetFlowTest {
         rule.onNode(
             SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.RadioButton).and(hasText("TO-DO")),
         ).assertIsSelected()
+    }
+
+    // ── test gaps closed by the verification pass (#30, §5.2) ──
+
+    private val occurrence = TaskDraft(
+        id = "S1__2026-10-15", title = "Write 500 words", toDoDate = "2026-10-15",
+        seriesId = "S1", occurrenceDate = "2026-10-15",
+        recurrence = RecurrenceDraft(rule = RepeatRule(pattern = Pattern.WEEKDAY, weekdays = listOf(2, 4))),
+    )
+    private val words = Habit("H1", "Write in the morning", kind = HabitKind.QUANTITATIVE, target = 500.0, unit = "words")
+
+    /** FR-EDITOR-3.2 — on a changed draft a whole-series choice asks "Discard your changes?" first, then acts and closes. */
+    @Test
+    fun aWholeSeriesChipOnAChangedDraft_asksToDiscardFirst_thenActs() {
+        val seriesActs = mutableListOf<TaskState>()
+        var closes = 0
+        rule.setContent {
+            TzafonTheme {
+                TaskEditorScreen(
+                    initial = occurrence, today = today,
+                    onSave = { _, _ -> }, onDelete = { _, _ -> }, onClose = { closes++ },
+                    series = live,
+                    onSeriesStatus = { _, target, _ -> seriesActs += target },
+                )
+            }
+        }
+        rule.onNode(hasSetTextAction().and(hasText("Write 500 words"))).performTextReplacement("Write 600 words")
+        rule.onNode(radio("FROZEN")).performClick()
+        rule.onNodeWithText("Freeze series").performClick()
+        rule.onNodeWithText("Discard your changes?").assertIsDisplayed()
+        assertTrue(seriesActs.isEmpty())
+
+        rule.onNodeWithText("Discard").performClick()
+        assertEquals(listOf(TaskState.FROZEN), seriesActs)
+    }
+
+    /** FR-EDITOR-3.6 — on a repeating task the Backlog chip is dimmed, with its hint. */
+    @Test
+    fun theBacklogChip_isDimmedOnARepeatingTask_withItsHint() {
+        rule.setContent {
+            TzafonTheme {
+                TaskEditorScreen(initial = occurrence, today = today, onSave = { _, _ -> }, onDelete = { _, _ -> }, onClose = {}, series = live)
+            }
+        }
+        rule.onNode(radio("BACKLOG")).assertIsNotEnabled()
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Unavailable while this repeats"))
+        rule.onNodeWithText("Backlog is unavailable while this repeats — freeze it instead.").assertIsDisplayed()
+        rule.onNode(radio("OPEN")).assertIsSelected()
+    }
+
+    /** FR-EDITOR-3.4 — cancelling "How much?" at the Done chip leaves the chip as it was. */
+    @Test
+    fun cancellingHowMuch_leavesTheChip() {
+        rule.setContent {
+            TzafonTheme {
+                TaskEditorScreen(
+                    initial = TaskDraft(id = "T1", title = "Write 500 words", toDoDate = today, habitId = "H1"), today = today,
+                    onSave = { _, _ -> }, onDelete = { _, _ -> }, onClose = {}, habits = listOf(words),
+                )
+            }
+        }
+        rule.onNode(radio("DONE")).performClick()
+        rule.onNodeWithText("How much? · Write in the morning").assertIsDisplayed()
+        rule.onNode(hasContentDescription("Close sheet")).performClick()
+        rule.onNodeWithText("How much? · Write in the morning").assertDoesNotExist()
+        rule.onNode(radio("OPEN")).assertIsSelected()
+        rule.onNode(radio("DONE")).assertIsNotSelected()
+    }
+
+    /** FR-STATUS-1.10 — Done picked in the sheet on an amount task asks "How much?" first, and changes nothing yet. */
+    @Test
+    fun doneFromTheSheet_onAnAmountTask_asksHowMuchFirst() {
+        val database = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), TzafonDatabase::class.java).build()
+        db = database
+        val habits = RoomHabitRepository(database.habitDao())
+        val repo = RoomTaskRepository(database.taskDao(), database.seriesDao(), habits)
+        val task: Task = runBlocking {
+            habits.upsert(words)
+            repo.saveDraft(TaskDraft(id = null, title = "Write 500 words", toDoDate = today, habitId = "H1"), EditScope.ONE, today)
+            repo.observeTasks().first().single()
+        }
+        val host = StatusHost(
+            StatusChanges(tasks = repo, habits = habits, goals = null, today = { today }),
+            CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate),
+        )
+        lateinit var controls: TaskStatusControls
+        rule.setContent {
+            CompositionLocalProvider(LocalStatusHost provides host) {
+                TzafonTheme {
+                    controls = rememberTaskStatusControls()
+                    TaskStatusSheets(controls)
+                }
+            }
+        }
+        rule.runOnIdle { controls.hold(task) }
+        rule.waitUntil(5_000) { rule.onAllNodes(hasText("SET STATUS")).fetchSemanticsNodes().isNotEmpty() }
+        row("Done").performClick()
+
+        rule.waitUntil(5_000) { rule.onAllNodes(hasText("How much? · Write in the morning")).fetchSemanticsNodes().isNotEmpty() }
+        assertEquals(TaskState.OPEN, runBlocking { repo.getTask(task.id)!!.state })
+    }
+
+    /** NFR-A11Y-1.2 / 1.3 — TalkBack reads each row, the current one, the dimmed Backlog, and each scope radio with its line. */
+    @Test
+    fun talkBack_readsTheRows_theCurrentOne_theDimmedBacklog_andEachScopeRadio() {
+        rule.setContent {
+            TzafonTheme {
+                TaskStatusSheet(subject = repeating, onApply = { _, _ -> }, onClose = {}, onReschedule = {}, onOpenEditor = {})
+            }
+        }
+        rule.onNode(hasContentDescription("Done, Finished. Files into Journey.")).assertIsDisplayed()
+        rule.onNode(hasContentDescription("Open, Back on your list."))
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "current status"))
+        rule.onNode(hasContentDescription("Backlog, Off the calendar, into the backlog."))
+            .assertIsNotEnabled()
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Unavailable while this repeats. Freeze it instead."))
+
+        row("Closed").performClick()
+        rule.onNode(radio("Just this one").and(hasText("Only this occurrence changes."))).assertIsSelected()
+        rule.onNode(radio("The whole series").and(hasText("Ends the series today.", substring = true))).assertIsNotSelected()
     }
 
     private fun radio(label: String) =

@@ -8,6 +8,7 @@ import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.StateRestorationTester
@@ -17,6 +18,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextReplacement
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.thefoxworks.tzafon.domain.editor.Pane
 import com.thefoxworks.tzafon.domain.model.TaskDraft
 import com.thefoxworks.tzafon.ui.editor.TaskEditorScreen
 import com.thefoxworks.tzafon.ui.theme.TzafonTheme
@@ -167,6 +169,53 @@ class TaskEditorFrameTest {
         titleField().performTextReplacement("Write the final report")
         rule.onNodeWithText("Save").performClick()
         assertEquals(1, saves)
+    }
+
+    /** FR-EDITOR-1.11 — Delete has its own confirm, so a changed draft never asks "Discard your changes?". */
+    @Test
+    fun deleteAfterAnEdit_neverAsksToDiscard() {
+        editor()
+        titleField().performTextReplacement("Something else")
+        rule.onNodeWithText("Delete task").performScrollTo().performClick()
+        rule.onNodeWithText("Delete this task?").assertIsDisplayed()
+        rule.onNodeWithText("Discard your changes?").assertDoesNotExist()
+    }
+
+    /** FR-STATUS-1.9 — a date picked after Reschedule lands only at Save; Cancel throws it away. */
+    @Test
+    fun aRescheduledDate_appliesOnlyAtSave_andCancelDiscardsIt() {
+        rule.setContent {
+            TzafonTheme {
+                TaskEditorScreen(
+                    initial = task, today = today,
+                    onSave = { _, _ -> saves++ }, onDelete = { _, _ -> },
+                    onClose = { closes++ }, openOn = Pane.TIMING,
+                )
+            }
+        }
+        rule.onNode(hasContentDescription("Wednesday 14 October", substring = true)).performClick()
+        assertEquals(0, saves)
+        rule.onNodeWithText("Cancel").performClick()
+        rule.onNodeWithText("Discard").performClick()
+        assertEquals(1, closes)
+        assertEquals(0, saves)
+    }
+
+    @Test
+    fun aRescheduledDate_savesTheNewToDoDate() {
+        var saved: TaskDraft? = null
+        rule.setContent {
+            TzafonTheme {
+                TaskEditorScreen(
+                    initial = task, today = today,
+                    onSave = { d, _ -> saved = d }, onDelete = { _, _ -> },
+                    onClose = {}, openOn = Pane.TIMING,
+                )
+            }
+        }
+        rule.onNode(hasContentDescription("Wednesday 14 October", substring = true)).performClick()
+        rule.onNodeWithText("Save").performClick()
+        assertEquals("2026-10-14", saved?.toDoDate)
     }
 
     /** v2.13.0 — Save with nothing changed just closes the editor and writes nothing. */
