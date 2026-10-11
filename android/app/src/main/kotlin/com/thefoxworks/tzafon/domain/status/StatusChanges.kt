@@ -1,6 +1,7 @@
 package com.thefoxworks.tzafon.domain.status
 
 import com.thefoxworks.tzafon.domain.attribution.Attribution
+import com.thefoxworks.tzafon.domain.editor.RepeatCard
 import com.thefoxworks.tzafon.domain.model.Goal
 import com.thefoxworks.tzafon.domain.model.GoalRepository
 import com.thefoxworks.tzafon.domain.model.Habit
@@ -11,7 +12,6 @@ import com.thefoxworks.tzafon.domain.model.StatusScope
 import com.thefoxworks.tzafon.domain.model.Task
 import com.thefoxworks.tzafon.domain.model.TaskRepository
 import com.thefoxworks.tzafon.domain.model.TaskState
-import com.thefoxworks.tzafon.domain.recurrence.Recurrence
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -66,7 +66,7 @@ class StatusChanges(
             title = task.title,
             state = task.state,
             toDoDate = task.toDoDate,
-            repeat = series?.let { Recurrence.summary(it.rule) },
+            repeat = series?.let { RepeatCard.summary(it.rule) },
             series = series?.let { SeriesStatus.of(it, today()) },
             habit = task.habitId?.let { habits?.getHabit(it)?.name },
             goals = task.goalIds.mapNotNull { goals?.getGoal(it)?.title },

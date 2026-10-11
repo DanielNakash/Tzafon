@@ -47,6 +47,7 @@ import com.thefoxworks.tzafon.domain.editor.CueSuggestions
 import com.thefoxworks.tzafon.domain.editor.DraftDiff
 import com.thefoxworks.tzafon.domain.editor.EditorSession
 import com.thefoxworks.tzafon.domain.editor.Pane
+import com.thefoxworks.tzafon.domain.editor.RepeatCard
 import com.thefoxworks.tzafon.domain.editor.SaveProblem
 import com.thefoxworks.tzafon.domain.editor.SaveStep
 import com.thefoxworks.tzafon.domain.editor.ScopeSheetCopy
@@ -65,7 +66,6 @@ import com.thefoxworks.tzafon.domain.status.StatusSubject
 import com.thefoxworks.tzafon.ui.components.AmountSheet
 import com.thefoxworks.tzafon.ui.status.TaskStatusSheet
 import com.thefoxworks.tzafon.domain.model.TaskDraft
-import com.thefoxworks.tzafon.domain.recurrence.Recurrence
 import com.thefoxworks.tzafon.ui.components.DenSheet
 import com.thefoxworks.tzafon.ui.components.LocalWeekStart
 import com.thefoxworks.tzafon.ui.components.TzIcons
@@ -310,7 +310,7 @@ fun TaskEditorScreen(
                     title = draft.title,
                     state = draft.state,
                     toDoDate = draft.toDoDate,
-                    repeat = draft.recurrence?.takeIf { series != null }?.let { Recurrence.summary(it.rule) },
+                    repeat = draft.recurrence?.takeIf { series != null }?.let { RepeatCard.summary(it.rule) },
                     series = series,
                     habit = habits.find { it.id == draft.habitId }?.name,
                     goals = goals.filter { it.id in draft.goalIds }.map { it.title },

@@ -10,6 +10,7 @@ import com.thefoxworks.tzafon.domain.model.HabitKind
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
+import java.util.Locale
 
 /**
  * v2.13.0 — the Alignment pane's lists: the one habit a task ticks and the
@@ -82,6 +83,17 @@ class AlignmentListsTest {
         assertEquals("BY 12 DEC", AlignmentLists.goalSubtitle(Goal("g", "Ship it", deadline = "2026-12-12"), today))
         assertEquals("BY 3 FEB 2027", AlignmentLists.goalSubtitle(Goal("g", "Ship it", deadline = "2027-02-03"), today))
         assertNull(AlignmentLists.goalSubtitle(Goal("g", "Be kinder"), today))
+    }
+
+    @Test
+    fun `goal numbers group by the device locale, like the goal cards`() {
+        val before = Locale.getDefault()
+        try {
+            Locale.setDefault(Locale.GERMANY)
+            assertEquals("62.000 / 80.000 WORDS", AlignmentLists.goalSubtitle(draft, today))
+        } finally {
+            Locale.setDefault(before)
+        }
     }
 
     @Test

@@ -165,6 +165,19 @@ class StatusUndoTest {
     }
 
     @Test
+    fun subject_readsTheRepeatCardsShortSummary() = runBlocking {
+        val series = Series(
+            id = "S1", title = "Run", rule = Rule(pattern = Pattern.WEEKDAY, weekdays = listOf(2, 4)),
+            ruleAnchor = today, startDate = today, generatedThrough = today,
+        )
+        seriesDao.upsert(series.toEntity())
+
+        val subject = changes.subject(Task(id = "S1__$today", title = "Run", toDoDate = today, seriesId = "S1"))
+
+        assertEquals("Every Tue & Thu", subject.repeat)
+    }
+
+    @Test
     fun amountPrompt_onlyForAmountTasks() = runBlocking {
         seed()
         assertEquals(AmountPrompt("How much? · Write in the morning", "words", 500.0), changes.amountPrompt(write))

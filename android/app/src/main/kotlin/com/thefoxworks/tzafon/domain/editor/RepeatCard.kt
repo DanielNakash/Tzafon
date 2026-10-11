@@ -349,9 +349,10 @@ object RepeatCard {
 
     /**
      * The header's summary. Weekly abbreviates its days ("Every Tue & Thu");
-     * the other types read as [Recurrence.summary] does.
+     * the other types read as [Recurrence.summary] does. The status sheet's
+     * meta line uses it too, so it doesn't wrap.
      */
-    private fun summary(rule: Rule): String {
+    fun summary(rule: Rule): String {
         if (rule.pattern != Pattern.WEEKDAY || rule.weekdays.size !in 1..2) return Recurrence.summary(rule)
         val days = rule.weekdays.sorted().joinToString(" & ") { Dates.WD[it] }
         return "Every $days" + if (rule.weekInterval > 1) ", every ${rule.weekInterval} weeks" else ""

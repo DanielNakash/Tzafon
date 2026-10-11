@@ -13,7 +13,7 @@ data class StatusSubject(
     val title: String,
     val state: TaskState,
     val toDoDate: String?,
-    /** the repeat summary ("Every Tuesday & Thursday"); null for a one-off task */
+    /** the repeat card's short summary ("Every Tue & Thu"); null for a one-off task */
     val repeat: String? = null,
     /** the series' facts; null for a one-off task */
     val series: SeriesStatus? = null,
@@ -105,13 +105,14 @@ object StatusSheet {
     }
 
     /**
-     * The header's meta line: `THU 17 SEP · EVERY TUESDAY & THURSDAY · TICKS RUN`.
-     * The last part is the label the list row shows, which names only a habit.
+     * The header's meta line: `THU 17 SEP · EVERY TUE & THU · TICKS RUN · MOVES FIRST DRAFT`.
+     * Past one goal it names the first and counts the rest (`MOVES FIRST DRAFT +2`).
      */
     fun meta(s: StatusSubject): String = listOfNotNull(
         s.toDoDate?.let { DraftDiff.day(it) } ?: "NO DATE",
         s.repeat,
         s.habit?.let { "TICKS $it" },
+        s.goals.firstOrNull()?.let { "MOVES $it" + if (s.goals.size > 1) " +${s.goals.size - 1}" else "" },
     ).joinToString(" · ").uppercase()
 
     fun footnote(s: StatusSubject): List<String> = listOfNotNull(

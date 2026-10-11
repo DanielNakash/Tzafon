@@ -6,7 +6,6 @@ import com.thefoxworks.tzafon.domain.model.GoalState
 import com.thefoxworks.tzafon.domain.model.GoalType
 import com.thefoxworks.tzafon.domain.model.Habit
 import com.thefoxworks.tzafon.domain.model.HabitKind
-import java.util.Locale
 
 /** One row of "Ticks a habit · one": a radio, at most one selected. */
 data class HabitRow(val id: String, val name: String, val cadence: String, val selected: Boolean)
@@ -73,5 +72,5 @@ object AlignmentLists {
     }
 
     private fun qty(v: Double): String =
-        if (v % 1.0 == 0.0) String.format(Locale.US, "%,d", v.toLong()) else v.toString()
+        if (v % 1.0 == 0.0) "%,d".format(v.toLong()) else v.toString()
 }

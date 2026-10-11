@@ -56,12 +56,21 @@ class StatusSheetTest {
     // ── header and footnote ──
 
     @Test
-    fun `the meta line reads the to-do date, the repeat and the row's habit label`() {
+    fun `the meta line reads the to-do date, the repeat, the habit it ticks and the goal it moves`() {
         assertEquals("THU 17 SEP", StatusSheet.meta(oneOff))
         assertEquals("NO DATE", StatusSheet.meta(oneOff.copy(toDoDate = null, state = TaskState.BACKLOG)))
         assertEquals(
-            "THU 17 SEP · EVERY TUESDAY & THURSDAY · TICKS WRITE IN THE MORNING",
+            "THU 17 SEP · EVERY TUESDAY & THURSDAY · TICKS WRITE IN THE MORNING · MOVES FIRST DRAFT",
             StatusSheet.meta(repeating.copy(habit = "Write in the morning", goals = listOf("First draft"))),
+        )
+        assertEquals("THU 17 SEP · MOVES FIRST DRAFT", StatusSheet.meta(oneOff.copy(goals = listOf("First draft"))))
+    }
+
+    @Test
+    fun `past one goal the meta line names the first and counts the rest`() {
+        assertEquals(
+            "THU 17 SEP · MOVES FIRST DRAFT +2",
+            StatusSheet.meta(oneOff.copy(goals = listOf("First draft", "Run a 10K", "Learn Hebrew"))),
         )
     }
 
