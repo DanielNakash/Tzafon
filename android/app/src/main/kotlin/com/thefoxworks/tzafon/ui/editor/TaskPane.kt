@@ -183,6 +183,8 @@ private fun EdInput(
                     .background(Tz.colors.card)
                     .border(1.dp, Tz.colors.line, RoundedCornerShape(13.dp))
                     .padding(14.dp),
+                // the field fills the box, so a right-to-left line sits at the right edge
+                propagateMinConstraints = true,
             ) {
                 if (value.isEmpty()) {
                     Text(placeholder, style = styled.copy(color = Tz.colors.faint, fontWeight = FontWeight.Normal))

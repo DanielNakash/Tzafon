@@ -102,7 +102,7 @@ fun CueSheet(
                     cursorBrush = SolidColor(Tz.colors.rust),
                     singleLine = true,
                     decorationBox = { inner ->
-                        Box {
+                        Box(propagateMinConstraints = true) {
                             if (label.isEmpty()) {
                                 Text(
                                     when (type) {
@@ -149,7 +149,7 @@ fun CueSheet(
                         // isValidHhMm below enforce the HH:mm shape).
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
                         decorationBox = { inner ->
-                            Box {
+                            Box(propagateMinConstraints = true) {
                                 if (time.isEmpty()) {
                                     Text(
                                         "08:30",
@@ -257,7 +257,7 @@ fun AmountSheet(
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     decorationBox = { inner ->
-                        Box {
+                        Box(propagateMinConstraints = true) {
                             if (text.isEmpty()) {
                                 Text(
                                     "0",

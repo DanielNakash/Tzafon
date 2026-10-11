@@ -207,6 +207,7 @@ fun HabitEditorSheet(
                             .background(Tz.colors.card)
                             .border(1.dp, Tz.colors.line, RoundedCornerShape(13.dp))
                             .padding(horizontal = 14.dp, vertical = 13.dp),
+                        propagateMinConstraints = true,
                     ) {
                         if (name.isEmpty()) {
                             Text(
@@ -292,7 +293,7 @@ fun HabitEditorSheet(
                             cursorBrush = SolidColor(Tz.colors.rust),
                             singleLine = true,
                             decorationBox = { inner ->
-                                Box {
+                                Box(propagateMinConstraints = true) {
                                     if (unit.isEmpty()) {
                                         Text(
                                             "words · km · pages",
@@ -303,6 +304,7 @@ fun HabitEditorSheet(
                                     inner()
                                 }
                             },
+                            modifier = Modifier.fillMaxWidth(),
                         )
                     }
                 }

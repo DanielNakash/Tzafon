@@ -216,8 +216,8 @@ outcomes against the design; don't screenshot what a log line already proves.
   the status sheet and undo, action logic, habit math, attribution, journey, review, notify,
   palettes, bidi, nav back-stack rules, data export/import, and `WordingTest` (no stale UI words).
   Repository suites run over the in-memory `FakeDaos`.
-- **Instrumented** — `./gradlew connectedDebugAndroidTest` (needs a running emulator). 104 tests in
-  18 suites in `app/src/androidTest/kotlin/…` cover behavioural UI (the editor frame, panes,
+- **Instrumented** — `./gradlew connectedDebugAndroidTest` (needs a running emulator). 107 tests in
+  19 suites in `app/src/androidTest/kotlin/…` cover behavioural UI (the editor frame, panes,
   calendar and repeat card, scope sheets, status sheet flow, checkbox hold, header menu, habit
   collapse/edit, content direction, reorder, Directions creation, About) and Room migrations
   (`MigrationTest`, one case per migration).

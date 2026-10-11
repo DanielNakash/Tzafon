@@ -200,7 +200,7 @@ fun GoalEditorSheet(
                                 cursorBrush = SolidColor(Tz.colors.rust),
                                 singleLine = true,
                                 decorationBox = { inner ->
-                                    Box {
+                                    Box(propagateMinConstraints = true) {
                                         if (newStep.isEmpty()) {
                                             Text(
                                                 "Add a step…",
@@ -509,6 +509,7 @@ private fun EditorField(
                     .background(Tz.colors.card)
                     .border(1.dp, Tz.colors.line, RoundedCornerShape(13.dp))
                     .padding(horizontal = 14.dp, vertical = 13.dp),
+                propagateMinConstraints = true,
             ) {
                 if (value.isEmpty()) {
                     Text(placeholder, style = style.copy(color = Tz.colors.faint, fontWeight = FontWeight.Normal))

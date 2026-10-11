@@ -188,7 +188,7 @@ fun AllTasksScreen(
                                 cursorBrush = SolidColor(Tz.colors.cream),
                                 singleLine = true,
                                 decorationBox = { inner ->
-                                    Box {
+                                    Box(propagateMinConstraints = true) {
                                         if (query.isEmpty()) {
                                             Text(
                                                 "Search title or notes…",

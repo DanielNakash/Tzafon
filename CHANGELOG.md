@@ -119,6 +119,14 @@ feature-request pipeline; its codes are defined in `v2.13.0 Requirements.md`.
   `android/app/schemas/`, and an instrumented `MigrationTest` migrates a real v5
   database. The export format stays at version 2 and carries the offset.
 
+### Fixed
+- **Right-to-left text sits at the right edge while you type** (`FR-DESIGN-3`) — a
+  Hebrew or Arabic title, notes, cue, search or name now lines up on the right of
+  its field from the first letter, instead of starting mid-line and drifting right
+  as it grows. This covers every text field in the app.
+- **A right-to-left title sits on the right of the status sheet's header**
+  (`FR-DESIGN-3`), as it does on Today's rows.
+
 ## [2.12.0] — 2026-09-18
 
 ### Added

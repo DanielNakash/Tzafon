@@ -296,7 +296,7 @@ private fun ReflectStep(state: ReviewUiState, note: String, onNote: (String) -> 
             textStyle = TextStyle(fontFamily = DenType.serif, fontSize = 15.sp, fontStyle = FontStyle.Italic, color = Tz.colors.ink).contentDir(),
             cursorBrush = SolidColor(Tz.colors.rust),
             decorationBox = { inner ->
-                Box(Modifier.padding(top = 6.dp)) {
+                Box(Modifier.padding(top = 6.dp), propagateMinConstraints = true) {
                     if (note.isEmpty()) {
                         Text(
                             "What mattered this week…",

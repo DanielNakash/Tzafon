@@ -278,6 +278,7 @@ private fun TimeField(cue: CueDraft, flagged: Boolean, focus: FocusRequester, on
                         .background(if (incomplete) Tz.colors.due.a(0.08f) else Tz.colors.bg)
                         .border(1.dp, if (incomplete) Tz.colors.due else Tz.colors.line, RoundedCornerShape(10.dp))
                         .padding(horizontal = 12.dp, vertical = 9.dp),
+                    propagateMinConstraints = true,
                 ) {
                     if (cue.time.isEmpty()) Text("HH:mm", style = TextStyle(fontFamily = DenType.mono, fontSize = 16.sp), color = Tz.colors.faint)
                     inner()

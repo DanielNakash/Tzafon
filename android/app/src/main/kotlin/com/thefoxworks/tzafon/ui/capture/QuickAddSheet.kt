@@ -115,7 +115,7 @@ fun QuickAddSheet(
                 }),
                 singleLine = true,
                 decorationBox = { inner ->
-                    Box {
+                    Box(propagateMinConstraints = true) {
                         if (title.isEmpty()) {
                             Text(
                                 "What needs doing?",

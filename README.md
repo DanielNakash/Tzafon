@@ -103,7 +103,7 @@ adb shell am start -n com.thefoxworks.tzafon/.MainActivity
 ```bash
 cd android
 ./gradlew testDebugUnitTest          # 526 JVM unit tests, 44 suites
-./gradlew connectedDebugAndroidTest  # 104 instrumented tests, 18 suites (needs an emulator)
+./gradlew connectedDebugAndroidTest  # 107 instrumented tests, 19 suites (needs an emulator)
 ```
 
 Unit tests cover the pure domain: the recurrence engine (an oracle-parity suite ported from the
