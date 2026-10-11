@@ -9,6 +9,116 @@ to the versioned requirements documents in the repo.
 
 ---
 
+## [2.13.0] — 2026-10-11
+
+The Task Editor Redesign. This version came from the owner's design deck and the
+wayfinder map [#1](https://github.com/DanielNakash/Tzafon/issues/1), not from the
+feature-request pipeline; its codes are defined in `v2.13.0 Requirements.md`.
+
+> **Upgrade note: update every signed-in device together.** A repeating task with a
+> per-occurrence deadline (new in this version) crashes **v2.12.0** on opening Today
+> once it syncs, and a v2.12.0 install strips the offset when it re-pushes the series.
+> Install v2.13.0 on every device signed in to the same account **before** saving any
+> per-occurrence deadline (`FR-REC-4.1`, `NFR-OFFLINE-1`, §2 *Mixed versions on one
+> account*). Nothing else in this version is unreadable to an older install.
+
+### Added
+- **The task editor is three panes: Task · Timing · Alignment** (`FR-EDITOR-1`) —
+  the long single column and its eight pop-up sheets are replaced by three tabs
+  edited in place. The editor always opens on Task; a small dot on a tab means
+  something on that pane changed since you opened it. Save always looks ready and,
+  if something is missing (a blank title, a half-typed cue time), jumps straight to
+  it. Cancel and Back ask "Discard your changes?" only when there is something to
+  discard, and a half-finished edit survives rotating the phone.
+- **One calendar for both dates** (`FR-EDITOR-4`) — the Timing pane sets the to-do
+  date and the deadline on a single calendar. Two tiles show which date a tap sets;
+  the quick picks follow it (`Today · Tomorrow · <weekday> · Undated` for the to-do
+  date, `+1 / +2 weeks · None` for the deadline), the grid marks both dates and the
+  window between them, and tapping the chosen date again clears it. If the deadline
+  falls before the to-do date, one tap moves the to-do date to the deadline.
+- **Repeat sits inline under the calendar** (`FR-EDITOR-5`) — one card with
+  `Weekly · Monthly · Every N days`, its steppers, and an `Ends | Deadline` footer
+  that swaps its body in place; the end date is picked on the same calendar. Nothing
+  you could set before is lost: older rules the card can't edit show read-only.
+- **Per-occurrence deadlines are now "N days after each to-do date"**
+  (`FR-REC-4`, `FR-REC-4.1`) — choose One fixed (a single deadline for the whole
+  series) or Per occurrence, 0–30 days after each occurrence's own to-do date. A
+  series saved with an older deadline rule keeps working, shows "Custom deadline
+  rule", and offers **Switch to offset**.
+- **The Alignment pane edits the cue, the habit and the goals in place**
+  (`FR-EDITOR-6`) — the cue comes first, with suggestion chips drawn from your own
+  past cues; "After a routine" can carry a time too. Habits are a single choice you
+  can clear, each with its plain cadence (`3× / WEEK`, `DAILY`); goals list the
+  ongoing ones plus any already linked, each with a subtitle for its kind. The themes
+  a task belongs to are shown, read-only, inherited from its goals and habit. A cue
+  parsed from a quick-add marks the Alignment tab as changed when you expand it.
+- **Scope is asked once, at Save, over what you changed** (`FR-EDITOR-2`,
+  `FR-REC-6`, `FR-REC-6.10`) — editing a repeating task no longer starts with a
+  "this one / this and future / all" banner. Save lists what changed ("You changed:
+  To-do date Thu 17 → Fri 18") and then asks where it should land, offering only the
+  choices those changes can take, with a count of the occurrences each one reaches.
+  A one-off task, a new task or an untouched one saves without asking.
+- **Delete has a forward choice** (`FR-REC-6.14`) — deleting from a repeating task
+  offers *Just this one*, *This and every future one* and *The whole series*; a
+  one-off task asks "Delete this task?". Neither series-wide choice removes a Done
+  occurrence: deleting the whole series keeps your Done ones as one-off tasks.
+- **Freeze, thaw, close and reopen reach the whole series** (`FR-REC-5`,
+  `DM-TASK-2`) — a repeating task freezes only as a whole (the **Freeze series**
+  button is the confirmation). Thawing and Closed ask *Just this one* or *The whole
+  series*: closing the series ends it today, closes what is past and not done, and
+  clears what is still ahead; a closed series reopens from the status sheet or by
+  setting Ends to Never. A series that comes back fills in from today — the days it
+  spent frozen or closed never return as overdue rows.
+- **Hold a checkbox to choose a status** (`FR-STATUS-1`, `FR-STATUS-3`) — on
+  Today, Planning, All Tasks and Backlog, holding a task's checkbox for a moment
+  raises a sheet with all five statuses and what each one does. A choice that
+  changes just this task applies at once; one that could reach a series turns the
+  sheet into a short scope panel first. Backlog on a repeating task is dimmed with
+  the reason (`REPEATS — USE FREEZE`). Under TalkBack the checkbox reads its title
+  and status and offers a "Change status" action.
+- **Undo after every status change from a list** (`FR-STATUS-4`) — one toast
+  above the bottom bar says what happened (`Done · ticked Write in the morning`,
+  `Moved to Backlog · <title>`) and offers **Undo** for six seconds (longer with
+  TalkBack on), restoring the task exactly as it was, the habit amount and goal
+  progress included. A whole-series change (`Series frozen · <title>`) shows the
+  toast without Undo, and editor saves show none. The completion chime now also
+  plays on Done picked from the sheet (`FR-AUDIO-1.2`).
+- **The editor's status chips** (`FR-EDITOR-3`) — Task's five status chips pick
+  into the draft and apply at Save like any other edit; "How much?" is asked as you
+  pick Done on an amount task. A whole-series choice acts at once and closes the
+  editor.
+
+### Changed
+- **A tap on a list checkbox follows one rule** (`FR-STATUS-2`) — Open ↔ Done, as
+  before, now with the undo toast; a Closed, Frozen or Backlog task opens the status
+  sheet instead of jumping straight to Done. The checkbox never starts Also today's
+  drag-to-reorder.
+- **One vocabulary across the app** (`FR-DESIGN-6`) — **Status** (not state),
+  **Backlog** (never "Someday"), **Notes**, **To-do date**, **Deadline**, **Repeat**
+  (not recurrence); a task *ticks* a habit and *moves* a goal, while *serves* stays
+  for links further up. Rows, Planning's "Set status", search placeholders ("Search
+  title or notes…"), All Tasks' horizon line, the menu and the habit editor all
+  follow it.
+- **Planning's Reschedule opens the editor on Timing** (`FR-PLAN-4.5`,
+  `FR-STATUS-1.9`) — with the to-do date ready to set; the new date applies at Save
+  and Cancel leaves the task alone. The separate "Move it to" sheet is gone, and
+  "Change Status" is now **Set status**.
+- **Moving a repeating task's to-do date** (`FR-REC-6`) — under Weekly and Monthly
+  a moved date stays on that occurrence in every scope; only Every N days re-counts
+  the rhythm from the new date. An edit that moves no date leaves the rhythm alone.
+- **Every calendar follows your week start** (`FR-SET-1.1`) — the editor's
+  calendar and every date picker (Backlog pull, a habit's log date, Planning's
+  "Plan through", the theme editor) now start their weeks on the day set in
+  Settings.
+- **Turning repeat off** (`FR-REC-6.12`) — keeps this occurrence as a one-off task
+  with your edits, ends the series the day before it, and clears the later
+  occurrences that aren't Done.
+- **Database upgrade, Room 5 → 6** (`NFR-DATA-1`, `NFR-DATA-1.1`) — one additive
+  column (`series.dueOffsetDays`) for the per-occurrence offset; existing tasks,
+  series and links carry over untouched. Each schema version is now exported to
+  `android/app/schemas/`, and an instrumented `MigrationTest` migrates a real v5
+  database. The export format stays at version 2 and carries the offset.
+
 ## [2.12.0] — 2026-09-18
 
 ### Added

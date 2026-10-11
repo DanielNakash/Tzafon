@@ -7,12 +7,18 @@ v2.0.0 was a one-shot build of a frozen spec (milestones `M0`→`M9`) — **that
 roadmap is history.** Since v2.1.0 the app ships **one minor version per batch of user feature
 requests**, through the automated pipeline below. Work the pipeline, not the milestone roadmap.
 
+The exception is a **wayfinder map**: a GitHub issue labelled `wayfinder:map` whose sub-issues are
+tickets, worked one per session with `/wayfinder <map> [ticket]` (`docs/agents/issue-tracker.md`).
+A map whose Notes say it *carries execution* builds a version itself, outside the pipeline — that
+is how v2.13.0 was made. Inside a map, its Notes and tickets are the plan.
+
 ## Where the repo stands
 
 | | |
 |---|---|
 | **Latest promoted** | **v2.12.0** — tag `v2.12.0`, `versionName "2.12.0"` / `versionCode 13`, promoted 2026-09-25. This is what `main` and `origin` carry. |
-| **Built, awaiting promotion** | none. `main`, the highest tag and the builder's view of the frontier all agree, so the release-serialization guard is clear and the next `/build-next-version` is free to start. |
+| **Built, awaiting verification** | **v2.13.0** (Task Editor Redesign) — `versionName "2.13.0"` / `versionCode 14`, built 2026-10-11 on **`task-editor-redesign`** (pushed) **outside the pipeline**, via the wayfinder map [#1](https://github.com/DanielNakash/Tzafon/issues/1). Untagged; the APK is `feature-requests/releases/Tzafon-2.13.0.apk` (local). The owner verifies it with Claude, then decides the merge to `main`, the `v2.13.0` tag and unpausing — **not** through `/promote`. `release/2.13.0` is stale at M3. |
+| **Pipeline** | **`paused`** on purpose (`FEATURE_REQUESTS.md`) until the owner says otherwise, so the groomer can't claim v2.13.0. The queued requests then target v2.14.0+. |
 | **Full history** | `CHANGELOG.md` — every shipped version in user-facing language, each bullet citing its requirement code |
 
 > **The remote is not the whole truth.** A finished build lives only on the machine that built it
@@ -56,8 +62,8 @@ Full contract: `feature-requests/README.md`. The step-by-step logic lives in `.c
 
 - **`v2.0.0 Requirements.md`** — the **baseline contract**: the data model (`DM-*`), the original
   functional surface (`FR-*`), non-functional requirements (`NFR-*`), out-of-scope in §10.
-- **`v2.1.0` … `v2.12.0 Requirements.md`** — one **delta doc per version**, auto-groomed from user
-  requests. They add new codes and **refine existing ones**; for any code, the *newest* doc that
+- **`v2.1.0` … `v2.13.0 Requirements.md`** — one **delta doc per version**, auto-groomed from user
+  requests (v2.13.0's was written from its wayfinder map). They add new codes and **refine existing ones**; for any code, the *newest* doc that
   touches it wins. Each section cites its source request id and carries acceptance criteria.
   Before changing behaviour in an area, grep that area's code across the docs in version order —
   e.g. `grep -n 'FR-NAV-9' v2.*Requirements.md`.
@@ -65,6 +71,9 @@ Full contract: `feature-requests/README.md`. The step-by-step logic lives in `.c
   authoritative for §2–§4 and §6; **§5's `M0`→`M9` milestone list is historical**, superseded by the
   per-version `## Milestones` lists.
 - **`CHANGELOG.md`** — what actually shipped, and when.
+- **`CONTEXT.md`** — the domain glossary (status, Backlog, to-do date, deadline, repeat, series,
+  occurrence, edit scope …): use its words in UI copy, code and tickets. **`docs/adr/`** — the
+  architecture decision records (`0001`: a per-occurrence deadline is an offset).
 - **Design:** `task-manager/project/Tzafon v2.0.html` + its `tz/*.jsx` imports. Read the
   HTML/JSX/CSS **source** for exact dimensions/colors/spacing; do NOT render design files in a
   browser. Cross-reference `task-manager/project/screenshots/`. The design predates several shipped
@@ -76,7 +85,7 @@ Full contract: `feature-requests/README.md`. The step-by-step logic lives in `.c
 **Code conventions:** `DM-<AREA>-n` data model, `FR-<AREA>-n` functional, `NFR-<AREA>-n`
 non-functional, sub-numbered for detail (`FR-HAB-11.3`). Areas in use: `ABOUT, ALL, AUDIO, AUTH,
 BACKLOG, CAPTURE, CUE, DATA, DESIGN, DIR, EDITOR, HAB, JOURNEY, LOOP, NAV, NOTIF, PLAN, REC, SET,
-TODAY` (FR); `ATTR, CUE, EXPORT, FOCUS, GOAL, HABIT, NOT, PREF, REL, REVIEW, TASK, THEME` (DM);
+STATUS, TODAY` (FR); `ATTR, CUE, EXPORT, FOCUS, GOAL, HABIT, NOT, PREF, REL, REVIEW, TASK, THEME` (DM);
 `A11Y, DATA, OFFLINE, PERF, SEC, TEST` (NFR). Every implementation item and commit cites its codes.
 
 ## Locked decisions (do not revisit)
@@ -107,6 +116,8 @@ MainActivity.kt      the NavHost and every route (tabs + alltasks/backlog/review
 TzafonApp.kt         Application + AppContainer (manual DI), notification top-up, sync gating
 domain/  model/      entities, repository interfaces, StateMachine, AuthRepository
          recurrence/ the Kotlin engine (oracle parity)
+         editor/     EditorSession, DraftDiff, ScopeSheetCopy, SharedCalendar, RepeatCard, Alignment rules
+         status/     StatusSheet, TapRule, StatusChanges (the undo toast), StatusUndo
          dates/ action/ attribution/ habits/ journey/ notify/ review/ themes/   pure logic, unit-tested
 data/    db/         Room: Entities.kt, Daos.kt, TzafonDatabase.kt
          repo/       Room-backed repository impls
@@ -115,8 +126,10 @@ data/    db/         Room: Entities.kt, Daos.kt, TzafonDatabase.kt
          transfer/   export / import (DM-EXPORT-1)   audio/ ChimePlayer
 notify/              channel, alarm scheduling, boot receiver, WorkManager top-up
 ui/      today/ planning/ habits/ directions/ journey/   ← the five bottom-nav tabs
-         alltasks/ backlog/ review/ settings/ about/ capture/ editor/ goals/ welcome/
-         components/ theme/ nav/
+         editor/     TaskEditorScreen (the frame) + TaskPane, TimingPane, TimingCalendar,
+                     TimingRepeatCard, AlignmentPane, ScopeSheets
+         status/     TaskStatusSheet, StatusToastHost, TaskStatusControls
+         alltasks/ backlog/ review/ settings/ about/ capture/ goals/ welcome/ components/ theme/ nav/
 ```
 
 - The five tabs are defined in `ui/nav/BottomNav.kt`; All Tasks, Backlog, Settings and About ride
@@ -129,6 +142,12 @@ ui/      today/ planning/ habits/ directions/ journey/   ← the five bottom-nav
   JSON from newer entities.
 - The Firestore mirror writes **through the DAOs on purpose**, bypassing repository business logic —
   a mirror must not re-run attribution or state-machine effects.
+- **Sync is not forward-compatible.** An older install signed in to the same account reads every
+  synced row, so a **new persisted enum value** (or a field it must understand) crashes or corrupts
+  it: v2.12.0 dies on Today once a v2.13.0 `DueMode.OFFSET` series syncs, and strips
+  `dueOffsetDays` when it re-pushes. The owner's rule: update every signed-in device together
+  before using the new value, and say so in the CHANGELOG. When adding one, decode defensively
+  (a fallback, not `valueOf`) so the *next* version degrades instead of crashing.
 
 ## Shell command style (important — reduces permission prompts)
 
@@ -190,13 +209,18 @@ outcomes against the design; don't screenshot what a log line already proves.
 
 ## Testing (`NFR-TEST-1`)
 
-- **Unit** — `cd android && ./gradlew testDebugUnitTest`. 22 suites in
-  `app/src/test/kotlin/…`, covering the recurrence oracle-parity suite (`RecurrenceTest`,
-  `RecurringDateShiftTest`), the state machine, action logic, habit math, attribution, journey,
-  review, notify, palettes, bidi, nav back-stack rules, and data export/import.
-- **Instrumented** — `./gradlew connectedDebugAndroidTest` (needs a running emulator).
-  the 9 suites in `app/src/androidTest/kotlin/…` cover behavioural UI (header menu, habit collapse/edit,
-  content direction, reorder, Directions creation, About) and Room migrations (`MigrationTest`).
+- **Unit** — `cd android && ./gradlew testDebugUnitTest`. 526 tests in 44 suites in
+  `app/src/test/kotlin/…` (as of v2.13.0), covering the recurrence oracle-parity suite
+  (`RecurrenceTest`, `RecurringDateShiftTest`), the state machine and series-scoped status, the
+  editor's rules (`DraftDiffTest`, `EditScopesTest`, `CalendarRulesTest`, `RepeatCardTest`, …),
+  the status sheet and undo, action logic, habit math, attribution, journey, review, notify,
+  palettes, bidi, nav back-stack rules, data export/import, and `WordingTest` (no stale UI words).
+  Repository suites run over the in-memory `FakeDaos`.
+- **Instrumented** — `./gradlew connectedDebugAndroidTest` (needs a running emulator). 104 tests in
+  18 suites in `app/src/androidTest/kotlin/…` cover behavioural UI (the editor frame, panes,
+  calendar and repeat card, scope sheets, status sheet flow, checkbox hold, header menu, habit
+  collapse/edit, content direction, reorder, Directions creation, About) and Room migrations
+  (`MigrationTest`, one case per migration).
 - A version is done only when its tests are green **and** it's verified on the emulator against the
   design. New behaviour lands with a test — regressions here are what the parity suites exist for.
 
