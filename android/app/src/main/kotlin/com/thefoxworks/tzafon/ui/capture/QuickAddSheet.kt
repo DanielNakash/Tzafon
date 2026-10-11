@@ -170,7 +170,7 @@ fun QuickAddSheet(
                 ) {
                     TzIcons.Pencil(13.dp, Tz.colors.muted)
                     Text(
-                        "EXPAND — DATES, CUE, SERVES",
+                        "EXPAND — TIMING, ALIGNMENT",
                         style = TextStyle(fontFamily = DenType.mono, fontSize = 11.sp),
                         color = Tz.colors.muted,
                     )
