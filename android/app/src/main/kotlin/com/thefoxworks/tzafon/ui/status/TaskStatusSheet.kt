@@ -120,7 +120,8 @@ private fun Header(subject: StatusSubject) {
                 subject.title,
                 style = TextStyle(fontFamily = DenType.serif, fontSize = 21.sp, fontWeight = FontWeight.SemiBold).contentDir(),
                 color = Tz.colors.ink,
-                modifier = Modifier.semantics { heading() },
+                // fill the column so an RTL title aligns right, as on Today's rows (FR-DESIGN-3)
+                modifier = Modifier.fillMaxWidth().semantics { heading() },
             )
             Text(
                 StatusSheet.meta(subject),
